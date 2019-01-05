@@ -283,12 +283,20 @@ void tusb_recv_data(tusb_device_t* dev, uint8_t EPn)
     pma->cnt = 0;
     ep->rx_count += len;
     if(len != GetOutMaxPacket(dev, EPn) || ep->rx_count >= ep->rx_size){
-      if(tusb_on_rx_done(dev, EPn, ep->rx_buf, ep->rx_count) == 0){
-        ep->rx_count = 0;
+      if(EPn == 0){
+        if(dev->ep0_rx_done){
+          dev->ep0_rx_done(dev);
+          dev->ep0_rx_done = 0;
+        }
+        ep->rx_buf = 0;
       }else{
-        // of rx done not return success, change rx_count to rx_size, this will block
-        // the data recieve
-        ep->rx_count = ep->rx_size;
+        if(tusb_on_rx_done(dev, EPn, ep->rx_buf, ep->rx_count) == 0){
+          ep->rx_count = 0;
+        }else{
+          // of rx done not return success, change rx_count to rx_size, this will block
+          // the data recieve
+          ep->rx_count = ep->rx_size;
+        }
       }
     }
   }
@@ -309,21 +317,7 @@ void tusb_ep_handler(tusb_device_t* dev, uint8_t EPn)
         tusb_setup_handler(dev);
       }else{
         // Handle ep 0 data packet
-        if(dev->Ep[0].rx_buf){
-          tusb_ep_data* ep = &dev->Ep[0];
-          uint32_t len = tusb_read_ep0(dev, ep->rx_buf + ep->rx_count);
-          ep->rx_count += len;
-          if(len < GetOutMaxPacket(dev, 0) || ep->rx_count >= ep->rx_size){
-            // when got ep 0 data, invoke the setup data out call back
-            if(dev->ep0_rx_done){
-              dev->ep0_rx_done(dev);
-              dev->ep0_rx_done = 0;
-            }
-            ep->rx_buf = 0;
-          }
-        }else{
-          // recv ep0 data, but not processed, drop it
-        }
+        tusb_recv_data(dev, EPn);
       }
       TUSB_CLEAR_RX_CTR(GetUSB(dev), PCD_ENDP0, EP);
       TUSB_SET_RX_STATUS(GetUSB(dev), PCD_ENDP0, EP, USB_EP_RX_VALID);
