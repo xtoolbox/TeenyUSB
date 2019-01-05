@@ -1,0 +1,8 @@
+out
+RTE
+DebugConfig
+*.uvguix.*
+*.uvgui.*
+*.ini
+*.txt
+*.scvd
