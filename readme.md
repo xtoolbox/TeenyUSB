@@ -20,8 +20,27 @@ Not only a teeny USB stack for STM32 devices, but also a toolset to create USB d
 
 # TeenyUSB协议栈 Stack
 
-STM32 USB FS模块调用关系如下图
-![fs_flow](images/teenyusb_fs_flow.png)
+## 示例 demos
+
+| Demo Folder      |      Demo Type       |
+|------------------|----------------------|
+| custom_bulk      | 自定义 Bulk 设备     |
+| cdc              | 虚拟串口 CDC         |
+| msc              | 虚拟U盘 Mass Storage |
+| custom_hid       | 自定义 HID 设备      |
+| cdc5             | 5路 CDC              |
+
+## DEMO测试过的开发板 Demo tested boards
+| Board Folder     |      Board Type      |      Chip     |HSE Freq | USB Core      |
+|------------------|----------------------|---------------|---------|---------------|
+| stm32f0          | Custom board         | STM32F072C8T6 | No HSE  | USB FS        |
+| stm32f1          | Custom board         | STM32F103RET6 | 8MHz    | USB FS        |
+| stm32f723e_disco | [stm32f723e discovery][723] | STM32F723IEK6 | 25MHz   | OTG_FS/OTG_HS |
+| stm32767zi_nucleo| [stm32f767zi nucleo][767]   | STM32F767ZIT6 | 8HMz    | OTG_FS        |
+
+[767]: https://www.st.com/en/evaluation-tools/nucleo-f767zi.html
+[723]: https://www.st.com/en/evaluation-tools/32f723ediscovery.html
+
 
 # TeenyDT 描述符工具 Descriptor Tool
 
