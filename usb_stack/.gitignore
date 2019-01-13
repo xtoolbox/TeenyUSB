@@ -6,3 +6,6 @@ DebugConfig
 *.ini
 *.txt
 *.scvd
+*.uvoptx
+teeny_usb_desc.c
+teeny_usb_init.h

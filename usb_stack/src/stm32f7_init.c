@@ -485,32 +485,77 @@ void tusb_otg_host_handler(tusb_host_t* dev);
 #define TUSB_OTG_GetMode(USBx) ((USBx->GINTSTS ) & 0x1U)
 
 #if defined(USB_OTG_FS)
-extern tusb_device_t tusb_dev_otg_fs;
-extern tusb_host_t tusb_host_otg_fs;
+static tusb_device_t tusb_dev_otg_fs;
+static tusb_host_t tusb_host_otg_fs;
 void OTG_FS_IRQHandler(void)
 {
   if (TUSB_OTG_GetMode(USB_OTG_FS) == USB_OTG_MODE_DEVICE){
+#if defined(NO_DEVICE)
+    while(1);
+#else
     tusb_otg_device_handler(&tusb_dev_otg_fs);
+#endif
   }else{
+#if defined(NO_HOST)
+    while(1);
+#else
     tusb_otg_host_handler(&tusb_host_otg_fs);
+#endif
   }
 }
 #endif
 
 
 #if defined(USB_OTG_HS)
-extern tusb_device_t tusb_dev_otg_hs;
-extern tusb_host_t tusb_host_otg_hs;
+static tusb_device_t tusb_dev_otg_hs;
+static tusb_host_t tusb_host_otg_hs;
 void OTG_HS_IRQHandler(void)
 {
   if (TUSB_OTG_GetMode(USB_OTG_HS) == USB_OTG_MODE_DEVICE){
+#if defined(NO_DEVICE)
+    while(1);
+#else
     tusb_otg_device_handler(&tusb_dev_otg_hs);
+#endif
   }else{
+#if defined(NO_HOST)
+    while(1);
+#else
     tusb_otg_host_handler(&tusb_host_otg_hs);
+#endif
   }
 }
 #endif
 
+tusb_device_t* tusb_get_device(uint8_t id)
+{
+  if(id != 0){
+#if defined(USB_OTG_HS)
+    SetUSB(&tusb_dev_otg_hs, USB_OTG_HS);
+    return &tusb_dev_otg_hs;
+#endif
+  }
+#if defined(USB_OTG_FS)
+  SetUSB(&tusb_dev_otg_fs, USB_OTG_FS);
+  return &tusb_dev_otg_fs;
+#else
+  return 0;
+#endif
+}
 
-
+tusb_host_t* tusb_get_host(uint8_t id)
+{
+  if(id != 0){
+#if defined(USB_OTG_HS)
+    SetUSB(&tusb_host_otg_hs, USB_OTG_HS);
+    return &tusb_host_otg_hs;
+#endif
+  }
+#if defined(USB_OTG_FS)
+  SetUSB(&tusb_host_otg_fs, USB_OTG_FS);
+  return &tusb_host_otg_fs;
+#else
+  return 0;
+#endif
+}
 

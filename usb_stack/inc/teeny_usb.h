@@ -180,6 +180,11 @@ typedef enum {
 //////////////////////////////////////////////
 // Device functions,  used in device only mode
 //////////////////////////////////////////////
+// Get USB device
+// Param id:  0 - FS core
+//            1 - HS core
+tusb_device_t* tusb_get_device(uint8_t id);
+
 // open USB in device mode, implement by platform
 void tusb_open_device(tusb_device_t* dev);
 
@@ -235,6 +240,11 @@ const uint8_t* tusb_get_report_descriptor(tusb_device_t* dev, tusb_setup_packet 
 //////////////////////////////////////////////
 // Host functions,  used in host only mode
 //////////////////////////////////////////////
+// Get USB host
+// Param id:  0 - FS core
+//            1 - HS core
+tusb_host_t* tusb_get_host(uint8_t id);
+
 // open USB core in host mode, implement by platform
 void tusb_open_host(tusb_host_t* host);
 

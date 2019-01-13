@@ -111,7 +111,7 @@ void tsub_resume(tusb_device_t* dev)
 }
 
 
-extern tusb_device_t tusb_dev;
+static tusb_device_t tusb_dev;
 // end point data handler, also called in USB_HP IRQ
 void tusb_ep_handler(tusb_device_t* dev, uint8_t EPn);
 
@@ -182,7 +182,10 @@ if( IMR_MSK & USB_ISTR_ESOF){
   GetUSB(dev)->ISTR = (0);
 }
 
-
+tusb_device_t* tusb_get_device(uint8_t id)
+{
+  return &tusb_dev;
+}
 
 
 
