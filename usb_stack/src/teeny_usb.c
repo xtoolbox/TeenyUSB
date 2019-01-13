@@ -82,8 +82,7 @@ static void tusb_get_descriptor(tusb_device_t* dev, tusb_setup_packet *req)
 #endif
       break;
     }
-#if defined(USB_OTG_HS)
-    // For High speed device, support the DEVICE_QUALIFIER 
+    // For all speed device, support the DEVICE_QUALIFIER 
     // and OTHER_SPEED_CONFIGURATION request
     case USB_DESC_TYPE_DEVICE_QUALIFIER:
     {
@@ -117,7 +116,6 @@ static void tusb_get_descriptor(tusb_device_t* dev, tusb_setup_packet *req)
       }
       break;
     }
-#endif
   }
   if(desc){
     tusb_send_data(dev, 0, desc,
