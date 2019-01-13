@@ -205,9 +205,15 @@ void tusb_send_data_done(tusb_device_t* dev, uint8_t EPn)
       dev->ep0_tx_done(dev);
       dev->ep0_tx_done = 0;
     }
+  }else{
+    //if(ep->tx_last_size == maxpacket){
+      // Send a ZLP
+    //  tusb_send_data(dev, EPn, ep->tx_buf, 0);
+    //  return;
+    //}
+    // clear the fifo empty mask
+    tusb_on_tx_done(dev, EPn);
   }
-  // clear the fifo empty mask
-  tusb_on_tx_done(dev, EPn);
 }
 
 // un-like the USB FS core, we need buffer size to set the ep valid

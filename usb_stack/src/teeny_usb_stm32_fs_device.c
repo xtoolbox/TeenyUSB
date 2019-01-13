@@ -141,7 +141,7 @@ int tusb_send_data(tusb_device_t* dev, uint8_t EPn, const void* data, uint16_t l
       pma1 = PMA_TX1(dev, EPn);
     }
     copy_tx(dev, ep, pma0, data, len, GetInMaxPacket(dev, EPn));
-    if( ep->tx_size || ep->tx_last_size == GetInMaxPacket(dev, EPn) ){
+    if( ep->tx_size){
       copy_tx(dev, ep, pma1, ep->tx_buf, ep->tx_size, GetInMaxPacket(dev, EPn));
     }
     // toggle it
@@ -190,7 +190,7 @@ void tusb_send_data_done(tusb_device_t* dev, uint8_t EPn)
     ep->tx_pushed = 0;
     pma = PMA_TX(dev, EPn);
   }
-  if(ep->tx_size || ep->tx_last_size == GetInMaxPacket(dev, EPn)){
+  if(ep->tx_size || (EPn == 0 && ep->tx_last_size == GetInMaxPacket(dev, EPn) )) {
     copy_tx(dev, ep, pma, ep->tx_buf, ep->tx_size, GetInMaxPacket(dev, EPn));
     PCD_SET_EP_TX_STATUS(GetUSB(dev), EPn, USB_EP_TX_VALID);
     return;
@@ -202,12 +202,15 @@ void tusb_send_data_done(tusb_device_t* dev, uint8_t EPn)
         ep->tx_buf = 0;
       }
     }else{
-      if(EPn == 0 && dev->ep0_tx_done){
-        // invoke status transmitted call back for ep0
-        dev->ep0_tx_done(dev);
-        dev->ep0_tx_done = 0;
+      if(EPn == 0){
+        if(dev->ep0_tx_done){
+          // invoke status transmitted call back for ep0
+          dev->ep0_tx_done(dev);
+          dev->ep0_tx_done = 0;
+        }
+      }else{
+        tusb_on_tx_done(dev, EPn);
       }
-      tusb_on_tx_done(dev, EPn);
     }
   }
 }
