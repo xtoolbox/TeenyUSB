@@ -3,11 +3,11 @@ Teeny USB
 Not only a teeny USB stack for STM32 devices, but also a toolset to create USB descriptors and drivers.
 
 # 特性
-1. 支持的例程：串口(CDC)，多串口(CDC x 5)，自定义HID，自定义批量(bulk)。
+1. 支持的例程：串口，5路串口，自定义HID，自定义设备批量传输(无需驱动)。
 2. 使用lua脚本生成USB相关描述符，并根据描述符自动生成初始化配置代码。
 3. 根据USB描述自动生成驱动文件，并对驱动文件签名。
 # Feature
-1. Demo for CDC, multiple CDC, Custom HID, Custom Bulk (No driver need, even no inf)
+1. Demo for CDC, multiple CDC, Custom HID, Custom Bulk (No custom driver need, even no inf)
 2. USB descriptor generation by lua script and UI tool
 3. Driver inf generation (based on libwdi)
 
@@ -70,7 +70,7 @@ return Device {
    }
 }
 ```
-更多示例 More Demo：[Custom Bulk](usb_stack/demo/custom_bulk/custom_bulk_desc.lua)，[CDC](usb_stack/demo/cdc/cdc_desc.lua)，[CDCx5](usb_stack/demo/cdc5/cdc5_desc.lua)，[MSC](usb_stack/demo/msc/msc_desc.lua)，[Custom HID](usb_stack/demo/custom_hid/hid_desc.lua)
+更多示例 More TeenyDT Descriptor Demo：[Custom Bulk](usb_stack/demo/custom_bulk/custom_bulk_desc.lua)，[CDC](usb_stack/demo/cdc/cdc_desc.lua)，[CDCx5](usb_stack/demo/cdc5/cdc5_desc.lua)，[MSC](usb_stack/demo/msc/msc_desc.lua)，[Custom HID](usb_stack/demo/custom_hid/hid_desc.lua)
 
 # USB测试工具 Test Tool
 串口测试 Serial Port
