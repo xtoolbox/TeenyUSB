@@ -3,13 +3,15 @@ Teeny USB
 Not only a teeny USB stack for STM32 devices, but also a toolset to create USB descriptors and drivers.
 
 # 特性
-1. 支持的例程：串口，5路串口，自定义HID，自定义设备批量传输(无需驱动)。
-2. 使用lua脚本生成USB相关描述符，并根据描述符自动生成初始化配置代码。
-3. 根据USB描述自动生成驱动文件，并对驱动文件签名。
+1. 设备例程：串口，5路串口，自定义HID，自定义设备批量传输(无需驱动)。
+2. 主机例程：无协议栈主机，键盘鼠标+HUB。
+3. 使用lua脚本生成USB相关描述符，并根据描述符自动生成初始化配置代码。
+4. 根据USB描述自动生成驱动文件，并对驱动文件签名。
 # Feature
-1. Demo for CDC, multiple CDC, Custom HID, Custom Bulk (No custom driver need, even no inf)
-2. USB descriptor generation by lua script and UI tool
-3. Driver inf generation (based on libwdi)
+1. Device demo: CDC, multiple CDC, Custom HID, Custom Bulk (No custom driver need, even no inf)
+2. Host demo: raw host, hub+keyboard+mouse
+4. USB descriptor generation by lua script and UI tool
+5. Driver inf generation (based on libwdi)
 
 # 目录结构说明 Folder
 [usb_stack](./usb_stack) TeenyUSB协议栈的源码 Source code of TeenyUSB
