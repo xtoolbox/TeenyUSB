@@ -57,10 +57,12 @@ Not only a teeny USB stack for STM32 devices, but also a toolset to create USB d
 
 # TeenyDT 描述符工具 TeenyDT Descriptor Tool
 
-## UI操作方式
+## UI操作方式 GUI
 ![teenydt_ui](images/preview_desc.png)
 
-## 命令行方式
+![teenydt_ui_en](images/preview_desc_en.png)
+
+## 命令行方式 Command Line
 
 ```bat
 lua gen_descriptor.lua demo.lua -maxep=7 -maxmem=1024
