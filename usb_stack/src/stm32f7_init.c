@@ -426,13 +426,19 @@ static void tusb_init_otg_host(tusb_host_t* dev)
 
   /* Enable VBUS driving */
   tusb_otg_driver_vbus(USBx, 1U);
-
+  
+  delay_ms(2000);
+  
   /* Disable all interrupts. */
   USBx->GINTMSK = 0U;
 
   /* Clear any pending interrupts */
   USBx->GINTSTS = 0xFFFFFFFFU;
 
+  // The FIFO will not set success if remove the delay function before
+  // How to wait is not mentioned
+  // FIFO did not allocate all memory, the remain memory maybe used for the request queue
+  // How request queue work is not describe in the RM
   if(USBx == USB_OTG_FS){
     /* set Rx/Tx FIFO size */
     USBx->GRXFSIZ  = 0x80U;
@@ -458,6 +464,9 @@ static void tusb_init_otg_host(tusb_host_t* dev)
   
   
   USBx->GAHBCFG |= USB_OTG_GAHBCFG_GINT;
+  
+  /* Enable VBUS driving */
+  tusb_otg_driver_vbus(USBx, 1U);
 }
 
 void tusb_open_device(tusb_device_t* dev)

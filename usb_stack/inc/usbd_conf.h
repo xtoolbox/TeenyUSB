@@ -41,7 +41,9 @@
 
 
 #include "stdint.h"
+#ifndef NO_DEVICE
 #include "teeny_usb_init.h"
+#endif
 
 #define WEAK     __weak
 

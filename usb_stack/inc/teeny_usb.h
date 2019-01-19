@@ -80,6 +80,10 @@ typedef struct _tusb_core
 }tusb_core_t;
 
 
+#ifndef EP_NUM
+#define EP_NUM 1
+#endif
+
 typedef struct _tusb_device tusb_device_t;
 typedef void(*tusb_callback_t)(tusb_device_t* dev);
 struct _tusb_device{
@@ -117,7 +121,8 @@ typedef struct _tusb_hc_data
   uint8_t*  ch_buf;
   uint16_t  size;                    // size of the pipe buffer
   uint16_t  count;                   // data count of the pipe buffer
-  uint32_t  retry_count;             // channel error count
+  uint32_t  nak_count;               // channel NAK count
+  uint32_t  error_count;             // channel error count
   uint32_t  error_reason;            // channel error reason
   uint8_t   state;                   // channel state
   uint8_t   toggle_in:1;             // toggle bit for IN pipe
@@ -126,7 +131,8 @@ typedef struct _tusb_hc_data
   uint8_t   is_use:1;                // used flag
   uint8_t   is_data:1;               // 1: data packet, 0: setup packet
   uint8_t   auto_free:1;             // 1: auto free when transaction done, 0: do not free
-  uint8_t   padding:2;               // bit field padding
+  uint8_t   xfer_done:1;             // 1: xfer done, 0: xfer on goning
+  uint8_t   padding:1;               // bit field padding
   uint16_t  padding32;               // padding to 32bit boundary
 }tusb_hc_data_t;
 
@@ -158,7 +164,7 @@ typedef enum {
   TUSB_HOST_PORT_CONNECTED,
   TUSB_HOST_PORT_ENABLED,
   TUSB_HOST_PORT_DISABLED,
-}host_state_t;
+}host_port_state_t;
 
 typedef enum {
   TUSB_CS_INIT = 0,
@@ -168,12 +174,16 @@ typedef enum {
   TSUB_CS_PING_SUCCESS,
   TUSB_CS_NYET,
   TUSB_CS_STALL,
+  TUSB_CS_INT_NAK,
   
   TUSB_CS_AHB_ERROR = 10,
   TUSB_CS_DT_ERROR,
   TUSB_CS_TRANSACTION_ERROR,
   TUSB_CS_FRAMEOVERRUN_ERROR,
   TUSB_CS_BABBLE_ERROR,
+  
+  TUSB_CS_XFER_ONGOING,
+  TUSB_CS_UNKNOWN_ERROR,
 }channel_state_t;
 
 
@@ -267,7 +277,7 @@ int tusb_on_channel_event(tusb_host_t* host, uint8_t hc_num);
 // WEAK function
 // called when port status changed
 // when new connection detect, start enum device
-void tusb_host_port_changed(tusb_host_t* host, host_state_t new_state);
+void tusb_host_port_changed(tusb_host_t* host, host_port_state_t new_state);
 
 
 
@@ -277,10 +287,10 @@ void tusb_host_port_changed(tusb_host_t* host, host_state_t new_state);
 // When working in device mode, use the device related functions
 // when working in host mode, use the host related functions
 // open USB core in DRD mode, implement by platform
-void tusb_open_otg(tusb_host_t* dev);
+void tusb_open_otg(tusb_otg_t* otg);
 
 // close USB core in DRD mode, implement by platform
-void tusb_close_otg(tusb_host_t* dev);
+void tusb_close_otg(tusb_otg_t* otg);
 
 
 #endif

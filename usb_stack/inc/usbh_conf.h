@@ -52,7 +52,6 @@
 #define __USBH_CONF__H__
 
 /* Includes ------------------------------------------------------------------*/
-#include "teeny_usb_init.h"
 
 /*----------   -----------*/
 #define USBH_MAX_NUM_ENDPOINTS      2

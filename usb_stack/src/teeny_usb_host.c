@@ -66,3 +66,36 @@ void tusb_pipe_xfer_data(tusb_pipe_t* pipe, void* data, uint32_t len)
   tusb_otg_host_xfer_data(pipe->host, pipe->hc_num, 1, (uint8_t*)data, len);
 }
 
+
+void tusb_pipe_update_speed(tusb_pipe_t* pipe, uint8_t is_low_speed)
+{
+  if(pipe->host && pipe->hc_num < MAX_HC_NUM){
+    USB_OTG_GlobalTypeDef *USBx = GetUSB(pipe->host);
+    if(is_low_speed){
+      USBx_HC(pipe->hc_num)->HCCHAR |= USB_OTG_HCCHAR_LSDEV;
+    }else{
+      USBx_HC(pipe->hc_num)->HCCHAR &= ~USB_OTG_HCCHAR_LSDEV;
+    }
+  }
+}
+
+channel_state_t tusb_pipe_wait(tusb_pipe_t* pipe, uint32_t timeout)
+{
+  if(!pipe->host) return TUSB_CS_UNKNOWN_ERROR;
+  if(pipe->hc_num >= MAX_HC_NUM) return TUSB_CS_UNKNOWN_ERROR;
+  tusb_hc_data_t* hc = &pipe->host->hc[pipe->hc_num];
+  while(hc->xfer_done == 0 && timeout){
+    if(timeout < 0xffffffff){
+      timeout--;
+    }
+    if(pipe->host->state != TUSB_HOST_PORT_ENABLED){
+      return TUSB_CS_UNKNOWN_ERROR;
+    }
+  }
+  if(hc->xfer_done){
+    return (channel_state_t)hc->state;
+  }
+  return TUSB_CS_XFER_ONGOING;
+}
+
+

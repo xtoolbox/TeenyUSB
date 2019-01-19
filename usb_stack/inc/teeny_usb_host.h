@@ -36,14 +36,23 @@ typedef struct _tusb_pipe
   uint8_t      hc_num;
 }tusb_pipe_t;
 
+// Open a pipe
 int tusb_pipe_open(tusb_host_t* host, tusb_pipe_t* pipe, uint8_t dev_addr, uint8_t ep_addr, uint8_t ep_type, uint16_t mps);
 
+// Close a pipe
 int tusb_pipe_close(tusb_pipe_t* pipe);
 
+// Send setup packet
 void tusb_pipe_setup(tusb_pipe_t* pipe, tusb_setup_packet* setup);
 
+// Send/Recv data packet
 void tusb_pipe_xfer_data(tusb_pipe_t* pipe, void* data, uint32_t len);
 
+// change pipe speed
+void tusb_pipe_update_speed(tusb_pipe_t* pipe, uint8_t is_low_speed);
+
+// wait pipe action done, return action result
+channel_state_t tusb_pipe_wait(tusb_pipe_t* pipe, uint32_t timeout);
 
 
 #endif
