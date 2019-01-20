@@ -7,5 +7,6 @@ DebugConfig
 *.txt
 *.scvd
 *.uvoptx
+images
 teeny_usb_desc.c
 teeny_usb_init.h
