@@ -1,6 +1,6 @@
 Teeny USB
 ==========
-Not only a teeny USB stack for STM32 devices, but also a toolset to create USB descriptors and drivers.
+A teeny USB stack for STM32 MCUs, also contain a toolset to create USB descriptors and drivers.
 
 # 特性
 1. 设备例程：串口，5路串口，自定义HID，自定义设备批量传输(无需驱动)。
@@ -35,24 +35,29 @@ Not only a teeny USB stack for STM32 devices, but also a toolset to create USB d
 | cdc5             | 5路 CDC              | All Below      |
 
 ## USB主机例程 Demo for host
+The host is not stable right now
+
+主机例程目前还不稳定
 
 | Demo Folder      |      Demo Type       |  Tested Board  |
 |------------------|----------------------|----------------|
-| host_raw         | 无协议栈主机 Raw Host| 723/767        |
-| host_input       | HUB+KeyBoard+Mouse   | 723/767        |
+| host_raw         | 无协议栈主机 Raw Host| 723            |
+| host_input       | HUB+KeyBoard+Mouse   | 723            |
 
 
 ## Demo测试用的开发板 Demo tested on boards
 
-| Board Folder     |      Board Type      |      Chip     |HSE Freq | Tested USB Core |
-|------------------|----------------------|---------------|---------|-----------------|
-| stm32f0          | Custom board         | STM32F072C8T6 | No HSE  | USB FS          |
-| stm32f1          | Custom board         | STM32F103RET6 | 8 MHz   | USB FS          |
+| Board Folder     |      Board Type             |      Chip     |HSE Freq | Tested USB Core     |
+|------------------|-----------------------------|---------------|---------|---------------------|
+| stm32f0          | Custom board                | STM32F072C8T6 | No HSE  | USB FS              |
+| stm32f1          | Custom board                | STM32F103RET6 | 8 MHz   | USB FS              |
+| stm32f407_evk    | [Waveshare EVK407I][407]    | STM32F407IGT6 | 8 MHz   | OTG_FS/OTG_HS_ULPI  |
 | stm32f723e_disco | [stm32f723e discovery][723] | STM32F723IEK6 | 25 MHz  | OTG_FS/OTG_HS_Embed |
 | stm32767zi_nucleo| [stm32f767zi nucleo][767]   | STM32F767ZIT6 | 8 MHz   | OTG_FS              |
 
 [767]: https://www.st.com/en/evaluation-tools/nucleo-f767zi.html
 [723]: https://www.st.com/en/evaluation-tools/32f723ediscovery.html
+[407]: http://www.waveshare.net/wiki/EVK407I
 
 
 # TeenyDT 描述符工具 TeenyDT Descriptor Tool
@@ -88,11 +93,11 @@ return Device {
 更多示例 More TeenyDT Descriptor Demo：[Custom Bulk](usb_stack/demo/custom_bulk/custom_bulk_desc.lua)，[CDC](usb_stack/demo/cdc/cdc_desc.lua)，[CDCx5](usb_stack/demo/cdc5/cdc5_desc.lua)，[MSC](usb_stack/demo/msc/msc_desc.lua)，[Custom HID](usb_stack/demo/custom_hid/hid_desc.lua)
 
 # USB测试工具 USB Test Tool
-串口测试 Serial Port
+串口测试 Serial Port Viewer
 
 ![test_cdc5](images/test_tool_cdc5.png)
 
-HID测试
+HID测试 HID Viewer
 
 ![test_hid](images/test_tool_hid.png)
 
