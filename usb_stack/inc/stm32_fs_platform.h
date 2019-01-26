@@ -23,8 +23,8 @@
  */
 
 // teeny usb platform header for STM32F1/STM32F0 device
-#ifndef __STM32F0F1_PLATFORM_H__
-#define __STM32F0F1_PLATFORM_H__
+#ifndef __STM32_FS_PLATFORM_H__
+#define __STM32_FS_PLATFORM_H__
 
 #include "usbd_def.h"
 #include "usbd_core.h"
@@ -228,13 +228,6 @@ typedef union _pma_ep_desc {
 #define   TUSB_CLEAR_RX_CTR(USBx, EPn, EPOld) \
   PCD_SET_ENDPOINT((USBx), (EPn), \
     EPOld & 0x7FFFU & USB_EPREG_MASK)
-
-
-
-#define  STALL_EP0(dev) \
-do{\
-  PCD_SET_EP_TXRX_STATUS(GetUSB(dev), 0, USB_EP_RX_STALL, USB_EP_TX_STALL); \
-}while(0)
 
 #endif
 

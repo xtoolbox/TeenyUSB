@@ -23,8 +23,8 @@
  */
 
 // teeny usb platform header for STM32F7 device
-#ifndef __STM32F7_PLATFORM_H__
-#define __STM32F7_PLATFORM_H__
+#ifndef __STM32_OTG_PLATFORM_H__
+#define __STM32_OTG_PLATFORM_H__
 
 #include "usbd_def.h"
 #include "usbd_core.h"
@@ -44,26 +44,42 @@
 #define USB_EP_BULK                                                   USBD_EP_TYPE_BULK
 #define USB_EP_INTERRUPT                                              USBD_EP_TYPE_INTR
 
-
+#if defined(STM32F7)
 #define USB_OTG_FS_MAX_EP_NUM   6
 #define USB_OTG_HS_MAX_EP_NUM   9
-
 #define USB_OTG_FS_MAX_CH_NUM   12
 #define USB_OTG_HS_MAX_CH_NUM   16
+#define MAX_HC_NUM              16
+
+#elif defined(STM32F4)
+#define USB_OTG_FS_MAX_EP_NUM   4
+#define USB_OTG_HS_MAX_EP_NUM   6
+#define USB_OTG_FS_MAX_CH_NUM   8
+#define USB_OTG_HS_MAX_CH_NUM   12
+#define MAX_HC_NUM              12
+
+#else
+#error unsupport chip
+#endif
+
+
 
 #if defined(USB_OTG_FS) && defined(USB_OTG_HS)
 #define  USB_CORE_HANDLE_TYPE        PCD_TypeDef*
 #define  GetUSB(dev)           ((dev)->handle)
 #define  SetUSB(dev, usbx)     do{ (dev)->handle = usbx;  }while(0)
+
 #else
 #if defined(USB_OTG_FS)
 #define  GetUSB(dev)           USB_OTG_FS
 #define  SetUSB(dev, usbx)
+
 #elif defined(USB_OTG_HS)
 #define  GetUSB(dev)           USB_OTG_HS
 #define  SetUSB(dev, usbx)
+
 #else
-#error OTG_FS and OTG_HS all missed
+#error neither otg_hs or otg_fs
 #endif
 #endif
 
@@ -87,6 +103,7 @@ do{                                                                             
     maxpacket = __CLZ(maxpacket) - 25;                                                     \
   }                                                                                        \
   USBx_DEVICE->DAINTMSK |=  ( (USB_OTG_DAINTMSK_IEPM) & ( (1 << (EPn))) );                 \
+  if (((INEp->DIEPCTL) & USB_OTG_DIEPCTL_USBAEP) == 0U)                                    \
   INEp->DIEPCTL |= ((maxpacket & USB_OTG_DIEPCTL_MPSIZ ) | (type << 18 ) |                 \
     ((EPn) << 22 ) | (USB_OTG_DIEPCTL_SD0PID_SEVNFRM) | (USB_OTG_DIEPCTL_USBAEP));         \
 }while(0)
@@ -99,6 +116,7 @@ do{                                                                             
     maxpacket = __CLZ(maxpacket) - 25;                                                     \
   }                                                                                        \
   USBx_DEVICE->DAINTMSK |=  ( (USB_OTG_DAINTMSK_OEPM) & ( (1 << (EPn))<<16 ) );            \
+  if (((USBx_OUTEP(EPn)->DOEPCTL) & USB_OTG_DOEPCTL_USBAEP) == 0U)                         \
   USBx_OUTEP(EPn)->DOEPCTL |= ((maxpacket & USB_OTG_DOEPCTL_MPSIZ ) | (type << 18 ) |      \
     (USB_OTG_DOEPCTL_SD0PID_SEVNFRM) | (USB_OTG_DIEPCTL_USBAEP));                          \
 }while(0)
@@ -130,12 +148,5 @@ do{\
     GetUSB(dev)->GRXFSIZ = (size/4);\
   }while(0)
 
-#define  STALL_EP0(dev) \
-do{\
-  PCD_TypeDef* USBx =  GetUSB(dev);\
-  USBx_INEP(0)->DIEPCTL |= USB_OTG_DIEPCTL_STALL;\
-  USBx_OUTEP(0)->DOEPCTL |= USB_OTG_DOEPCTL_STALL;\
-}while(0)
-  
 #endif
 

@@ -27,16 +27,12 @@
 
 #if defined(USB_OTG_FS) || defined(USB_OTG_HS)
 
-// Public functions used by user app
-int tusb_send_data(tusb_device_t* dev, uint8_t EPn, const void* data, uint16_t len);
-int tusb_set_recv_buffer(tusb_device_t* dev, uint8_t EPn, void* data, uint16_t len);
-void tusb_set_rx_valid(tusb_device_t* dev, uint8_t EPn);
-
-
 // Private functions used by teeny usb core
 void tusb_send_data_done(tusb_device_t* dev, uint8_t EPn);
 uint32_t tusb_read_ep0(tusb_device_t* dev, void* buf);
 void tusb_recv_data(tusb_device_t* dev, uint8_t EPn, uint16_t EP);
+static void tusb_otg_device_prepare_setup(tusb_device_t* dev);
+void tusb_setup_handler(tusb_device_t* dev);
 
 #ifdef HAS_DOUBLE_BUFFER
 #define  DOUBLE_BUFF 1
@@ -92,13 +88,15 @@ static uint32_t get_max_out_packet_size(PCD_TypeDef* USBx, uint8_t EPn)
   return maxpacket;
 }
 
-int tusb_send_data(tusb_device_t* dev, uint8_t EPn, const void* data, uint16_t len)
+int tusb_send_data(tusb_device_t* dev, uint8_t EPn, const void* data, uint16_t len, uint8_t option)
 {
   PCD_TypeDef* USBx = GetUSB(dev);
   tusb_ep_data* ep = &dev->Ep[EPn];
   uint32_t maxpacket = GetInMaxPacket(dev, EPn);
   uint32_t pktCnt;
   uint32_t total_len = len;
+  ep->tx_total_size = len;
+  ep->tx_need_zlp = (TUSB_TXF_ZLP & option) != 0;
   USB_OTG_INEndpointTypeDef* epin = USBx_INEP(EPn);
   ep->tx_buf = (const uint8_t*)data;
   if(epin->DIEPCTL & USB_OTG_DIEPCTL_EPENA){
@@ -112,7 +110,7 @@ int tusb_send_data(tusb_device_t* dev, uint8_t EPn, const void* data, uint16_t l
     }
   }
   // set remain size of tx buffer, current tx size is saved in the DIEPTSIZ register
-  ep->tx_size = total_len - len;
+  ep->tx_remain_size = total_len - len;
   // calculate last packet size
   ep->tx_last_size = len ? (len-1) % maxpacket + 1 : 0;
   
@@ -138,6 +136,9 @@ int tusb_send_data(tusb_device_t* dev, uint8_t EPn, const void* data, uint16_t l
   
   
   if(USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN){
+    if((uint32_t)ep->tx_buf & 3){
+      while(1);
+    }
     epin->DIEPDMA = (uint32_t)ep->tx_buf;
   }else{
     if(len > 0){
@@ -193,24 +194,37 @@ void tusb_send_data_done(tusb_device_t* dev, uint8_t EPn)
   PCD_TypeDef* USBx = GetUSB(dev);
   tusb_ep_data* ep = &dev->Ep[EPn];
   uint32_t maxpacket = get_max_in_packet_size(USBx, EPn);
-  //track(EPn, ep->tx_size, 3, ep->tx_last_size);
-  if(EPn == 0){
-    if(ep->tx_size){
-      tusb_send_data(dev, EPn, ep->tx_buf, ep->tx_size);
+  if(EPn == 0){    
+    if(ep->tx_remain_size){
+      tusb_send_data(dev, EPn, ep->tx_buf, ep->tx_remain_size, 0);
     }else if(ep->tx_last_size == maxpacket){
       // Send a ZLP
-      tusb_send_data(dev, EPn, ep->tx_buf, 0);
-    }else if(dev->ep0_tx_done){
-      // invoke status transmitted call back for ep0
-      dev->ep0_tx_done(dev);
-      dev->ep0_tx_done = 0;
+      tusb_send_data(dev, EPn, ep->tx_buf, 0, 0);
+      // Set the total size to 1, so ep0 done will start to recv status out
+      ep->tx_total_size = 1;
+    }else{
+      // EP0 send done
+      if(dev->ep0_tx_done){
+        // invoke status transmitted call back for ep0
+        dev->ep0_tx_done(dev);
+        dev->ep0_tx_done = 0;
+      }
+      if(ep->tx_total_size){
+        // borrow the setup buffer to recv status packet 
+        tusb_set_recv_buffer(dev, 0, &dev->setup, 24);
+        // prepare receive status packet
+        tusb_set_rx_valid(dev, 0);
+      }else{
+        // ep0 tx size = 1, status IN, prepare for setup
+        tusb_otg_device_prepare_setup(dev);
+      }
     }
   }else{
-    //if(ep->tx_last_size == maxpacket){
+    if(ep->tx_last_size == maxpacket && ep->tx_need_zlp){
       // Send a ZLP
-    //  tusb_send_data(dev, EPn, ep->tx_buf, 0);
-    //  return;
-    //}
+      tusb_send_data(dev, EPn, ep->tx_buf, 0, 0);
+      return;
+    }
     // clear the fifo empty mask
     tusb_on_tx_done(dev, EPn);
   }
@@ -239,9 +253,14 @@ void tusb_set_rx_valid(tusb_device_t* dev, uint8_t EPn)
     // avoid zero packet count, used to send ZLP(zero length packet) 
     pktCnt = 1;
   }
-  if(len) len = pktCnt * maxpacket;
+  len = pktCnt * maxpacket;
   // clear and set the EPT size field
-  epout->DOEPTSIZ =  (pktCnt<<19) | len;
+  
+  epout->DOEPTSIZ &= ~(USB_OTG_DOEPTSIZ_XFRSIZ); 
+  epout->DOEPTSIZ &= ~(USB_OTG_DOEPTSIZ_PKTCNT); 
+  
+  
+  epout->DOEPTSIZ |=  (pktCnt<<19) | len;
   
   if(USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN){
     epout->DOEPDMA = (uint32_t)ep->rx_buf;
@@ -257,11 +276,6 @@ void tusb_set_rx_valid(tusb_device_t* dev, uint8_t EPn)
   epout->DOEPCTL |= (USB_OTG_DOEPCTL_CNAK | USB_OTG_DOEPCTL_EPENA);
 }
 
-
-#define  INTR()   (USBx->GINTSTS & USBx->GINTMSK)
-
-void tusb_setup_handler(tusb_device_t* dev);
-
 static void tusb_otg_device_prepare_setup(tusb_device_t* dev)
 {
   USB_OTG_GlobalTypeDef *USBx = GetUSB(dev);
@@ -272,9 +286,50 @@ static void tusb_otg_device_prepare_setup(tusb_device_t* dev)
     /* EP enable */
     outep->DOEPCTL = 0x80008000;
   }
-  outep->DOEPCTL |= (USB_OTG_DOEPCTL_CNAK | USB_OTG_DOEPCTL_EPENA);
 }
 
+void tusb_set_stall(tusb_device_t* dev, uint8_t EPn)
+{
+  PCD_TypeDef* USBx =  GetUSB(dev);
+  uint8_t ep = EPn & 0x7f;
+  if(ep == 0){
+    USBx_INEP(0)->DIEPCTL |= USB_OTG_DIEPCTL_STALL;
+    USBx_OUTEP(0)->DOEPCTL |= USB_OTG_DOEPCTL_STALL;
+    tusb_otg_device_prepare_setup(dev);
+  }else{
+    if(EPn & 0x80){
+      USBx_INEP(ep)->DIEPCTL |= USB_OTG_DIEPCTL_STALL;
+    }else{
+      USBx_OUTEP(ep)->DOEPCTL |= USB_OTG_DOEPCTL_STALL;
+    }
+  }
+}
+
+void tusb_clear_stall(tusb_device_t* dev, uint8_t EPn)
+{
+  PCD_TypeDef* USBx =  GetUSB(dev);
+  uint8_t ep = EPn & 0x7f;
+  if(ep == 0){
+    USBx_INEP(0)->DIEPCTL &= ~USB_OTG_DIEPCTL_STALL;
+    USBx_OUTEP(0)->DOEPCTL &= ~USB_OTG_DOEPCTL_STALL;
+  }else{
+    if(EPn & 0x80){
+      uint32_t type = (USBx_INEP(ep)->DIEPCTL & USB_OTG_DIEPCTL_EPTYP) >> USB_OTG_DIEPCTL_EPTYP_Pos;
+      USBx_INEP(ep)->DIEPCTL &= ~USB_OTG_DIEPCTL_STALL;
+      if(type == USB_EP_INTERRUPT || type == USB_EP_BULK){
+        USBx_INEP(ep)->DIEPCTL |= USB_OTG_DIEPCTL_SD0PID_SEVNFRM; /* DATA0 */
+      }
+    }else{
+      uint32_t type = (USBx_OUTEP(ep)->DOEPCTL & USB_OTG_DOEPCTL_EPTYP) >> USB_OTG_DOEPCTL_EPTYP_Pos;
+      USBx_OUTEP(ep)->DOEPCTL &= ~USB_OTG_DOEPCTL_STALL;
+      if(type == USB_EP_INTERRUPT || type == USB_EP_BULK){
+        USBx_OUTEP(ep)->DOEPCTL |= USB_OTG_DOEPCTL_SD0PID_SEVNFRM; /* DATA0 */
+      }
+    }
+  }
+}
+
+#define  INTR()   (USBx->GINTSTS & USBx->GINTMSK)
 // Interrupt handler of DEVICE mode
 void tusb_otg_device_handler(tusb_device_t* dev)
 {
@@ -327,8 +382,10 @@ void tusb_otg_device_handler(tusb_device_t* dev)
                   dev->ep0_rx_done = 0;
                 }
                 ep->rx_buf = 0;
-                // prepare ep0 to recv next setup packet
-                tusb_otg_device_prepare_setup(dev);
+                if(ep->rx_count == 0){
+                  // ep0 rx count = 0, got status out, re-enable setup packet receive
+                  tusb_otg_device_prepare_setup(dev);
+                }
               }else{
                 ep->rx_buf += ep->rx_count;
                 ep->rx_size -= ep->rx_count;
@@ -349,38 +406,45 @@ void tusb_otg_device_handler(tusb_device_t* dev)
             ep->rx_buf = 0;
             tusb_setup_handler(dev);
             if(ep->rx_buf){
+              // Data write setup
               // rx_buf is not null, means setup need write some data
               tusb_set_rx_valid(dev, EPn);
-            }else{
-              // otherwise prepare recv setup packet again
-              tusb_otg_device_prepare_setup(dev);
             }
-            
           }
           // clear all interrupt flags
           USBx_OUTEP(EPn)->DOEPINT = epint;
         }
         ep_intr>>=1;
-        EPn+=1;
+        EPn++;
       }
     }
 
     // handle input
     if(INTR() & USB_OTG_GINTSTS_IEPINT){
       uint32_t ep_intr = (USBx_DEVICE->DAINT & USBx_DEVICE->DAINTMSK) & 0xffff;
-      uint8_t ep = 0;
+      uint8_t EPn = 0;
       while(ep_intr){
-        if(ep >= MAX_EP_NUM){
+        if(EPn >= MAX_EP_NUM){
           break;
         }
         if (ep_intr & 0x1){
-          USB_OTG_INEndpointTypeDef* epin = USBx_INEP(ep);
+          USB_OTG_INEndpointTypeDef* epin = USBx_INEP(EPn);
           uint32_t epint = epin->DIEPINT;
           // Xfer complete interrupt handler
+          if(EPn == 0){
+            // Endpoint is 0, and DMA enabled, adjust the tx_buf pointer
+            // Endpoiny 0 always transfer max packet size
+            if(USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN){
+              tusb_ep_data* ep = &dev->Ep[EPn];
+              ep->tx_buf += GetInMaxPacket(dev, EPn);
+            }
+          }
+          
+          
           if(epint & USB_OTG_DIEPINT_XFRC){
-            USBx_DEVICE->DIEPEMPMSK &= ~(0x1ul << ep);
+            USBx_DEVICE->DIEPEMPMSK &= ~(0x1ul << EPn);
             epin->DIEPINT = USB_OTG_DIEPINT_XFRC;
-            tusb_send_data_done(dev, ep);
+            tusb_send_data_done(dev, EPn);
           }
           
 //          if(( epint & USB_OTG_DIEPINT_TOC) == USB_OTG_DIEPINT_TOC){
@@ -396,14 +460,14 @@ void tusb_otg_device_handler(tusb_device_t* dev)
 //            epin->DIEPINT = USB_OTG_DIEPINT_EPDISD;
 //          }
           // FIFO empty interrupt handler
-          if( ((epint & USB_OTG_DIEPINT_TXFE) == USB_OTG_DIEPINT_TXFE) && (USBx_DEVICE->DIEPEMPMSK & (1 << ep)) ){
-            tusb_fifo_empty(dev, ep);
+          if( ((epint & USB_OTG_DIEPINT_TXFE) == USB_OTG_DIEPINT_TXFE) && (USBx_DEVICE->DIEPEMPMSK & (1 << EPn)) ){
+            tusb_fifo_empty(dev, EPn);
           }
           // clear all interrupts
           epin->DIEPINT = epint;
         }
         ep_intr>>=1;
-        ep+=1;
+        EPn++;
       }
     }
     /* Handle Resume Interrupt */
@@ -419,25 +483,20 @@ void tusb_otg_device_handler(tusb_device_t* dev)
       // TODO: enter low power mode
       USBx->GINTSTS = USB_OTG_GINTSTS_USBSUSP;
     }
-
     /* Handle LPM Interrupt */
+#if defined(USB_OTG_GINTSTS_LPMINT)
     if(INTR() & USB_OTG_GINTSTS_LPMINT){
       USBx->GINTSTS = USB_OTG_GINTSTS_LPMINT;
     }
-
+#endif
     /* Handle Reset Interrupt */
     if(INTR() & USB_OTG_GINTSTS_USBRST ){
       uint32_t i;
       USBx_DEVICE->DCTL &= ~USB_OTG_DCTL_RWUSIG;
       flush_tx(USBx, 0x10);
-      for (i = 0; i < MAX_EP_NUM ; i++)
-      {
+      for (i = 0; i < MAX_EP_NUM ; i++){
         USBx_INEP(i)->DIEPINT = 0xFF;
-        USBx_INEP(i)->DIEPCTL &= ~USB_OTG_DIEPCTL_STALL;
-        USBx_INEP(i)->DIEPCTL |= USB_OTG_DIEPCTL_EPDIS;
         USBx_OUTEP(i)->DOEPINT = 0xFF;
-        USBx_OUTEP(i)->DOEPCTL &= ~USB_OTG_DOEPCTL_STALL;
-        USBx_OUTEP(i)->DOEPCTL |= USB_OTG_DOEPCTL_EPDIS;
       }
       USBx_DEVICE->DAINT = 0xFFFFFFFF;
       USBx_DEVICE->DAINTMSK |= 0x10001;

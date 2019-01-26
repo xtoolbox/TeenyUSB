@@ -47,7 +47,7 @@ WEAK const uint8_t* tusb_get_report_descriptor(tusb_device_t* dev, tusb_setup_pa
 // User need override it if the class need some special request
 WEAK void tusb_class_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
 {
-  tusb_send_data(dev, 0, 0, 0);
+  tusb_send_status(dev);
 }
 
 // Standard get descriptor function
@@ -82,46 +82,53 @@ static void tusb_get_descriptor(tusb_device_t* dev, tusb_setup_packet *req)
 #endif
       break;
     }
-    // For all speed device, support the DEVICE_QUALIFIER 
+#if defined(SUPPORT_OTHER_SPEED)
+    // For High speed device, support the DEVICE_QUALIFIER 
     // and OTHER_SPEED_CONFIGURATION request
     case USB_DESC_TYPE_DEVICE_QUALIFIER:
     {
-      static __ALIGN_BEGIN uint8_t device_qualifer_desc_buffer[USB_LEN_DEV_QUALIFIER_DESC];
-      // just copy the device descriptor to qualifer descriptor
-      device_qualifer_desc_buffer[0] = USB_LEN_DEV_QUALIFIER_DESC;
-      device_qualifer_desc_buffer[1] = USB_DESC_TYPE_DEVICE_QUALIFIER;
-      memcpy(device_qualifer_desc_buffer+2, dev->descriptors->device + 2, 6);
+#if defined(DESCRIPTOR_BUFFER_SIZE) && DESCRIPTOR_BUFFER_SIZE > 0
+      dev->desc_buffer[0] = USB_LEN_DEV_QUALIFIER_DESC;
+      dev->desc_buffer[1] = USB_DESC_TYPE_DEVICE_QUALIFIER;
+      memcpy(dev->desc_buffer+2, dev->descriptors->device + 2, 6);
       // set the bNumConfigurations field
-      device_qualifer_desc_buffer[8] = dev->descriptors->device[17];
+      dev->desc_buffer[8] = dev->descriptors->device[17];
       // set bReserved field to zero
-      device_qualifer_desc_buffer[9] = 0;
+      dev->desc_buffer[9] = 0;
       len = USB_LEN_DEV_QUALIFIER_DESC;
-      desc = device_qualifer_desc_buffer;
+      desc = dev->desc_buffer;
+#else
+      desc = 0;
+#endif
+      
       break;
     }
     case USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION:
     {
-      static __ALIGN_BEGIN uint8_t device_other_speed_desc_buffer[1024];
+#if defined(DESCRIPTOR_BUFFER_SIZE) && DESCRIPTOR_BUFFER_SIZE > 0
       desc = dev->descriptors->config;
       if(desc)len = *((uint16_t*)desc + 1);
-      if(len <= sizeof(device_other_speed_desc_buffer)){
-        // if config total length is less than the buffer, copy it to the buffer,
-        // and set it type to OTHER_SPEED_CONFIGURATION
-        memcpy(device_other_speed_desc_buffer, desc, len);
-        device_other_speed_desc_buffer[1] = USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION;
-        desc = device_other_speed_desc_buffer;
-      }else{
-        // otherwise return a fail status
-        desc = 0;
-      }
+      memcpy(dev->desc_buffer, desc, len);
+      dev->desc_buffer[1] = USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION;
+      desc = dev->desc_buffer;
+#else
+      desc = 0;
+#endif
       break;
     }
+#endif  // SUPPORT_OTHER_SPEED
   }
-  if(desc){
-    tusb_send_data(dev, 0, desc,
-          req->wLength > len ? len : req->wLength);
+  if(desc){    
+    len = req->wLength > len ? len : req->wLength;
+#if defined(DESCRIPTOR_BUFFER_SIZE) && DESCRIPTOR_BUFFER_SIZE > 0
+    if(dev->desc_buffer != desc){
+      memcpy(dev->desc_buffer, desc, len);
+      desc = dev->desc_buffer;
+    }
+#endif
+    tusb_control_send(dev, desc, len);
   }else{
-    STALL_EP0(dev);
+    tusb_set_stall(dev, 0);
   }
 }
 
@@ -162,8 +169,16 @@ static void tusb_vendor_request(tusb_device_t* dev, tusb_setup_packet* setup_req
         break;
   }
   // TODO: Handle length more than 0xffff
-  tusb_send_data(dev, 0, desc,
-          setup_req->wLength > len ? len : setup_req->wLength);
+  len = setup_req->wLength > len ? len : setup_req->wLength;
+#if defined(DESCRIPTOR_BUFFER_SIZE) && DESCRIPTOR_BUFFER_SIZE > 0
+  if(desc){
+    if(dev->desc_buffer != desc){
+      memcpy(dev->desc_buffer, desc, len);
+      desc = dev->desc_buffer;
+    }
+  }
+#endif
+  tusb_control_send(dev, desc, len);
 }
 #endif
 
@@ -194,6 +209,7 @@ static void tusb_standard_request(tusb_device_t* dev, tusb_setup_packet* setup_r
     break;
    }
    */
+   static __ALIGN_BEGIN uint32_t temp __ALIGN_END;
   switch (setup_req->bRequest) {
   case USB_REQ_SET_ADDRESS:
     dev->addr = LO_BYTE(setup_req->wValue);
@@ -202,7 +218,7 @@ static void tusb_standard_request(tusb_device_t* dev, tusb_setup_packet* setup_r
 #else
     dev->ep0_tx_done = tusb_fs_set_addr;
 #endif
-    tusb_send_data(dev, 0, 0, 0);
+    tusb_send_status(dev);
     break;
   
   case USB_REQ_GET_DESCRIPTOR:
@@ -210,43 +226,46 @@ static void tusb_standard_request(tusb_device_t* dev, tusb_setup_packet* setup_r
     break;
   
   case USB_REQ_GET_STATUS:
-    tusb_send_data(dev, 0, (uint16_t *) &dev->status, 2);
+    temp = dev->status;
+    tusb_control_send(dev, &temp, 2);
     break;
   
   // Only support one configuration, so just save and return the config value
   case USB_REQ_GET_CONFIGURATION:
-    tusb_send_data(dev, 0, (uint16_t *) &dev->config, 1);
+    temp = dev->config;
+    tusb_control_send(dev, &temp, 1);
     break;
   
   case USB_REQ_SET_CONFIGURATION:
     dev->config = LO_BYTE(setup_req->wValue);
-    tusb_send_data(dev, 0, 0, 0);
+    tusb_send_status(dev);
     break;
   // Only support one alt setting, so just save and return the alt value
   case USB_REQ_GET_INTERFACE:
-    tusb_send_data(dev, 0, &dev->alt_cfg, 1);
+    temp = dev->alt_cfg;
+    tusb_control_send(dev, &temp, 1);
     break;
   case USB_REQ_SET_INTERFACE:
     dev->alt_cfg = LO_BYTE(setup_req->wValue);
-    tusb_send_data(dev, 0, 0, 0);
+    tusb_send_status(dev);
     break;
   case USB_REQ_SET_FEATURE:
     if(setup_req->wValue == USB_FEATURE_REMOTE_WAKEUP){
       dev->remote_wakeup = 1;
-      tusb_send_data(dev, 0, 0, 0);
+      tusb_send_status(dev);
       break;
     }
     // otherwise fall to default
   case USB_REQ_CLEAR_FEATURE:
     if(setup_req->wValue == USB_FEATURE_REMOTE_WAKEUP){
       dev->remote_wakeup = 0;
-      tusb_send_data(dev, 0, 0, 0);
+      tusb_send_status(dev);
       break;
     }
     // otherwise fall to default
   default:
     // Error condition, stall ep0
-    STALL_EP0(dev);
+    tusb_set_stall(dev, 0);
     break;
   }
 }
@@ -295,3 +314,17 @@ WEAK int tusb_on_rx_done(tusb_device_t* dev, uint8_t EPn, const void* data, uint
 WEAK void tusb_reconfig(tusb_device_t* dev)
 {
 }
+
+
+
+
+// Macro check
+#if defined(SUPPORT_OTHER_SPEED)
+#ifndef DESCRIPTOR_BUFFER_SIZE
+#error Other speed descriptor enabled, but descriptor buffer size not defined
+#elif DESCRIPTOR_BUFFER_SIZE == 0
+#error Other speed descriptor enabled, but descriptor buffer size too small
+#endif
+#endif
+
+
