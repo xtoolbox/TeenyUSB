@@ -297,21 +297,21 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
   tusb_hc_data_t* hc = &host->hc[ch_num];
   uint32_t tmpreg;
   
-  if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_AHBERR) == USB_OTG_HCINT_AHBERR)
+  if ((HC->HCINT & USB_OTG_HCINT_AHBERR) == USB_OTG_HCINT_AHBERR)
   {
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_AHBERR);
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
   }
-  else if( (USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_BBERR) == USB_OTG_HCINT_BBERR )
+  else if( (HC->HCINT & USB_OTG_HCINT_BBERR) == USB_OTG_HCINT_BBERR )
   {
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_BBERR);
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_ACK) == USB_OTG_HCINT_ACK)
+  else if ((HC->HCINT & USB_OTG_HCINT_ACK) == USB_OTG_HCINT_ACK)
   {
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_ACK);
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_STALL) == USB_OTG_HCINT_STALL)
+  else if ((HC->HCINT & USB_OTG_HCINT_STALL) == USB_OTG_HCINT_STALL)
   {
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
     hc->state = TUSB_CS_STALL;
@@ -319,7 +319,7 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_STALL);
     tusb_otg_halt_channel(USBx, ch_num);
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_DTERR) == USB_OTG_HCINT_DTERR)
+  else if ((HC->HCINT & USB_OTG_HCINT_DTERR) == USB_OTG_HCINT_DTERR)
   {
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
     tusb_otg_halt_channel(USBx, ch_num);
@@ -332,18 +332,18 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
     /* ... */
   }
 
-  if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_FRMOR) == USB_OTG_HCINT_FRMOR)
+  if ((HC->HCINT & USB_OTG_HCINT_FRMOR) == USB_OTG_HCINT_FRMOR)
   {
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
     tusb_otg_halt_channel(USBx, ch_num);
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_FRMOR);
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_XFRC) == USB_OTG_HCINT_XFRC)
+  else if ((HC->HCINT & USB_OTG_HCINT_XFRC) == USB_OTG_HCINT_XFRC)
   {
     uint32_t HcEpType = (HC->HCCHAR & USB_OTG_HCCHAR_EPTYP) >> 18;
     if (USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN)
     {
-      hc->count = hc->size - (USBx_HC(ch_num)->HCTSIZ & USB_OTG_HCTSIZ_XFRSIZ);
+      hc->count = hc->size - (HC->HCTSIZ & USB_OTG_HCTSIZ_XFRSIZ);
     }
 
     hc->state = TUSB_CS_TRANSFER_COMPLETE;
@@ -359,7 +359,7 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
     }
     else if(HcEpType == HCCHAR_INTR)
     {
-      USBx_HC(ch_num)->HCCHAR |= USB_OTG_HCCHAR_ODDFRM;
+      HC->HCCHAR |= USB_OTG_HCCHAR_ODDFRM;
       hc->xfer_done = 1;
       tusb_on_channel_event(host, ch_num);
     }
@@ -370,7 +370,7 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
     hc->toggle_in ^= 1U;
 
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_CHH) == USB_OTG_HCINT_CHH)
+  else if ((HC->HCINT & USB_OTG_HCINT_CHH) == USB_OTG_HCINT_CHH)
   {
     __HAL_HCD_MASK_HALT_HC_INT(ch_num);
 
@@ -398,19 +398,19 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
       }
 
       /* re-activate the channel  */
-      tmpreg = USBx_HC(ch_num)->HCCHAR;
+      tmpreg = HC->HCCHAR;
       tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
       tmpreg |= USB_OTG_HCCHAR_CHENA;
-      USBx_HC(ch_num)->HCCHAR = tmpreg;
+      HC->HCCHAR = tmpreg;
     }
     else if (hc->state == TUSB_CS_NAK)
     {
       //hhcd->hc[ch_num].urb_state  = URB_NOTREADY;
       /* re-activate the channel  */
-      tmpreg = USBx_HC(ch_num)->HCCHAR;
+      tmpreg = HC->HCCHAR;
       tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
       tmpreg |= USB_OTG_HCCHAR_CHENA;
-      USBx_HC(ch_num)->HCCHAR = tmpreg;
+      HC->HCCHAR = tmpreg;
     }
     else
     {
@@ -420,7 +420,7 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
     tusb_on_channel_event(host, ch_num);
     //HAL_HCD_HC_NotifyURBChange_Callback(hhcd, (uint8_t)ch_num, hhcd->hc[ch_num].urb_state);
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_TXERR) == USB_OTG_HCINT_TXERR)
+  else if ((HC->HCINT & USB_OTG_HCINT_TXERR) == USB_OTG_HCINT_TXERR)
   {
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
     hc->error_count++;
@@ -428,7 +428,7 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
     tusb_otg_halt_channel(USBx, ch_num);
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_TXERR);
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_NAK) == USB_OTG_HCINT_NAK)
+  else if ((HC->HCINT & USB_OTG_HCINT_NAK) == USB_OTG_HCINT_NAK)
   {
     uint32_t HcEpType = (HC->HCCHAR & USB_OTG_HCCHAR_EPTYP) >> 18;
     if(HcEpType == HCCHAR_INTR)
@@ -464,15 +464,16 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
 static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
 {
   USB_OTG_GlobalTypeDef *USBx = GetUSB(host);
+  USB_OTG_HostChannelTypeDef* HC = USBx_HC(ch_num);
   tusb_hc_data_t* hc = &host->hc[ch_num];
   uint32_t tmpreg;
 
-  if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_AHBERR) == USB_OTG_HCINT_AHBERR)
+  if ((HC->HCINT & USB_OTG_HCINT_AHBERR) == USB_OTG_HCINT_AHBERR)
   {
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_AHBERR);
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_ACK) == USB_OTG_HCINT_ACK)
+  else if ((HC->HCINT & USB_OTG_HCINT_ACK) == USB_OTG_HCINT_ACK)
   {
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_ACK);
 
@@ -484,7 +485,7 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
       tusb_otg_halt_channel(USBx, ch_num);
     }
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_NYET) == USB_OTG_HCINT_NYET)
+  else if ((HC->HCINT & USB_OTG_HCINT_NYET) == USB_OTG_HCINT_NYET)
   {
     hc->state = TUSB_CS_NYET;
     hc->do_ping = 1U;
@@ -493,13 +494,13 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
     tusb_otg_halt_channel(USBx, ch_num);
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_NYET);
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_FRMOR) == USB_OTG_HCINT_FRMOR)
+  else if ((HC->HCINT & USB_OTG_HCINT_FRMOR) == USB_OTG_HCINT_FRMOR)
   {
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
     tusb_otg_halt_channel(USBx, ch_num);
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_FRMOR);
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_XFRC) == USB_OTG_HCINT_XFRC)
+  else if ((HC->HCINT & USB_OTG_HCINT_XFRC) == USB_OTG_HCINT_XFRC)
   {
     hc->error_count = 0U;
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
@@ -507,14 +508,14 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_XFRC);
     hc->state = TUSB_CS_TRANSFER_COMPLETE;
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_STALL) == USB_OTG_HCINT_STALL)
+  else if ((HC->HCINT & USB_OTG_HCINT_STALL) == USB_OTG_HCINT_STALL)
   {
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_STALL);
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
     tusb_otg_halt_channel(USBx, ch_num);
     hc->state = TUSB_CS_STALL;
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_NAK) == USB_OTG_HCINT_NAK)
+  else if ((HC->HCINT & USB_OTG_HCINT_NAK) == USB_OTG_HCINT_NAK)
   {
     hc->error_count = 0U;
     hc->state = TUSB_CS_NAK;
@@ -527,14 +528,14 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
     tusb_otg_halt_channel(USBx, ch_num);
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_NAK);
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_TXERR) == USB_OTG_HCINT_TXERR)
+  else if ((HC->HCINT & USB_OTG_HCINT_TXERR) == USB_OTG_HCINT_TXERR)
   {
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
     tusb_otg_halt_channel(USBx, ch_num);
     hc->state = TUSB_CS_TRANSACTION_ERROR;
      __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_TXERR);
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_DTERR) == USB_OTG_HCINT_DTERR)
+  else if ((HC->HCINT & USB_OTG_HCINT_DTERR) == USB_OTG_HCINT_DTERR)
   {
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
     tusb_otg_halt_channel(USBx, ch_num);
@@ -542,12 +543,12 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_DTERR);
     hc->state = TUSB_CS_DT_ERROR;
   }
-  else if ((USBx_HC(ch_num)->HCINT & USB_OTG_HCINT_CHH) == USB_OTG_HCINT_CHH)
+  else if ((HC->HCINT & USB_OTG_HCINT_CHH) == USB_OTG_HCINT_CHH)
   {
     __HAL_HCD_MASK_HALT_HC_INT(ch_num);
 
     if (hc->state == TUSB_CS_TRANSFER_COMPLETE){
-      uint32_t HcEpType = (USBx_HC(ch_num)->HCCHAR & USB_OTG_HCCHAR_EPTYP) >> 18;
+      uint32_t HcEpType = (HC->HCCHAR & USB_OTG_HCCHAR_EPTYP) >> 18;
       if(HcEpType == HCCHAR_BULK){
         hc->toggle_out ^= 1U;
       }
@@ -556,10 +557,10 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
     else if (hc->state == TUSB_CS_NAK)
     {
       /* re-activate the channel  */
-      //tmpreg = USBx_HC(ch_num)->HCCHAR;
+      //tmpreg = HC->HCCHAR;
       //tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
       //tmpreg |= USB_OTG_HCCHAR_CHENA;
-      //USBx_HC(ch_num)->HCCHAR = tmpreg;
+      //HC->HCCHAR = tmpreg;
       //hhcd->hc[ch_num].urb_state = URB_NOTREADY;
     }
     else if (hc->state == TUSB_CS_NYET)
@@ -585,10 +586,10 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
       }
 
       /* re-activate the channel  */
-      tmpreg = USBx_HC(ch_num)->HCCHAR;
+      tmpreg = HC->HCCHAR;
       tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
       tmpreg |= USB_OTG_HCCHAR_CHENA;
-      USBx_HC(ch_num)->HCCHAR = tmpreg;
+      HC->HCCHAR = tmpreg;
     }
     else
     {
@@ -858,6 +859,7 @@ void tusb_otg_host_handler(tusb_host_t* host)
         tusb_otg_send_data(host, ch_num);
         break;
       }
+      ch_num++;
       mask>>=1;
     }
     if(!host->ptx_pending){
@@ -874,6 +876,7 @@ void tusb_otg_host_handler(tusb_host_t* host)
         tusb_otg_send_data(host, ch_num);
         break;
       }
+      ch_num++;
       mask>>=1;
     }
     if(!host->nptx_pending){
@@ -1044,15 +1047,21 @@ static void tusb_otg_send_data(tusb_host_t* host, uint8_t hc_num)
   tusb_hc_data_t* hc = &host->hc[hc_num];
   uint32_t i;
   uint32_t act_len;
+  uint32_t req_size;
   uint32_t *pSrc = (uint32_t *)hc->ch_buf;
   uint32_t len = hc->size;
   // len = (len+3)/4;
   if(xfer_type == EP_TYPE_CTRL || xfer_type == EP_TYPE_BULK){
-    act_len = USBx->HNPTXSTS & 0xFFFFU;
+    act_len = USBx->HNPTXSTS;
   }else{
-    act_len = USBx_HOST->HPTXSTS & 0xFFFFU;
+    act_len = USBx_HOST->HPTXSTS;
   }
-  act_len = ( act_len*4 / mps )  * mps;
+  // calculate useful FIFO size, depend on two factor
+  // 1. remain [request queue space] * [max packet size]
+  req_size = ((act_len & 0xff0000) >> 16) * mps;
+  // 2. remain FIFO buffer size, round to max packet size boundary
+  act_len = ( (act_len & 0xffff) *4 / mps )  * mps;
+  if(act_len > req_size) act_len = req_size;
   if(len > act_len){
     len = len - act_len;
   }else{
@@ -1064,6 +1073,7 @@ static void tusb_otg_send_data(tusb_host_t* host, uint8_t hc_num)
     USBx_DFIFO((uint32_t)hc_num) = *((__packed uint32_t *)pSrc);
     pSrc++;
   }
+  
   hc->ch_buf = (uint8_t*)pSrc;
   hc->size = len;
   if(len){
@@ -1074,6 +1084,9 @@ static void tusb_otg_send_data(tusb_host_t* host, uint8_t hc_num)
       USBx->GINTMSK |= USB_OTG_GINTMSK_PTXFEM;
       host->ptx_pending |= (1<<hc_num);
     }
+  }else{
+    host->nptx_pending &= ~(1<<hc_num);
+    host->ptx_pending &= ~(1<<hc_num);
   }
 }
 
