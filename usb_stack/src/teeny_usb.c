@@ -23,31 +23,12 @@
  */
 #include "teeny_usb.h"
 #include "string.h"
-// Default function to get report descriptor
-// some class need report descriptor, e.g. HID, user should override it
-WEAK const uint8_t* tusb_get_report_descriptor(tusb_device_t* dev, tusb_setup_packet *req, uint16_t* len)
-{
-  /**
-   // example code for get report descriptor
-   uint16_t interfaceIndex = req->wIndex;
-   switch(interfaceIndex){
-     case 0: 
-         *len = interface_0_report_descriptor_size;
-         return interface_0_report_descriptor;
-     case 1:
-         *len = interface_1_report_descriptor_size;
-         return interface_1_report_descriptor;
-   }
-   */
-  *len = 0;
-  return 0;
-}
 
 // Default class request handler
 // User need override it if the class need some special request
-WEAK void tusb_class_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
+WEAK int tusb_class_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
 {
-  tusb_send_status(dev);
+  return 0;
 }
 
 // Standard get descriptor function
@@ -63,9 +44,6 @@ static void tusb_get_descriptor(tusb_device_t* dev, tusb_setup_packet *req)
     case USB_DESC_TYPE_CONFIGURATION:
       desc = dev->descriptors->config;
       if(desc)len = *((uint16_t*)desc + 1);
-      break;
-    case USB_DESC_TYPE_REPORT:
-      desc = tusb_get_report_descriptor(dev, req, &len);
       break;
     case USB_DESC_TYPE_STRING:
     {
@@ -280,15 +258,15 @@ void tusb_read_data(tusb_device_t* dev, void* buf, uint32_t len);
 void tusb_setup_handler(tusb_device_t* dev)
 {
   tusb_setup_packet *setup_req = &dev->setup;
-  if( (setup_req->bmRequestType & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_CLASS){
-    tusb_class_request(dev, setup_req);
-#if defined(HAS_WCID)
-  }else if((setup_req->bmRequestType & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_VENDOR){
-    tusb_vendor_request(dev, setup_req);
-#endif
-  }else{
-    tusb_standard_request(dev, setup_req);
+  if(tusb_class_request(dev, setup_req)){
+    return;
   }
+#if defined(HAS_WCID)
+  if((setup_req->bmRequestType & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_VENDOR){
+    tusb_vendor_request(dev, setup_req);
+  }
+#endif
+  tusb_standard_request(dev, setup_req);
 }
 
 // initial the ep recv buffer

@@ -437,7 +437,7 @@ int tusb_on_rx_done(tusb_device_t* dev, uint8_t EPn, const void* data, uint16_t 
 void tusb_reconfig(tusb_device_t* dev);
 
 /** Called when USB device need handle class request
- *  This is a WEAK function, default send status IN packet
+ *  This is a WEAK function, default return 0
  *  user application can override it to handle the class request
  *
  *  \ingroup Group_Device
@@ -445,23 +445,11 @@ void tusb_reconfig(tusb_device_t* dev);
  *
  *  \param[in]  dev          Indicate witch USB device need handle class request
  *  \param[in]  setup        Setup packet pointer
- */
-void tusb_class_request(tusb_device_t* dev, tusb_setup_packet* setup);
-
-
-/** Called when USB device need handle get report descriptor request
- *  This is a WEAK function, default send status IN packet
- *  user application can override it to handle the class request
  *
- *  \ingroup Group_Device
- *  \ingroup Group_Event
- *
- *  \param[in]   dev          Indicate witch USB device need handle get report descriptor request
- *  \param[in]   setup        Setup packet pointer
- *  \param[out]  len          length of the report descriptor
- *  \return      report descriptor pointer
+ *  \return       0 - the setup request is not processed by class, will be handle in TeenyUSB stack
+ *                1 - the setup request is processed by class, TeenyUSB stack will ignore it
  */
-const uint8_t* tusb_get_report_descriptor(tusb_device_t* dev, tusb_setup_packet *setup, uint16_t* len);
+int tusb_class_request(tusb_device_t* dev, tusb_setup_packet* setup);
 
 
 //////////////////////////////////////////////
