@@ -2,6 +2,8 @@ Teeny USB
 ==========
 A teeny USB stack for STM32 MCUs, also contain a toolset to create USB descriptors and drivers.
 
+关于TeenyUSB的实现细节和使用方式请阅读[《STM32 USB设备开发指南》](https://github.com/xtoolbox/TeenyUSB/releases/download/0.1/STM32_USB_desgin_guide.pdf)
+
 # 特性
 1. 设备例程：串口，5路串口，自定义HID，自定义设备批量传输(无需驱动)。
 2. 主机例程：无协议栈主机，键盘鼠标+HUB。
