@@ -84,6 +84,8 @@
 #endif
 
 
+#define  USBx_BASE   ((uint32_t)USBx)
+
 #if defined (NEED_MAX_PACKET)
 #undef NEED_MAX_PACKET
 #endif

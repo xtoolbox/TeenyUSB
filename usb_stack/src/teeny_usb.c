@@ -130,7 +130,7 @@ static void tusb_fs_set_addr(tusb_device_t* dev)
 #endif
 
 #if defined(HAS_WCID)
-static void tusb_vendor_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
+static int tusb_vendor_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
 {
   uint32_t len = 0;
   const uint8_t* desc = 0;
@@ -156,7 +156,11 @@ static void tusb_vendor_request(tusb_device_t* dev, tusb_setup_packet* setup_req
     }
   }
 #endif
-  tusb_control_send(dev, desc, len);
+  if(desc){
+    tusb_control_send(dev, desc, len);
+    return 1;
+  }
+  return 0;
 }
 #endif
 
@@ -263,7 +267,9 @@ void tusb_setup_handler(tusb_device_t* dev)
   }
 #if defined(HAS_WCID)
   if((setup_req->bmRequestType & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_VENDOR){
-    tusb_vendor_request(dev, setup_req);
+    if(tusb_vendor_request(dev, setup_req)){
+      return;
+    }
   }
 #endif
   tusb_standard_request(dev, setup_req);
