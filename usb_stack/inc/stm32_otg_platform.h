@@ -44,19 +44,39 @@
 #define USB_EP_BULK                                                   USBD_EP_TYPE_BULK
 #define USB_EP_INTERRUPT                                              USBD_EP_TYPE_INTR
 
-#if defined(STM32F7)
+#if defined(STM32F1)
+#define USB_OTG_FS_MAX_EP_NUM   4
+#define USB_OTG_FS_MAX_CH_NUM   8
+#define USB_OTG_HS_MAX_EP_NUM   0
+#define USB_OTG_HS_MAX_CH_NUM   0
+#define MAX_HC_NUM              8
+
+
+
+#elif defined(STM32F4) || defined(STM32F2)
+#define USB_OTG_FS_MAX_EP_NUM   4
+#define USB_OTG_HS_MAX_EP_NUM   6
+#define USB_OTG_FS_MAX_CH_NUM   8
+#define USB_OTG_HS_MAX_CH_NUM   12
+#define MAX_HC_NUM              12
+
+
+#elif defined(STM32F7)
 #define USB_OTG_FS_MAX_EP_NUM   6
 #define USB_OTG_HS_MAX_EP_NUM   9
 #define USB_OTG_FS_MAX_CH_NUM   12
 #define USB_OTG_HS_MAX_CH_NUM   16
 #define MAX_HC_NUM              16
 
-#elif defined(STM32F4)
-#define USB_OTG_FS_MAX_EP_NUM   4
-#define USB_OTG_HS_MAX_EP_NUM   6
-#define USB_OTG_FS_MAX_CH_NUM   8
-#define USB_OTG_HS_MAX_CH_NUM   12
-#define MAX_HC_NUM              12
+#elif defined(STM32H7)
+#define USB_OTG_FS_MAX_EP_NUM   9
+#define USB_OTG_HS_MAX_EP_NUM   9
+#define USB_OTG_FS_MAX_CH_NUM   16
+#define USB_OTG_HS_MAX_CH_NUM   16
+#define MAX_HC_NUM              16
+
+#define  GPIO_AF10_OTG_FS  GPIO_AF10_OTG1_FS
+#define  GPIO_AF10_OTG_HS  GPIO_AF10_OTG2_HS
 
 #else
 #error unsupport chip

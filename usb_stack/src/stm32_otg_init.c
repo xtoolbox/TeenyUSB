@@ -36,7 +36,11 @@
 
 // HS core always work in high speed
 #ifndef   OTG_HS_SPEED
+#if defined(USB_OTG_HS)
 #define   OTG_HS_SPEED      USB_OTG_SPEED_HIGH
+#else
+#define   OTG_HS_SPEED      OTG_FS_SPEED
+#endif
 #endif
 
 #if defined(OTG_HS_EMBEDDED_PHY) && defined(OTG_HS_EXTERNAL_PHY)
@@ -151,10 +155,13 @@ void tusb_close_core(tusb_core_t* core)
     __HAL_RCC_USB_OTG_FS_CLK_DISABLE();
     NVIC_DisableIRQ(OTG_FS_IRQn);
     // maybe need de-init the IOs
-  }else if(USBx == USB_OTG_HS){
+  }
+#if defined(USB_OTG_HS)
+	else if(USBx == USB_OTG_HS){
     __HAL_RCC_USB_OTG_HS_CLK_DISABLE();
     NVIC_DisableIRQ(OTG_HS_IRQn);
   }
+#endif
 }
 
 void tusb_close_device(tusb_device_t* dev)
@@ -171,6 +178,8 @@ void tusb_close_host(tusb_host_t* host)
 #define AFH(val, pin)   ((val)<< (( (pin)-8)*4))
 void set_io_af_mode(GPIO_TypeDef* GPIO, uint8_t pin, uint8_t af)
 {
+#if defined(STM32F1)
+#else
   GPIO->MODER &= ~(GPIO_MODER_MODER0 << (pin*2));
   GPIO->MODER |= (GPIO_MODER_MODER0_1 << (pin*2));
   GPIO->OTYPER &= ~(GPIO_OTYPER_OT_0 << pin);
@@ -182,6 +191,7 @@ void set_io_af_mode(GPIO_TypeDef* GPIO, uint8_t pin, uint8_t af)
     GPIO->AFR[0] &= ~( AFL(0xf,pin));
     GPIO->AFR[0] |= ( AFL(af,pin));
   }
+#endif
 }
 
 
@@ -196,9 +206,12 @@ static void tusb_setup_otg_fs_io(void)
   PA11     ------> USB_OTG_FS_DM
   PA12     ------> USB_OTG_FS_DP 
   */
+#if defined(STM32F1)
+#else
   __HAL_RCC_GPIOA_CLK_ENABLE();
   set_io_af_mode(GPIOA, 11, GPIO_AF10_OTG_FS);
   set_io_af_mode(GPIOA, 12, GPIO_AF10_OTG_FS);
+#endif
 #if defined(ENABLE_VBUS_DETECT)
   // Mode = Input
   GPIOA->MODER &= ~(GPIO_MODER_MODER9);
@@ -229,6 +242,7 @@ static void tusb_setup_otg_hs_io(void)
 static void tusb_otg_core_init(tusb_core_t* core)
 {
   USB_OTG_GlobalTypeDef* USBx = GetUSB(core);
+  (void)USBx;
   if(GetUSB(core) == USB_OTG_FS){
     // Init the FS core
 #if defined(OTG_FS_EMBEDDED_PHY)
@@ -246,7 +260,9 @@ static void tusb_otg_core_init(tusb_core_t* core)
     /* Deactivate the power down*/
     USBx->GCCFG = USB_OTG_GCCFG_PWRDWN;
 #endif
-  }else if(GetUSB(core) == USB_OTG_HS){
+  }
+#if defined(OTG_HS_EXTERNAL_PHY) || defined(OTG_HS_EMBEDDED_PHY)
+  else if(GetUSB(core) == USB_OTG_HS){
     // Init the HS core
     // 1. Init the IO
     // 2. Setup Interrupt
@@ -310,6 +326,7 @@ static void tusb_otg_core_init(tusb_core_t* core)
     /* Reset after a PHY select  */
     Wait_CoreReset(USBx);
   }
+#endif // defined(OTG_HS_EXTERNAL_PHY) || defined(OTG_HS_EMBEDDED_PHY)
 
 #if defined(OTG_HS_ENABLE_DMA)
   if(GetUSB(core) == USB_OTG_HS){
@@ -339,17 +356,18 @@ static void tusb_init_otg_device(tusb_device_t* dev)
 #if defined(ENABLE_VBUS_DETECT)
     USBx->GCCFG |= USB_OTG_GCCFG_VBUSBSEN;
 #else
+#if defined(USB_OTG_GCCFG_NOVBUSSENS)
     /* Enable VBUS */
     USBx->GCCFG |= USB_OTG_GCCFG_NOVBUSSENS;
+#endif
 #endif
 #endif
   
   USBx_PCGCCTL = 0;
   USBx_DEVICE->DCFG |= DCFG_FRAME_INTERVAL_80;
-  
-  
+
   USBx_DEVICE->DCFG |= USBx == USB_OTG_FS ? OTG_FS_SPEED : OTG_HS_SPEED;
-  
+
   flush_tx(USBx, 0x10);
   flush_rx(USBx);
   USBx_DEVICE->DIEPMSK = 0;

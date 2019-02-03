@@ -516,9 +516,11 @@ void tusb_otg_device_handler(tusb_device_t* dev)
       tusb_reconfig(dev);
       USBx->GUSBCFG &= ~USB_OTG_GUSBCFG_TRDT;
       switch(USBx_DEVICE->DSTS & USB_OTG_DSTS_ENUMSPD){
+#if defined(DSTS_ENUMSPD_HS_PHY_30MHZ_OR_60MHZ)
         case DSTS_ENUMSPD_HS_PHY_30MHZ_OR_60MHZ:
           USBx->GUSBCFG |= (uint32_t)((USBD_HS_TRDT_VALUE << 10) & USB_OTG_GUSBCFG_TRDT);
           break;
+#endif
         case DSTS_ENUMSPD_LS_PHY_6MHZ:
           USBx_INEP(0)->DIEPCTL |= 3; // force ep0 packet size to 8 when in LS mode
         case DSTS_ENUMSPD_FS_PHY_30MHZ_OR_60MHZ:

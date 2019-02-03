@@ -807,9 +807,13 @@ void tusb_otg_host_channel_handler(tusb_host_t* host, uint8_t hc_num)
         tusb_otg_halt_channel(USBx, hc_num);
         
       }else if ((HcEpType == HCCHAR_CTRL) || (HcEpType == HCCHAR_BULK)  ) {
+#if defined(USB_OTG_HS)
         if( ((USBx == USB_OTG_HS) && ((USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN) != 0)) ){
           // DMA enable, don't halt the channel
-        }else{
+        }
+        else
+#endif
+        {
           hc->state = TUSB_CS_NAK;
           UNMASK_HALT();
           tusb_otg_halt_channel(USBx, hc_num);
@@ -818,9 +822,11 @@ void tusb_otg_host_channel_handler(tusb_host_t* host, uint8_t hc_num)
     }else{
       hc->state = TUSB_CS_NAK;
       // In HS mode OUT ep, if NAK got, use ping to detect OUT status
+#if defined(USB_OTG_HS)
       if( USBx == USB_OTG_HS ){
         hc->do_ping = 1;
       }
+#endif
       UNMASK_HALT();
       tusb_otg_halt_channel(USBx, hc_num);
     }
@@ -1101,7 +1107,11 @@ uint32_t tusb_otg_host_submit(tusb_host_t* host, uint8_t hc_num)
   uint32_t len = hc->size;
   uint32_t data_pid = HC_PID_DATA1;
   uint8_t is_in = (HC->HCCHAR & USB_OTG_HCCHAR_EPDIR) != 0;
+#if defined(USB_OTG_HS)
   uint8_t is_dma = (USBx == USB_OTG_HS) && ((USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN) != 0);
+#else
+	uint8_t is_dma = 0;
+#endif
   uint8_t is_data = hc->is_data;
   uint8_t xfer_type = ((HC->HCCHAR & USB_OTG_HCCHAR_EPTYP) >> USB_OTG_HCCHAR_EPTYP_Pos);
   
@@ -1182,7 +1192,9 @@ uint32_t tusb_otg_host_xfer_data(tusb_host_t* host, uint8_t hc_num, uint8_t is_d
   tusb_hc_data_t* hc = &host->hc[hc_num];
   uint32_t mps = HC->HCCHAR & USB_OTG_HCCHAR_MPSIZ;
   uint8_t is_in = (HC->HCCHAR & USB_OTG_HCCHAR_EPDIR) != 0;
+#if defined(USB_OTG_HS)
   uint8_t is_dma = (USBx == USB_OTG_HS) && ((USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN) != 0);
+#endif
   hc->ch_buf = data;
   hc->size = len;
   hc->count = 0;
@@ -1194,6 +1206,7 @@ uint32_t tusb_otg_host_xfer_data(tusb_host_t* host, uint8_t hc_num, uint8_t is_d
   hc->nak_count = 0;
   
   if( ((HC->HCCHAR & USB_OTG_HCCHAR_EPTYP) >> USB_OTG_HCCHAR_EPTYP_Pos) == EP_TYPE_BULK){
+#if defined(USB_OTG_HS)
     if(USBx == USB_OTG_HS){
       if(is_dma){
         // DMA enabled, not ping
@@ -1203,6 +1216,7 @@ uint32_t tusb_otg_host_xfer_data(tusb_host_t* host, uint8_t hc_num, uint8_t is_d
         hc->do_ping = 1;
       }
     }
+#endif
   }
   tusb_otg_host_submit(host, hc_num);
   return 0;
