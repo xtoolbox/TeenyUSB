@@ -56,18 +56,27 @@
 #define  USB_CLR_CTR      ((uint16_t)~USB_ISTR_CTR   )
 #endif
 
+#define AFL(val, pin)   ((val)<< (( (pin))*4))
+#define AFH(val, pin)   ((val)<< (( (pin)-8)*4))
+static void set_io_af_mode(GPIO_TypeDef* GPIO, uint8_t pin, uint8_t af)
+{
+#if defined(STM32F3)
+  GPIO->MODER &= ~(GPIO_MODER_MODER0 << (pin*2));
+  GPIO->MODER |= (GPIO_MODER_MODER0_1 << (pin*2));
+  GPIO->OTYPER &= ~(GPIO_OTYPER_OT_0 << pin);
+  GPIO->OSPEEDR |= ( (GPIO_OSPEEDER_OSPEEDR0_0 | GPIO_OSPEEDER_OSPEEDR0_1)  << (pin*2) );
+  if(pin > 7){
+    GPIO->AFR[1] &= ~( AFH(0xf,pin));
+    GPIO->AFR[1] |= ( AFH(af,pin));
+  }else{
+    GPIO->AFR[0] &= ~( AFL(0xf,pin));
+    GPIO->AFR[0] |= ( AFL(af,pin));
+  }
+#endif
+}
 
 static void tusb_disconnect(tusb_device_t* dev)
 {
-#if defined(STM32F1)
-  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
-  // PA_12 output mode: OD = 0
-  GPIOA->CRH |= GPIO_CRH_CNF12_0;
-  GPIOA->CRH &= (~GPIO_CRH_CNF12_1);
-  GPIOA->CRH |= GPIO_CRH_MODE12;// PA_12 set as: Output mode, max speed 50 MHz.
-  GPIOA->BRR = GPIO_BRR_BR12;
-#endif
-
 #if defined(STM32F0)
 #ifdef USB_FS_INTERNAL_PULLUP
   RCC->APB1ENR |= RCC_APB1ENR_USBEN;
@@ -83,11 +92,31 @@ static void tusb_disconnect(tusb_device_t* dev)
 	GPIOA->BRR = GPIO_BRR_BR_12;
 #endif
 #endif
+
+#if defined(STM32F1)
+  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
+  // PA_12 output mode: OD = 0
+  GPIOA->CRH |= GPIO_CRH_CNF12_0;
+  GPIOA->CRH &= (~GPIO_CRH_CNF12_1);
+  GPIOA->CRH |= GPIO_CRH_MODE12;// PA_12 set as: Output mode, max speed 50 MHz.
+  GPIOA->BRR = GPIO_BRR_BR12;
+#endif
+
+#if defined(STM32F3)
+	RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+	GPIOA->MODER &= ~GPIO_MODER_MODER12;
+	GPIOA->MODER |= GPIO_MODER_MODER12_0;
+	GPIOA->BRR = GPIO_BRR_BR_12;
+#endif
 }
 
 
 void tusb_close_device(tusb_device_t* dev)
 {
+#if defined(STM32F0)
+  NVIC_DisableIRQ(USB_IRQn);
+#endif
+
 #if defined(STM32F1)
 #if defined(HAS_DOUBLE_BUFFER)
   NVIC_DisableIRQ(USB_HP_CAN1_TX_IRQn);
@@ -95,9 +124,13 @@ void tusb_close_device(tusb_device_t* dev)
   NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
 #endif
 
-#if defined(STM32F0)
-  NVIC_DisableIRQ(USB_IRQn);
+#if defined(STM32F3)
+#if defined(HAS_DOUBLE_BUFFER)
+  NVIC_DisableIRQ(USB_HP_CAN_TX_IRQn);
 #endif
+  NVIC_DisableIRQ(USB_LP_CAN_RX0_IRQn);
+#endif
+
   
   GetUSB()->ISTR = (0);
   // Turn USB Macrocell off (FRES + PWDN)
@@ -140,19 +173,6 @@ void tusb_open_device(tusb_device_t* dev)
   GetUSB(dev)->ISTR = (0);
   GetUSB(dev)->BTABLE = (BTABLE_ADDRESS);
   GetUSB(dev)->CNTR = (IMR_MSK);
-  
-#if defined(STM32F1)
-  // PA12 = Input
-  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
-  GPIOA->CRH |= GPIO_CRH_CNF12_0;
-  GPIOA->CRH &= ~GPIO_CRH_CNF12_1;
-  GPIOA->CRH &= ~GPIO_CRH_MODE12;
-  
-#if defined(HAS_DOUBLE_BUFFER)
-  NVIC_EnableIRQ(USB_HP_CAN1_TX_IRQn);
-#endif
-  NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
-#endif
 
 #if defined(STM32F0)
 #ifdef USB_FS_INTERNAL_PULLUP
@@ -166,6 +186,32 @@ void tusb_open_device(tusb_device_t* dev)
 #endif
   NVIC_EnableIRQ(USB_IRQn);
 #endif
+
+#if defined(STM32F1)
+  // PA12 = Input
+  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
+  GPIOA->CRH |= GPIO_CRH_CNF12_0;
+  GPIOA->CRH &= ~GPIO_CRH_CNF12_1;
+  GPIOA->CRH &= ~GPIO_CRH_MODE12;
+  
+#if defined(HAS_DOUBLE_BUFFER)
+  NVIC_EnableIRQ(USB_HP_CAN1_TX_IRQn);
+#endif
+  NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
+#endif
+
+#if defined(STM32F3)
+  // PA12 = Input
+  RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+	set_io_af_mode(GPIOA, 11, GPIO_AF14_USB);
+	set_io_af_mode(GPIOA, 12, GPIO_AF14_USB);
+	
+#if defined(HAS_DOUBLE_BUFFER)
+  NVIC_EnableIRQ(USB_HP_CAN_TX_IRQn);
+#endif
+  NVIC_EnableIRQ(USB_LP_CAN_RX0_IRQn);
+#endif
+
 }
 
 #ifndef USB_CNTR_LP_MODE
@@ -197,7 +243,11 @@ static tusb_device_t tusb_dev;
 // end point data handler, also called in USB_HP IRQ
 void tusb_ep_handler(tusb_device_t* dev, uint8_t EPn);
 
+#if defined(STM32F3)
+void USB_HP_CAN_TX_IRQHandler(void)
+#else
 void USB_HP_CAN1_TX_IRQHandler(void)
+#endif
 {
   uint16_t wIstr;
   tusb_device_t* dev = &tusb_dev;
@@ -209,6 +259,8 @@ void USB_HP_CAN1_TX_IRQHandler(void)
 
 #if defined(STM32F0)
 void USB_IRQHandler(void)
+#elif defined(STM32F3)
+void USB_LP_CAN_RX0_IRQHandler(void)
 #else
 void USB_LP_CAN1_RX0_IRQHandler(void)
 #endif
