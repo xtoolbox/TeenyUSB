@@ -363,6 +363,10 @@ static void tusb_init_otg_device(tusb_device_t* dev)
 #endif
 #endif
   
+#if defined(STM32F1)
+    USBx->GCCFG |= USB_OTG_GCCFG_VBUSBSEN;
+#endif
+
   USBx_PCGCCTL = 0;
   USBx_DEVICE->DCFG |= DCFG_FRAME_INTERVAL_80;
 
@@ -434,6 +438,7 @@ static void tusb_init_otg_device(tusb_device_t* dev)
   tusb_delay_ms(20);
   
   USBx_DEVICE->DCTL &= ~USB_OTG_DCTL_SDIS;
+  tusb_delay_ms(3);
   USBx->GAHBCFG |= USB_OTG_GAHBCFG_GINT;  
 }
 
@@ -538,6 +543,7 @@ void tusb_open_device(tusb_device_t* dev)
   tusb_otg_core_init((tusb_core_t*) dev);
   USBx->GUSBCFG &= ~(USB_OTG_GUSBCFG_FHMOD | USB_OTG_GUSBCFG_FDMOD);
   USBx->GUSBCFG |= USB_OTG_GUSBCFG_FDMOD;
+  tusb_delay_ms(50);
   tusb_init_otg_device(dev);
 }
 
