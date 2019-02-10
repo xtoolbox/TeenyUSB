@@ -35,6 +35,9 @@ A teeny USB stack for STM32 MCUs, also contain a toolset to create USB descripto
 | msc              | 虚拟U盘 Mass Storage | All Below      |
 | custom_hid       | 自定义 HID 设备      | All Below      |
 | cdc5             | 5路 CDC              | All Below      |
+| CubeMXF107       | CubeMX+TeenyUSB  自定义设备   | STM32F107VCT6 |
+| CubeMXF303       | CubeMX+TeenyUSB  自定义设备   | [STM32F3 Disco][303] |
+| CubeMXF723       | CubeMX+TeenyUSB  自定义设备   | [stm32f723e discovery][723] |
 
 ## USB主机例程 Demo for host
 The host is not stable right now
@@ -60,6 +63,7 @@ The host is not stable right now
 [767]: https://www.st.com/en/evaluation-tools/nucleo-f767zi.html
 [723]: https://www.st.com/en/evaluation-tools/32f723ediscovery.html
 [407]: http://www.waveshare.net/wiki/EVK407I
+[303]: https://www.st.com/en/evaluation-tools/stm32f3discovery.html
 
 
 # TeenyDT 描述符工具 TeenyDT Descriptor Tool
