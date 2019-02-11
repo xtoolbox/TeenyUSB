@@ -1,7 +1,17 @@
-/*
- * teeny usb - light weight usb stack for STM32 micro controllers
+/*       
+ *         _______                    _    _  _____ ____  
+ *        |__   __|                  | |  | |/ ____|  _ \ 
+ *           | | ___  ___ _ __  _   _| |  | | (___ | |_) |
+ *           | |/ _ \/ _ \ '_ \| | | | |  | |\___ \|  _ < 
+ *           | |  __/  __/ | | | |_| | |__| |____) | |_) |
+ *           |_|\___|\___|_| |_|\__, |\____/|_____/|____/ 
+ *                               __/ |                    
+ *                              |___/                     
+ *
+ * TeenyUSB - light weight usb stack for STM32 micro controllers
  * 
- * Copyright (c) 2018 XToolBox  - admin@xtoolbox.org
+ * Copyright (c) 2019 XToolBox  - admin@xtoolbox.org
+ *                         www.tusb.org
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
