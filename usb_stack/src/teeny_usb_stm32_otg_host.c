@@ -397,26 +397,22 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
             (hc->state == TUSB_CS_DT_ERROR))
     {
       hc->error_count++;
-      if(hc->error_count > 3U)
-      {
-        hc->error_count = 0U;
-        //hhcd->hc[ch_num].urb_state = URB_ERROR;
+      if(hc->error_count > MAX_ERROR_RETRY_TIME){
+        hc->xfer_done = 1;
+      }else{
+        /* re-activate the channel  */
+        tmpreg = HC->HCCHAR;
+        tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
+        tmpreg |= USB_OTG_HCCHAR_CHENA;
+        HC->HCCHAR = tmpreg;
       }
-      else
-      {
-        //hhcd->hc[ch_num].urb_state = TUSB_CS_XFER_ONGOING;
-      }
-
-      /* re-activate the channel  */
-      tmpreg = HC->HCCHAR;
-      tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
-      tmpreg |= USB_OTG_HCCHAR_CHENA;
-      HC->HCCHAR = tmpreg;
     }
     else if (hc->state == TUSB_CS_NAK)
     {
       //hhcd->hc[ch_num].urb_state  = URB_NOTREADY;
       /* re-activate the channel  */
+      hc->nak_count++;
+      hc->error_count = 0;
       tmpreg = HC->HCCHAR;
       tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
       tmpreg |= USB_OTG_HCCHAR_CHENA;
@@ -490,7 +486,6 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
     if( hc->do_ping == 1U)
     {
       hc->do_ping = 0U;
-      //hhcd->hc[ch_num].urb_state  = URB_NOTREADY;
       __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
       tusb_otg_halt_channel(USBx, ch_num);
     }
@@ -566,12 +561,12 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
     }
     else if (hc->state == TUSB_CS_NAK)
     {
+      hc->nak_count++;
       /* re-activate the channel  */
-      //tmpreg = HC->HCCHAR;
-      //tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
-      //tmpreg |= USB_OTG_HCCHAR_CHENA;
-      //HC->HCCHAR = tmpreg;
-      //hhcd->hc[ch_num].urb_state = URB_NOTREADY;
+      tmpreg = HC->HCCHAR;
+      tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
+      tmpreg |= USB_OTG_HCCHAR_CHENA;
+      HC->HCCHAR = tmpreg;
     }
     else if (hc->state == TUSB_CS_NYET)
     {
@@ -585,21 +580,15 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
             (hc->state == TUSB_CS_DT_ERROR))
     {
       hc->error_count++;
-      if (hc->error_count > 3U)
-      {
-        hc->error_count = 0U;
-        //hhcd->hc[ch_num].urb_state = URB_ERROR;
+      if(hc->error_count > MAX_ERROR_RETRY_TIME){
+        hc->xfer_done = 1;
+      }else{
+        /* re-activate the channel  */
+        tmpreg = HC->HCCHAR;
+        tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
+        tmpreg |= USB_OTG_HCCHAR_CHENA;
+        HC->HCCHAR = tmpreg;
       }
-      else
-      {
-        //hhcd->hc[ch_num].urb_state = URB_NOTREADY;
-      }
-
-      /* re-activate the channel  */
-      tmpreg = HC->HCCHAR;
-      tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
-      tmpreg |= USB_OTG_HCCHAR_CHENA;
-      HC->HCCHAR = tmpreg;
     }
     else
     {
@@ -613,240 +602,6 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
   {
      /* ... */
   }
-}
-
-
-// handle channel event 
-void tusb_otg_host_channel_handler(tusb_host_t* host, uint8_t hc_num)
-{
-#define  MASK_HALT()           do{ HC->HCINTMSK &= ~USB_OTG_HCINTMSK_CHHM; }while(0)
-#define  UNMASK_HALT()         do{ HC->HCINTMSK |= USB_OTG_HCINTMSK_CHHM; }while(0)
-#define  CLEAR_INT(interrupt)  do{ HC->HCINT = (interrupt); }while(0)
-  USB_OTG_GlobalTypeDef *USBx = GetUSB(host);
-  USB_OTG_HostChannelTypeDef* HC = USBx_HC(hc_num);
-  tusb_hc_data_t* hc = &host->hc[hc_num];
-  uint8_t is_in = (HC->HCCHAR & USB_OTG_HCCHAR_EPDIR) != 0;
-  if(HC->HCINT & USB_OTG_HCINT_XFRC){
-    // Transfer complete
-    CLEAR_INT(USB_OTG_HCINT_XFRC);
-    hc->state = TUSB_CS_TRANSFER_COMPLETE;
-    if(is_in){
-      uint32_t HcEpType = (HC->HCCHAR & USB_OTG_HCCHAR_EPTYP) >> 18;
-      // IN transfer, and DMA enabled
-      if(USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN){
-        hc->count = hc->size - (HC->HCTSIZ & USB_OTG_HCTSIZ_XFRSIZ);
-      }else{
-        // otherwise, rx data count will update in the tusb_otg_host_rx_handler
-      }
-      
-      if(HcEpType == HCCHAR_CTRL || HcEpType == HCCHAR_BULK){
-        CLEAR_INT(USB_OTG_HCINT_NAK);
-      }else if( HcEpType == HCCHAR_INTR ){
-        HC->HCCHAR |= USB_OTG_HCCHAR_ODDFRM;
-      }
-      hc->toggle_in ^= 1U;
-    }else{
-      // OUT transfer complete, host send data done
-    }
-    UNMASK_HALT();
-    tusb_otg_halt_channel(USBx, hc_num);
-    
-  }else if ( HC->HCINT & USB_OTG_HCINT_ACK ) {
-    if(!is_in){
-      // for out EP, ping ack means host can start OUT transaction
-      if(hc->do_ping){
-        // stop ping
-        hc->do_ping = 0;
-        hc->state = TSUB_CS_PING_SUCCESS;
-        // halt current channel, re-active in the halt interrupt
-        UNMASK_HALT();
-        tusb_otg_halt_channel(USBx, hc_num);
-      }
-    }else{
-      // IN EP will got data instead of ACK, never enter here
-    }
-    CLEAR_INT(USB_OTG_HCINT_ACK);
-    
-    
-  }else if( HC->HCINT & USB_OTG_HCINT_NYET ){
-    // not yet only for OUT ping
-    hc->state = TUSB_CS_NYET;
-    UNMASK_HALT();
-    tusb_otg_halt_channel(USBx, hc_num);
-    
-  }else if ( HC->HCINT & USB_OTG_HCINT_STALL ) {
-    CLEAR_INT(USB_OTG_HCINT_STALL);
-    CLEAR_INT(USB_OTG_HCINT_NAK);
-    hc->state = TUSB_CS_STALL;
-    UNMASK_HALT();
-    tusb_otg_halt_channel(USBx, hc_num);
-    
-  }else if ( HC->HCINT & USB_OTG_HCINT_AHBERR ) {
-    CLEAR_INT(USB_OTG_HCINT_AHBERR);
-    hc->state = TUSB_CS_AHB_ERROR;
-    hc->error_reason = HC->HCDMA;
-    UNMASK_HALT();
-    tusb_otg_halt_channel(USBx, hc_num);
-    
-  }else if ( HC->HCINT & USB_OTG_HCINT_TXERR ){
-    CLEAR_INT(USB_OTG_HCINT_TXERR);
-    hc->state = TUSB_CS_TRANSACTION_ERROR;
-    UNMASK_HALT();
-    tusb_otg_halt_channel(USBx, hc_num);
-    
-  }else if ( HC->HCINT & USB_OTG_HCINT_DTERR ){
-    CLEAR_INT(USB_OTG_HCINT_DTERR);
-    CLEAR_INT(USB_OTG_HCINT_NAK);
-    hc->state = TUSB_CS_DT_ERROR;
-    UNMASK_HALT();
-    tusb_otg_halt_channel(USBx, hc_num);
-    
-  }else if ( HC->HCINT & USB_OTG_HCINT_FRMOR ){
-    CLEAR_INT(USB_OTG_HCINT_FRMOR);
-    hc->state = TUSB_CS_FRAMEOVERRUN_ERROR;
-    UNMASK_HALT();
-    tusb_otg_halt_channel(USBx, hc_num);
-  }else if( HC->HCINT & USB_OTG_HCINT_BBERR ){
-    // OOPS reset the port
-    CLEAR_INT(USB_OTG_HCINT_BBERR);
-    hc->state = TUSB_CS_BABBLE_ERROR;
-    UNMASK_HALT();
-    tusb_otg_halt_channel(USBx, hc_num);
-  }
-  
-  else if( HC->HCINT & USB_OTG_HCINT_CHH ) {
-    // Do the real work here
-    // re-active means the user application known the data transfer complete, 
-    uint8_t reactive;
-    MASK_HALT();
-    
-    reactive = 0xff;
-    switch(hc->state){
-      case TUSB_CS_TRANSFER_COMPLETE:
-        hc->nak_count = 0;
-        reactive = tusb_on_channel_event(host, hc_num) == 0;
-        break;
-      case TUSB_CS_NAK:
-        if(is_in){
-          uint32_t HcEpType = (HC->HCCHAR & USB_OTG_HCCHAR_EPTYP) >> 18;
-          if(HcEpType == HCCHAR_INTR){
-            reactive = tusb_on_channel_event(host, hc_num) == 0;
-          }else{
-            uint32_t tmpreg;
-            // re-enable the channel 
-            tmpreg = HC->HCCHAR;
-            tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
-            tmpreg |= USB_OTG_HCCHAR_CHENA;
-            HC->HCCHAR = tmpreg;
-          }
-        }else{
-          // do nothing for out channel
-        }
-        break;
-      case TUSB_CS_ACK:
-        // never reach here
-        //reactive = 0;
-        break;
-      case TSUB_CS_PING_SUCCESS:
-        // Ping success, start OUT transaction
-        //reactive = 0;
-        break;
-      case TUSB_CS_NYET:
-        // only for HS core
-        //if(hc->retry_count){
-        //  reactive = 1;
-        //  hc->do_ping = 1;
-        //  if(hc->retry_count != RETRY_FOREVER){
-        //    hc->retry_count--;
-        //  }
-        //}else{
-        //  reactive = tusb_on_channel_event(host, hc_num) == 0;
-        //}
-        //if(reactive){
-          hc->do_ping = 1;
-        //}
-        break;
-      case TUSB_CS_STALL:
-        hc->nak_count = 0;
-        reactive = tusb_on_channel_event(host, hc_num) == 0;
-        break;
-      case TUSB_CS_TRANSACTION_ERROR:
-      case TUSB_CS_DT_ERROR:
-        hc->error_count++;
-        {
-          // re-enable the channel 
-          uint32_t tmpreg = HC->HCCHAR;
-          tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
-          tmpreg |= USB_OTG_HCCHAR_CHENA;
-          HC->HCCHAR = tmpreg;
-        }
-        break;
-      case TUSB_CS_AHB_ERROR:
-      case TUSB_CS_FRAMEOVERRUN_ERROR:
-      case TUSB_CS_BABBLE_ERROR:
-        reactive = tusb_on_channel_event(host, hc_num) == 0;
-        break;
-    }
-    
-    if(reactive != 0xff){
-      hc->xfer_done = 1;
-      if(reactive){
-        // re-wind the buffer pointer
-        hc->count = 0;
-        hc->xfer_done = 0;
-        // re-submit the transaction
-        tusb_otg_host_submit(host, hc_num);
-      }else{
-        // application no need
-        if(hc->auto_free){
-          tusb_host_deinit_channel(host, hc_num);
-        }
-      }
-    }
-    
-    CLEAR_INT(USB_OTG_HCINT_CHH);
-  }else if( HC->HCINT & USB_OTG_HCINT_NAK ){
-    hc->nak_count++;
-    if(is_in ){
-      uint32_t HcEpType = (HC->HCCHAR & USB_OTG_HCCHAR_EPTYP) >> 18;
-      /* Check for space in the request queue to issue the halt. */
-      if(HcEpType == HCCHAR_INTR){
-        // Halt channel, not set the state
-        hc->state = TUSB_CS_NAK;
-        UNMASK_HALT();
-        tusb_otg_halt_channel(USBx, hc_num);
-        
-      }else if ((HcEpType == HCCHAR_CTRL) || (HcEpType == HCCHAR_BULK)  ) {
-#if defined(USB_OTG_HS)
-        if( ((USBx == USB_OTG_HS) && ((USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN) != 0)) ){
-          // DMA enable, don't halt the channel
-        }
-        else
-#endif
-        {
-          hc->state = TUSB_CS_NAK;
-          UNMASK_HALT();
-          tusb_otg_halt_channel(USBx, hc_num);
-        }
-      }
-    }else{
-      hc->state = TUSB_CS_NAK;
-      // In HS mode OUT ep, if NAK got, use ping to detect OUT status
-#if defined(USB_OTG_HS)
-      if( USBx == USB_OTG_HS ){
-        hc->do_ping = 1;
-      }
-#endif
-      UNMASK_HALT();
-      tusb_otg_halt_channel(USBx, hc_num);
-    }
-    CLEAR_INT(USB_OTG_HCINT_NAK);
-    
-    
-  }
-#undef  MASK_HALT
-#undef  UNMASK_HALT
-#undef  CLEAR_INT
 }
 
 
@@ -1264,6 +1019,15 @@ void tusb_pipe_xfer_data(tusb_pipe_t* pipe, void* data, uint32_t len)
   tusb_otg_host_xfer_data(pipe->host, pipe->hc_num, 1, (uint8_t*)data, len);
 }
 
+int tusb_pipe_get_xfer_len(tusb_pipe_t* pipe)
+{
+  if(pipe->host && pipe->hc_num<MAX_HC_NUM){
+    tusb_hc_data_t* hc = &pipe->host->hc[pipe->hc_num];
+    return hc->count;
+  }
+  return -1;
+}
+
 channel_state_t tusb_pipe_wait(tusb_pipe_t* pipe, uint32_t timeout)
 {
   if(!pipe->host) return TUSB_CS_UNKNOWN_ERROR;
@@ -1311,6 +1075,11 @@ WEAK void tusb_otg_read_data(USB_OTG_GlobalTypeDef *USBx, void* buf, uint32_t le
     dest++;
     len--;
   }
+}
+
+
+WEAK void tusb_otg_id_changed(tusb_otg_t* otg, uint8_t id_state)
+{
 }
 
 #endif // #if defined(USB_OTG_FS) || defined(USB_OTG_HS)

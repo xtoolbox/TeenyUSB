@@ -134,6 +134,7 @@ struct _tusb_device{
 #if defined(DESCRIPTOR_BUFFER_SIZE) && DESCRIPTOR_BUFFER_SIZE > 0
   uint8_t*  desc_buffer;                  /**< descriptor buffer, used for qualifier or DMA */
 #endif
+  void*     user_data;                    /**<  User data for device                        */
   uint8_t   addr;                         /**< device address                               */
   uint8_t   config;                       /**< device current configurtaion ID              */
   uint8_t   alt_cfg;                      /**< device interface alernate configuration      */
@@ -184,6 +185,8 @@ struct _tusb_device{
 /** USB port speed low speed */
 #define PORT_SPEED_LOW                 2U
 
+/** USB channel max error retry time */
+#define MAX_ERROR_RETRY_TIME           128
 
 /* Type Defines: */
 /** Type define for Host channel data */
@@ -213,6 +216,7 @@ typedef struct _tusb_host{
 #if defined(USB_CORE_HANDLE_TYPE)
   USB_CORE_HANDLE_TYPE  handle;           /**< USB hardware handle */
 #endif
+  void*           user_data;              /**< User data for host */
   uint32_t        state;                  /**< current host state */
   tusb_hc_data_t  hc[MAX_HC_NUM];         /**< host channel array */
   uint32_t        nptx_pending;           /**< Non periodic pending trasmit/out pipe */
@@ -220,7 +224,7 @@ typedef struct _tusb_host{
 }tusb_host_t;
 
 /** Type define for USB OTG */
-typedef union _tusb_otg
+typedef struct _tusb_otg
 {
   tusb_device_t device;                   /**<  Device mode data */
   tusb_host_t   host;                     /**<  Host mode data */
@@ -268,6 +272,12 @@ typedef enum {
   TUSB_CS_UNKNOWN_ERROR,            /**< Channel Unknown error */
 }channel_state_t;
 
+/** Enums for ID line state
+ */
+typedef enum{
+  TUSB_ID_A = 0,                     /**< ID line is A/Host role */
+  TUSB_ID_B = 1,                     /**< ID line is B/Device role */
+}id_state_t;
 
 /* Function Prototypes: */
 
@@ -559,6 +569,18 @@ void tusb_pipe_setup(tusb_pipe_t* pipe, tusb_setup_packet* setup);
  */
 void tusb_pipe_xfer_data(tusb_pipe_t* pipe, void* data, uint32_t len);
 
+/** Get pipe xfer data length
+ *
+ *  \ingroup Group_Host
+ *
+ *  \param[in] pipe           Pipe pointer, initial by \ref tusb_pipe_open
+ *
+ *  \return >=0  xfer data size of the pipe, 
+ *           <0  means error
+ */
+int tusb_pipe_get_xfer_len(tusb_pipe_t* pipe);
+  
+
 /** Wait or get a pipe transfer state
  *
  *  \ingroup Group_Host
@@ -631,5 +653,16 @@ void tusb_open_otg(tusb_otg_t* otg);
  */
 void tusb_close_otg(tusb_otg_t* otg);
 
+
+/** Called when ID lined changed
+ *  This is a WEAK function, default do nothing
+ *  user application can override it to handle the ID line changed event
+ *
+ *  \ingroup Group_Event
+ *
+ *  \param[in]  otg            USB otg handle, return from \ref tusb_get_otg
+ *  \param[in]  id_state       New ID line status \ref id_state_t
+ */
+void tusb_otg_id_changed(tusb_otg_t* otg, id_state_t id_state);
 
 #endif

@@ -34,6 +34,7 @@
 
 //  STM32 OTG usb hardware handler
 #include "teeny_usb.h"
+#include "string.h"
 
 // #define  ENABLE_VBUS_DETECT 
 
@@ -140,27 +141,66 @@ static void USB_HS_PHYCInit(USB_OTG_GlobalTypeDef *USBx)
 void tusb_close_core(tusb_core_t* core)
 {
   USB_OTG_GlobalTypeDef* USBx = GetUSB(core);
+  uint32_t i;
+  
   USBx->GAHBCFG &= ~USB_OTG_GAHBCFG_GINT;
   
-  uint32_t i;
-  /* Clear Pending interrupt */
-  for (i = 0; i < EP_NUM ; i++){
-    USBx_INEP(i)->DIEPINT  = 0xFF;
-    USBx_OUTEP(i)->DOEPINT  = 0xFF;
-  }
-  USBx_DEVICE->DAINT = 0xFFFFFFFF;
-  /* Clear interrupt masks */
-  USBx_DEVICE->DIEPMSK  = 0;
-  USBx_DEVICE->DOEPMSK  = 0;
-  USBx_DEVICE->DAINTMSK = 0;
+  if(USBx->GINTSTS & USB_OTG_GINTSTS_CMOD){
+    // current work in host mode
+    uint32_t MAX_CH_NUM = USBx == USB_OTG_FS ? USB_OTG_FS_MAX_CH_NUM : USB_OTG_HS_MAX_CH_NUM;
+    
+    flush_rx(USBx);
+    flush_tx(USBx ,  0x10 );
+    
+    for (i = 0U; i <= MAX_CH_NUM; i++)
+    {
+      uint32_t value = USBx_HC(i)->HCCHAR;
+      value |=  USB_OTG_HCCHAR_CHDIS;
+      value &= ~USB_OTG_HCCHAR_CHENA;
+      value &= ~USB_OTG_HCCHAR_EPDIR;
+      USBx_HC(i)->HCCHAR = value;
+    }
 
-  /* Flush the FIFO */
-  flush_rx(USBx);
-  flush_tx(USBx ,  0x10 );
-  
-  // disconnect
-  USBx_DEVICE->DCTL |= USB_OTG_DCTL_SDIS ;
-  
+    /* Halt all channels to put them into a known state. */
+    for (i = 0U; i <= MAX_CH_NUM; i++)
+    {
+      uint32_t count = 0U;
+      uint32_t value = USBx_HC(i)->HCCHAR;
+      value |= USB_OTG_HCCHAR_CHDIS;
+      value |= USB_OTG_HCCHAR_CHENA;
+      value &= ~USB_OTG_HCCHAR_EPDIR;
+      USBx_HC(i)->HCCHAR = value;
+      do{
+        if (++count > 1000U){
+          break;
+        }
+      }
+      while ((USBx_HC(i)->HCCHAR & USB_OTG_HCCHAR_CHENA) == USB_OTG_HCCHAR_CHENA);
+    }
+    USBx_HOST->HAINT = 0xFFFFFFFFU;
+    USBx->GINTSTS = 0xFFFFFFFFU;
+  }else{
+    // work in device mode
+    
+    /* Clear Pending interrupt */
+    for (i = 0; i < EP_NUM ; i++){
+      USBx_INEP(i)->DIEPINT  = 0xFF;
+      USBx_OUTEP(i)->DOEPINT  = 0xFF;
+    }
+    USBx_DEVICE->DAINT = 0xFFFFFFFF;
+    /* Clear interrupt masks */
+    USBx_DEVICE->DIEPMSK  = 0;
+    USBx_DEVICE->DOEPMSK  = 0;
+    USBx_DEVICE->DAINTMSK = 0;
+
+    /* Flush the FIFO */
+    flush_rx(USBx);
+    flush_tx(USBx ,  0x10 );
+    
+    // disconnect
+    USBx_DEVICE->DCTL |= USB_OTG_DCTL_SDIS ;
+  }
+
   if(USBx == USB_OTG_FS){
     __HAL_RCC_USB_OTG_FS_CLK_DISABLE();
     NVIC_DisableIRQ(OTG_FS_IRQn);
@@ -168,7 +208,11 @@ void tusb_close_core(tusb_core_t* core)
   }
 #if defined(USB_OTG_HS)
 	else if(USBx == USB_OTG_HS){
+#if defined(USB_HS_PHYC)
+    __HAL_RCC_OTGPHYC_CLK_DISABLE();
+#endif
     __HAL_RCC_USB_OTG_HS_CLK_DISABLE();
+    __HAL_RCC_USB_OTG_HS_ULPI_CLK_DISABLE();
     NVIC_DisableIRQ(OTG_HS_IRQn);
   }
 #endif
@@ -183,6 +227,12 @@ void tusb_close_host(tusb_host_t* host)
 {
   tusb_close_core((tusb_core_t*) host);
 }
+
+void tusb_close_otg(tusb_otg_t* otg)
+{
+  tusb_close_core((tusb_core_t*) &otg->host);
+}
+
 
 #define AFL(val, pin)   ((val)<< (( (pin))*4))
 #define AFH(val, pin)   ((val)<< (( (pin)-8)*4))
@@ -564,7 +614,41 @@ void tusb_open_host(tusb_host_t* host)
   // Force to device mode
   USBx->GUSBCFG &= ~(USB_OTG_GUSBCFG_FHMOD | USB_OTG_GUSBCFG_FDMOD);
   USBx->GUSBCFG |= USB_OTG_GUSBCFG_FHMOD;
+  memset(&host->state, 0, (sizeof(tusb_host_t) -  (uint32_t) (&((tusb_host_t*)0)->state) ) );
   tusb_init_otg_host(host);
+}
+
+
+void tusb_open_otg(tusb_otg_t* otg)
+{
+  USB_OTG_GlobalTypeDef* USBx = GetUSB(&otg->device);
+  tusb_otg_core_init((tusb_core_t*) &otg->device);
+  (void)USBx;
+
+  /**
+  The ID line changed event seems not working
+  if(USBx == USB_OTG_FS){
+    // Enable PA10, ID pin for OTG FS
+    set_io_af_mode(GPIOA, 10, GPIO_AF10_OTG_FS);
+  }else{
+    // Enable PB12, ID pin for OTG FS
+    set_io_af_mode(GPIOB, 12, GPIO_AF12_OTG_HS_FS);
+  }
+  
+  USBx->GAHBCFG &= ~USB_OTG_GAHBCFG_GINT;
+  USBx->GINTMSK = 0;
+  USBx->GINTSTS = 0xBFFFFFFF;
+  
+  USBx->GINTMSK |= USB_OTG_GINTMSK_OTGINT;
+  //USBx->GINTMSK |= USB_OTG_GINTMSK_CIDSCHGM;
+  
+  USBx->GAHBCFG |= USB_OTG_GAHBCFG_GINT;
+  
+  USBx->GUSBCFG &= ~(USB_OTG_GUSBCFG_FHMOD | USB_OTG_GUSBCFG_FDMOD);
+  USBx->GUSBCFG |= USB_OTG_GUSBCFG_FDMOD;
+  tusb_delay_ms(50);
+  tusb_init_otg_device(&otg->device);
+  */
 }
 
 void tusb_otg_device_handler(tusb_device_t* dev);
@@ -573,10 +657,28 @@ void tusb_otg_host_handler(tusb_host_t* dev);
 #define TUSB_OTG_GetMode(USBx) ((USBx->GINTSTS ) & 0x1U)
 
 #if defined(USB_OTG_FS)
-static tusb_device_t tusb_dev_otg_fs;
+
+
+#if defined(NO_DEVICE) || defined(NO_HOST)
+#if defined(NO_DEVICE)
 static tusb_host_t tusb_host_otg_fs;
+#endif
+#if defined(NO_HOST)
+static tusb_device_t tusb_dev_otg_fs;
+#endif
+
+#else
+static tusb_otg_t tusb_otg_fs;
+
+#define  tusb_dev_otg_fs   (tusb_otg_fs.device)
+#define  tusb_host_otg_fs  (tusb_otg_fs.host)
+#endif
+
 void OTG_FS_IRQHandler(void)
 {
+#if defined(RTOS_INTERRUPT_ENTER)
+  RTOS_INTERRUPT_ENTER();
+#endif
   if (TUSB_OTG_GetMode(USB_OTG_FS) == USB_OTG_MODE_DEVICE){
 #if defined(NO_DEVICE)
     while(1);
@@ -590,15 +692,34 @@ void OTG_FS_IRQHandler(void)
     tusb_otg_host_handler(&tusb_host_otg_fs);
 #endif
   }
+#if defined(RTOS_INTERRUPT_LEAVE)
+  RTOS_INTERRUPT_LEAVE();
+#endif 
 }
 #endif
 
-
 #if defined(USB_OTG_HS)
-static tusb_device_t tusb_dev_otg_hs;
+
+#if defined(NO_DEVICE) || defined(NO_HOST)
+#if defined(NO_DEVICE)
 static tusb_host_t tusb_host_otg_hs;
+#endif
+#if defined(NO_HOST)
+static tusb_device_t tusb_dev_otg_hs;
+#endif
+
+#else
+static tusb_otg_t tusb_otg_hs;
+
+#define  tusb_dev_otg_hs   (tusb_otg_hs.device)
+#define  tusb_host_otg_hs  (tusb_otg_hs.host)
+#endif
+
 void OTG_HS_IRQHandler(void)
 {
+#if defined(RTOS_INTERRUPT_ENTER)
+  RTOS_INTERRUPT_ENTER();
+#endif
   if (TUSB_OTG_GetMode(USB_OTG_HS) == USB_OTG_MODE_DEVICE){
 #if defined(NO_DEVICE)
     while(1);
@@ -612,9 +733,13 @@ void OTG_HS_IRQHandler(void)
     tusb_otg_host_handler(&tusb_host_otg_hs);
 #endif
   }
+#if defined(RTOS_INTERRUPT_LEAVE)
+  RTOS_INTERRUPT_LEAVE();
+#endif
 }
 #endif
 
+#ifndef NO_DEVICE
 tusb_device_t* tusb_get_device(uint8_t id)
 {
   if(id != 0){
@@ -640,7 +765,9 @@ tusb_device_t* tusb_get_device(uint8_t id)
 #endif // USB_OTG_FS
   }
 }
+#endif
 
+#ifndef NO_HOST
 tusb_host_t* tusb_get_host(uint8_t id)
 {
   if(id != 0){
@@ -656,4 +783,37 @@ tusb_host_t* tusb_get_host(uint8_t id)
   return (tusb_host_t*)0;
 #endif // USB_OTG_FS
 }
+#endif
+
+#if defined(NO_DEVICE) || defined(NO_HOST)
+#else
+tusb_otg_t* tusb_get_otg(uint8_t id)
+{
+  if(id != 0){
+#if defined(USB_OTG_HS)
+#if defined(DESCRIPTOR_BUFFER_SIZE) && DESCRIPTOR_BUFFER_SIZE > 0
+    static __ALIGN_BEGIN uint8_t otg_hs_desc_buf[DESCRIPTOR_BUFFER_SIZE] __ALIGN_END;
+    tusb_dev_otg_hs.desc_buffer = otg_hs_desc_buf;
+#endif
+    SetUSB(&tusb_dev_otg_hs, USB_OTG_HS);
+    SetUSB(&tusb_host_otg_hs, USB_OTG_HS);
+    
+    return &tusb_otg_hs;
+#endif // USB_OTG_HS
+  }
+#if defined(USB_OTG_FS)
+  {
+#if defined(DESCRIPTOR_BUFFER_SIZE) && DESCRIPTOR_BUFFER_SIZE > 0
+    static __ALIGN_BEGIN uint8_t otg_fs_desc_buf[DESCRIPTOR_BUFFER_SIZE] __ALIGN_END;
+    tusb_dev_otg_fs.desc_buffer = otg_fs_desc_buf;
+#endif
+    SetUSB(&tusb_dev_otg_fs, USB_OTG_FS);
+    SetUSB(&tusb_host_otg_fs, USB_OTG_FS);
+  }
+  return &tusb_otg_fs;
+#else
+  return (tusb_host_t*)0;
+#endif // USB_OTG_FS
+}
+#endif
 

@@ -66,11 +66,11 @@
 #define  USB_CLR_CTR      ((uint16_t)~USB_ISTR_CTR   )
 #endif
 
+#if defined(STM32F3)
 #define AFL(val, pin)   ((val)<< (( (pin))*4))
 #define AFH(val, pin)   ((val)<< (( (pin)-8)*4))
 static void set_io_af_mode(GPIO_TypeDef* GPIO, uint8_t pin, uint8_t af)
 {
-#if defined(STM32F3)
   GPIO->MODER &= ~(GPIO_MODER_MODER0 << (pin*2));
   GPIO->MODER |= (GPIO_MODER_MODER0_1 << (pin*2));
   GPIO->OTYPER &= ~(GPIO_OTYPER_OT_0 << pin);
@@ -82,8 +82,8 @@ static void set_io_af_mode(GPIO_TypeDef* GPIO, uint8_t pin, uint8_t af)
     GPIO->AFR[0] &= ~( AFL(0xf,pin));
     GPIO->AFR[0] |= ( AFL(af,pin));
   }
-#endif
 }
+#endif
 
 static void tusb_disconnect(tusb_device_t* dev)
 {
