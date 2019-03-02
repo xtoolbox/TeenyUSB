@@ -209,6 +209,7 @@ typedef struct _tusb_hc_data
   uint8_t   padding:1;               /**< bit field padding                                                */
   uint8_t   speed;                   /**< port speed,  \ref PORT_SPEED_HIGH, \ref PORT_SPEED_FULL, \ref PORT_SPEED_LOW */
   uint8_t   padding32;               /**< padding to 32bit boundary                                        */
+  void*     user_data;               /**< User data for host */
 }tusb_hc_data_t;
 
 /** Type define for USB host */
