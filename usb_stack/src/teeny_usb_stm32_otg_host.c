@@ -351,32 +351,17 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
   else if ((HC->HCINT & USB_OTG_HCINT_XFRC) == USB_OTG_HCINT_XFRC)
   {
     uint32_t HcEpType = (HC->HCCHAR & USB_OTG_HCCHAR_EPTYP) >> 18;
-    if (USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN)
-    {
+    if (USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN){
       hc->count = hc->size - (HC->HCTSIZ & USB_OTG_HCTSIZ_XFRSIZ);
     }
 
     hc->state = TUSB_CS_TRANSFER_COMPLETE;
     hc->error_count = 0U;
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_XFRC);
-
-    if ((HcEpType == HCCHAR_CTRL)||
-        (HcEpType == HCCHAR_BULK))
-    {
-      __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
-      tusb_otg_halt_channel(USBx, ch_num);
-      __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_NAK);
-    }
-    else if(HcEpType == HCCHAR_INTR)
-    {
-      HC->HCCHAR |= USB_OTG_HCCHAR_ODDFRM;
-      hc->xfer_done = 1;
-      tusb_on_channel_event(host, ch_num);
-    }
-    else
-    {
-      /* ... */
-    }
+    
+    __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
+    tusb_otg_halt_channel(USBx, ch_num);
+    __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_NAK);    
     hc->toggle_in ^= 1U;
 
   }
@@ -387,11 +372,10 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
     if(hc->state == TUSB_CS_TRANSFER_COMPLETE)
     {
       hc->xfer_done = 1;
-      //hhcd->hc[ch_num].urb_state  = URB_DONE;
     }
     else if (hc->state == TUSB_CS_STALL)
     {
-      //hhcd->hc[ch_num].urb_state  = URB_STALL;
+      hc->xfer_done = 1;
     }
     else if((hc->state == TUSB_CS_TRANSACTION_ERROR) ||
             (hc->state == TUSB_CS_DT_ERROR))
@@ -409,14 +393,18 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
     }
     else if (hc->state == TUSB_CS_NAK)
     {
-      //hhcd->hc[ch_num].urb_state  = URB_NOTREADY;
       /* re-activate the channel  */
       hc->nak_count++;
       hc->error_count = 0;
-      tmpreg = HC->HCCHAR;
-      tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
-      tmpreg |= USB_OTG_HCCHAR_CHENA;
-      HC->HCCHAR = tmpreg;
+      if(hc->nak_count > MAX_NAK_RETRY_TIME){
+        hc->xfer_done = 1;
+      }else{
+        //tusb_otg_host_submit(host, ch_num);
+        tmpreg = HC->HCCHAR;
+        tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
+        tmpreg |= USB_OTG_HCCHAR_CHENA;
+        HC->HCCHAR = tmpreg;
+      }
     }
     else
     {
@@ -424,12 +412,10 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
     }
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_CHH);
     tusb_on_channel_event(host, ch_num);
-    //HAL_HCD_HC_NotifyURBChange_Callback(hhcd, (uint8_t)ch_num, hhcd->hc[ch_num].urb_state);
   }
   else if ((HC->HCINT & USB_OTG_HCINT_TXERR) == USB_OTG_HCINT_TXERR)
   {
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
-    hc->error_count++;
     hc->state = TUSB_CS_TRANSACTION_ERROR;
     tusb_otg_halt_channel(USBx, ch_num);
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_TXERR);
@@ -515,10 +501,11 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
   }
   else if ((HC->HCINT & USB_OTG_HCINT_STALL) == USB_OTG_HCINT_STALL)
   {
+    hc->state = TUSB_CS_STALL;
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_STALL);
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
     tusb_otg_halt_channel(USBx, ch_num);
-    hc->state = TUSB_CS_STALL;
+    
   }
   else if ((HC->HCINT & USB_OTG_HCINT_NAK) == USB_OTG_HCINT_NAK)
   {
@@ -562,19 +549,29 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
     else if (hc->state == TUSB_CS_NAK)
     {
       hc->nak_count++;
-      /* re-activate the channel  */
-      tmpreg = HC->HCCHAR;
-      tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
-      tmpreg |= USB_OTG_HCCHAR_CHENA;
-      HC->HCCHAR = tmpreg;
+      hc->error_count = 0;
+      if(hc->nak_count > MAX_NAK_RETRY_TIME){
+        hc->xfer_done = 1;
+      }else{
+        tusb_otg_host_submit(host, ch_num);
+        /*
+        if (USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN){
+          tmpreg = HC->HCCHAR;
+          tmpreg &= ~USB_OTG_HCCHAR_CHDIS;
+          tmpreg |= USB_OTG_HCCHAR_CHENA;
+          HC->HCCHAR = tmpreg;
+        }else{
+          tusb_otg_host_submit(host, ch_num);
+        }
+        */
+      }
     }
     else if (hc->state == TUSB_CS_NYET)
     {
-      //hhcd->hc[ch_num].urb_state  = URB_NOTREADY;
     }
     else if (hc->state == TUSB_CS_STALL)
     {
-      //hhcd->hc[ch_num].urb_state  = URB_STALL;
+      hc->xfer_done = 1;
     }
     else if ((hc->state == TUSB_CS_TRANSACTION_ERROR) ||
             (hc->state == TUSB_CS_DT_ERROR))

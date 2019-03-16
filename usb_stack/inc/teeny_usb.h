@@ -185,8 +185,11 @@ struct _tusb_device{
 /** USB port speed low speed */
 #define PORT_SPEED_LOW                 2U
 
-/** USB channel max error retry time */
-#define MAX_ERROR_RETRY_TIME           128
+/** USB host channel max retry time when error occur */
+#define MAX_ERROR_RETRY_TIME           16
+/** USB host channel max retry time when get NAK, 
+    this value is used to avoid infinite wait in Bulk/Control transfer */
+#define MAX_NAK_RETRY_TIME             0x10000
 
 /* Type Defines: */
 /** Type define for Host channel data */
@@ -209,7 +212,7 @@ typedef struct _tusb_hc_data
   uint8_t   padding:1;               /**< bit field padding                                                */
   uint8_t   speed;                   /**< port speed,  \ref PORT_SPEED_HIGH, \ref PORT_SPEED_FULL, \ref PORT_SPEED_LOW */
   uint8_t   padding32;               /**< padding to 32bit boundary                                        */
-  void*     user_data;               /**< User data for host */
+  void*     user_data;               /**< User data for host channel                                       */
 }tusb_hc_data_t;
 
 /** Type define for USB host */
