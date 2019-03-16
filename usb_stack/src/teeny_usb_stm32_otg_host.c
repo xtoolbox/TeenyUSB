@@ -368,8 +368,10 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
   else if ((HC->HCINT & USB_OTG_HCINT_CHH) == USB_OTG_HCINT_CHH)
   {
     __HAL_HCD_MASK_HALT_HC_INT(ch_num);
-
-    if(hc->state == TUSB_CS_TRANSFER_COMPLETE)
+    if(hc->is_cancel){
+      hc->xfer_done = 1;
+      hc->state = TUSB_CS_XFER_CANCEL;
+    }else if(hc->state == TUSB_CS_TRANSFER_COMPLETE)
     {
       hc->xfer_done = 1;
     }
@@ -542,8 +544,10 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
   else if ((HC->HCINT & USB_OTG_HCINT_CHH) == USB_OTG_HCINT_CHH)
   {
     __HAL_HCD_MASK_HALT_HC_INT(ch_num);
-
-    if (hc->state == TUSB_CS_XFER_ONGOING){
+    if(hc->is_cancel){
+      hc->xfer_done = 1;
+      hc->state = TUSB_CS_XFER_CANCEL;
+    }else if (hc->state == TUSB_CS_XFER_ONGOING){
       hc->state = TUSB_CS_INIT;
       tusb_otg_host_submit(host, ch_num);
     }else if (hc->state == TUSB_CS_TRANSFER_COMPLETE){
@@ -1042,6 +1046,21 @@ int tusb_pipe_close(tusb_pipe_t* pipe)
     pipe->hc_num = 0xff;
   }
   return 0;
+}
+
+int tusb_pipe_cancel(tusb_pipe_t* pipe)
+{
+  if(pipe->host && pipe->hc_num < MAX_HC_NUM){
+    tusb_hc_data_t* hc = &pipe->host->hc[pipe->hc_num];
+    if(hc->is_cancel == 0){
+      USB_OTG_GlobalTypeDef *USBx = GetUSB(pipe->host);
+      __HAL_HCD_UNMASK_HALT_HC_INT(pipe->hc_num);
+      tusb_otg_halt_channel(USBx, pipe->hc_num);
+    }
+    hc->is_cancel = 1;
+    return 0;
+  }
+  return -1;
 }
 
 void tusb_pipe_setup(tusb_pipe_t* pipe, tusb_setup_packet* setup)

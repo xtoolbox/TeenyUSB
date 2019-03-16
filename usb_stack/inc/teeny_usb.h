@@ -207,7 +207,7 @@ typedef struct _tusb_hc_data
   uint8_t   do_ping:1;               /**< do ping flag                                                     */
   uint8_t   is_use:1;                /**< used flag:  1-channel is used, 0-channel is free                 */
   uint8_t   is_data:1;               /**< Channel data type flag: 1-data packet, 0-setup packet            */
-  uint8_t   auto_free:1;             /**< Channel auto free flag: 1-auto free when xfer done, 0-not free   */
+  uint8_t   is_cancel:1;             /**< Cancel current transfer                                          */
   uint8_t   xfer_done:1;             /**< 1: xfer done, 0: xfer on goning                                  */
   uint8_t   padding:1;               /**< bit field padding                                                */
   uint8_t   speed;                   /**< port speed,  \ref PORT_SPEED_HIGH, \ref PORT_SPEED_FULL, \ref PORT_SPEED_LOW */
@@ -273,6 +273,7 @@ typedef enum {
   TUSB_CS_BABBLE_ERROR,             /**< Channel babble error */
   
   TUSB_CS_XFER_ONGOING,             /**< Channel data transfer is on going */
+  TUSB_CS_XFER_CANCEL,              /**< Channel data transfer is canceled */
   TUSB_CS_UNKNOWN_ERROR,            /**< Channel Unknown error */
 }channel_state_t;
 
@@ -553,6 +554,18 @@ int tusb_pipe_open(tusb_host_t* host, tusb_pipe_t* pipe, uint8_t dev_addr, uint8
  *  \return 0 for success, otherwise fail
  */
 int tusb_pipe_close(tusb_pipe_t* pipe);
+
+/** Cancel a USB host pipe
+ *
+ *  \ingroup Group_Host
+ *
+ *  \param[in] pipe           Pipe pointer, initial by \ref tusb_pipe_open
+ *
+ *  \return 0 for success, otherwise fail
+ */
+int tusb_pipe_cancel(tusb_pipe_t* pipe);
+
+
 
 /** Send a setup packet
  *
