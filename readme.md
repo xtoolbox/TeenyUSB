@@ -40,16 +40,13 @@ A teeny USB stack for STM32 MCUs, also contain a toolset to create USB descripto
 | CubeMXF723       | CubeMX+TeenyUSB  自定义设备   | [stm32f723e discovery][723] |
 
 ## USB主机例程 Demo for host
-The host is not stable right now
-
-主机例程目前还不稳定
 
 | Demo Folder      |      Demo Type       |  Tested Board  |
 |------------------|----------------------|----------------|
 | host_raw         | 无协议栈主机 Raw Host| 723            |
 | host_input       | HUB+KeyBoard+Mouse   | 723            |
 
-## USB主机从机例程 Demo for OTG
+## USB OTG例程 Demo for OTG
 | Demo Folder      |      Demo Type       |  Tested Board  |
 |------------------|----------------------|----------------|
 | host_rtt         | OTG in [rtthread][rtt]   | [stm32f723e_disco][723] |
@@ -57,6 +54,10 @@ The host is not stable right now
 接入普通USB线时，工作在设备模式，FS设备默认为CDC串口，HS设备默认为U盘，使用板载QSPI，可以通过命令行更改设备角色，重新插拔后生效。
 
 接入OTG线时，工作在主机模式，主机采用修改后的[rtthread][rtt] USB主机协议栈，目前支持HUB，U盘，键盘和鼠标。
+
+When plug with normal USB cable, work in device mode, the FS core is CDC and HS core is MSC by default. The device role can be changed through the command.
+
+When plug with OTG cable, work in host mode, support HUB, Mass storage, keyboard and mouse devices.
 
 
 ## Demo测试用的开发板 Demo tested on boards
