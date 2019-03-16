@@ -189,15 +189,15 @@ struct _tusb_device{
 #define MAX_ERROR_RETRY_TIME           16
 /** USB host channel max retry time when get NAK, 
     this value is used to avoid infinite wait in Bulk/Control transfer */
-#define MAX_NAK_RETRY_TIME             0x10000
+#define MAX_NAK_RETRY_TIME             0x160000
 
 /* Type Defines: */
 /** Type define for Host channel data */
 typedef struct _tusb_hc_data
 {
   uint8_t*  ch_buf;                  /**< channel data buffer                                              */
-  uint16_t  size;                    /**< size of the channel buffer                                       */
-  uint16_t  count;                   /**< data count of the channel buffer                                 */
+  uint16_t  size;                    /**< total size of the channel buffer                                 */
+  uint16_t  count;                   /**< current xfered data count of the channel buffer                  */
   uint32_t  nak_count;               /**< channel NAK count                                                */
   uint32_t  error_count;             /**< channel error count                                              */
   uint32_t  error_reason;            /**< channel error reason                                             */
