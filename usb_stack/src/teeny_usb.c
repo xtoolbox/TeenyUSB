@@ -144,9 +144,8 @@ static int tusb_vendor_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
 {
   uint32_t len = 0;
   const uint8_t* desc = 0;
-  switch (setup_req->bRequest) {
-    case WCID_VENDOR_CODE:
-      switch(setup_req->wIndex)
+  if (setup_req->bRequest == WCID_VENDOR_CODE) {
+    switch(setup_req->wIndex){
       case 4:
         desc = dev->descriptors->wcid_desc;
         len = desc[0] + (desc[1]<<8) + (desc[2]<<16) + (desc[3]<<24);
@@ -155,6 +154,7 @@ static int tusb_vendor_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
         desc = dev->descriptors->wcid_properties;
         len = desc[0] + (desc[1]<<8) + (desc[2]<<16) + (desc[3]<<24);
         break;
+    }
   }
   // TODO: Handle length more than 0xffff
   len = setup_req->wLength > len ? len : setup_req->wLength;
