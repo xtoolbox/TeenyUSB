@@ -70,6 +70,15 @@ static void tusb_get_descriptor(tusb_device_t* dev, tusb_setup_packet *req)
 #endif
       break;
     }
+#if defined(HAS_WCID_20)
+    case USB_DESC_TYPE_BOS:
+    {
+      desc = dev->descriptors->wcid_bos;
+      if(desc)len = *((uint16_t*)desc + 1);
+      break;
+    }
+#endif    
+    
 #if defined(SUPPORT_OTHER_SPEED)
     // For High speed device, support the DEVICE_QUALIFIER 
     // and OTHER_SPEED_CONFIGURATION request
@@ -139,21 +148,33 @@ static void tusb_fs_set_addr(tusb_device_t* dev)
 }
 #endif
 
-#if defined(HAS_WCID)
+#if defined(HAS_WCID) || defined(HAS_WCID_20)
 static int tusb_vendor_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
 {
   uint32_t len = 0;
   const uint8_t* desc = 0;
   if (setup_req->bRequest == WCID_VENDOR_CODE) {
     switch(setup_req->wIndex){
-      case 4:
+#if defined(HAS_WCID)
+      case 4:{
         desc = dev->descriptors->wcid_desc;
         len = desc[0] + (desc[1]<<8) + (desc[2]<<16) + (desc[3]<<24);
         break;
-      case 5:
-        desc = dev->descriptors->wcid_properties;
+      }
+      case 5:{
+        desc = dev->descriptors->wcid_properties[setup_req->wValue];
         len = desc[0] + (desc[1]<<8) + (desc[2]<<16) + (desc[3]<<24);
         break;
+      }
+#endif
+#if defined(HAS_WCID_20)
+      case 7:
+      {
+        desc = dev->descriptors->wcid_desc_set;
+        if(desc)len = *(uint16_t*)(desc+8);
+        break;
+      }
+#endif
     }
   }
   // TODO: Handle length more than 0xffff
@@ -275,7 +296,7 @@ void tusb_setup_handler(tusb_device_t* dev)
   if(tusb_class_request(dev, setup_req)){
     return;
   }
-#if defined(HAS_WCID)
+#if defined(HAS_WCID) || defined(HAS_WCID_20)
   if((setup_req->bmRequestType & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_VENDOR){
     if(tusb_vendor_request(dev, setup_req)){
       return;

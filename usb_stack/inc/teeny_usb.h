@@ -103,7 +103,11 @@ typedef struct _tusb_descriptors
   uint32_t string_cnt;       /**< string descriptor count */
 #if defined(HAS_WCID)
   desc_t  wcid_desc;         /**< WCID descriptor for windows campatible device */
-  desc_t  wcid_properties;   /**< WCID properties descriptor */
+  const desc_t*  wcid_properties;   /**< WCID properties descriptor */
+#endif
+#if defined(HAS_WCID_20)
+  desc_t  wcid_bos;
+  desc_t  wcid_desc_set;
 #endif
 }tusb_descriptors;
 
