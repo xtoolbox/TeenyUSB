@@ -90,13 +90,17 @@ $(OUTDIR)/$(TARGET).elf: $(OBJDIR) $(OBJECTS)
 
 USBMEM ?= 512
 USBEP  ?= 7
+
+PWD = $(shell pwd)
 teeny_usb_desc.c:$(TEENYDT)
 	@echo generate USB descriptor
-	@cd ../../TeenyDT && \
-	lua gen_descriptor.lua ../demo/f723dap/$< -maxmem=$(USBMEM) -maxep=$(USBEP) && \
-	cd ../demo/f723dap
+	cd $(PWD)/../../TeenyDT && \
+	lua gen_descriptor.lua $(PWD)/$< -maxmem=$(USBMEM) -maxep=$(USBEP) && \
+	cd $(PWD)
 
 clean:
 	$(RM) $(OUTDIR)/* $(OBJDIR)/*
+clear:
+	$(RM) $(OUTDIR) obj
 
-.PHONY: all clean
+.PHONY: all clean clear
