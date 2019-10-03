@@ -1,0 +1,9 @@
+CPU = cortex-m4
+
+DEV_TYPE = STM32f4xx
+BOARD_INC = $(BOARD_PATH) $(TUSB_PATH)/Drivers/$(DEV_TYPE)_HAL_Driver/Inc $(TUSB_PATH)/Drivers/CMSIS/Device/ST/$(DEV_TYPE)/Include
+BOARD_DEF = USE_HAL_DRIVER STM32F407xx HSE_VALUE=8000000
+BOARD_SRC = $(BOARD_PATH)/system_stm32f4xx.c
+BOARD_SRC += $(TUSB_PATH)/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/gcc/startup_stm32f407xx.s
+LDSCRIPT = $(BOARD_PATH)/STM32F407VGTx_FLASH.ld
+
