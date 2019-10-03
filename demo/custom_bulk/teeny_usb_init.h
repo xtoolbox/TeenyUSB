@@ -1,7 +1,7 @@
 /*
  * Name   :  teeny_usb_init.h
  * Author :  admin@xtoolbox.org
- * Date   :  2019-09-13 20:54:04
+ * Date   :  2019-10-03 22:14:42
  * Desc   :  This file is auto generate by the teeny_usb script tool
  *           Visit https://github.com/xtoolbox/TeenyUSB for more info
  */
@@ -20,6 +20,7 @@ return Device {
     Config {
         Interface{
             WCID=WinUSB,
+            GUID="{1D4B2365-4749-48EA-B38A-7C6FDDDD7E26}",
             EndPoint(IN(1),  BulkDouble, 64),
             EndPoint(OUT(2), BulkDouble, 64),
         },

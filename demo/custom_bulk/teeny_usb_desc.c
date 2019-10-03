@@ -1,7 +1,7 @@
 /*
  * Name   :  teeny_usb_desc.c
  * Author :  admin@xtoolbox.org
- * Date   :  2019-09-13 20:54:04
+ * Date   :  2019-10-03 22:14:42
  * Desc   :  This file is auto generate by the teeny_usb script tool
  *           Visit https://github.com/xtoolbox/TeenyUSB for more info
  */
@@ -20,6 +20,7 @@ return Device {
     Config {
         Interface{
             WCID=WinUSB,
+            GUID="{1D4B2365-4749-48EA-B38A-7C6FDDDD7E26}",
             EndPoint(IN(1),  BulkDouble, 64),
             EndPoint(OUT(2), BulkDouble, 64),
         },
@@ -213,7 +214,7 @@ WEAK __ALIGN_BEGIN const uint8_t BULK__IF0_WCIDProperties [142] __ALIGN_END = {
     0x01, 0x00,                                   /* wCount */
     /*WCID property field */
   /* DeviceInterfaceGUID = 
-       {30da925a-2f8e-8a2e-fd7a-4c784db044d6}  */
+       {1D4B2365-4749-48EA-B38A-7C6FDDDD7E26}  */
     0x84, 0x00, 0x00, 0x00,                       /* dwSize */
     0x01, 0x00, 0x00, 0x00,                       /* dwPropertyDataType */
     0x28, 0x00,                                   /* wPropertyNameLength */
@@ -224,15 +225,15 @@ WEAK __ALIGN_BEGIN const uint8_t BULK__IF0_WCIDProperties [142] __ALIGN_END = {
     'U', 0x00, 'I', 0x00, 'D', 0x00, 0x00, 0x00, 
     
     0x4e, 0x00, 0x00, 0x00,                       /* dwPropertyDataLength */
-    '{', 0x00, '3', 0x00, '0', 0x00, 'd', 0x00, 
-    'a', 0x00, '9', 0x00, '2', 0x00, '5', 0x00, 
-    'a', 0x00, '-', 0x00, '2', 0x00, 'f', 0x00, 
-    '8', 0x00, 'e', 0x00, '-', 0x00, '8', 0x00, 
-    'a', 0x00, '2', 0x00, 'e', 0x00, '-', 0x00, 
-    'f', 0x00, 'd', 0x00, '7', 0x00, 'a', 0x00, 
-    '-', 0x00, '4', 0x00, 'c', 0x00, '7', 0x00, 
-    '8', 0x00, '4', 0x00, 'd', 0x00, 'b', 0x00, 
-    '0', 0x00, '4', 0x00, '4', 0x00, 'd', 0x00, 
+    '{', 0x00, '1', 0x00, 'D', 0x00, '4', 0x00, 
+    'B', 0x00, '2', 0x00, '3', 0x00, '6', 0x00, 
+    '5', 0x00, '-', 0x00, '4', 0x00, '7', 0x00, 
+    '4', 0x00, '9', 0x00, '-', 0x00, '4', 0x00, 
+    '8', 0x00, 'E', 0x00, 'A', 0x00, '-', 0x00, 
+    'B', 0x00, '3', 0x00, '8', 0x00, 'A', 0x00, 
+    '-', 0x00, '7', 0x00, 'C', 0x00, '6', 0x00, 
+    'F', 0x00, 'D', 0x00, 'D', 0x00, 'D', 0x00, 
+    'D', 0x00, '7', 0x00, 'E', 0x00, '2', 0x00, 
     '6', 0x00, '}', 0x00, 0x00, 0x00, 
 };
 
