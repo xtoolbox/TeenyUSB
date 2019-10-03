@@ -35,6 +35,7 @@
 //  STM32 OTG usb hardware handler
 #include "teeny_usb.h"
 #include "string.h"
+#if defined(USB_OTG_FS) || defined(USB_OTG_HS)
 
 // #define  ENABLE_VBUS_DETECT 
 
@@ -818,3 +819,4 @@ tusb_otg_t* tusb_get_otg(uint8_t id)
 }
 #endif
 
+#endif // #if defined(USB_OTG_FS) || defined(USB_OTG_HS)
