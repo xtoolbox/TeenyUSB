@@ -9,3 +9,6 @@ Rquire lua5.3 to generate the USB descriptor.
 
 ## f723dap
 CMSIS dap running on STM32F723 discovery kit.
+
+## custom_bulk
+Custom bulk demo with WinUSB.
