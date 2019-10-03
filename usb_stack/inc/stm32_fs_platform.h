@@ -180,10 +180,10 @@ typedef union _pma_ep_desc {
 // Macro used to build ep setting, Tx/Rx CTR not changed, Tx/Rx TOG bits forced to 0
 #define  BUILD_EP_SETTING(dev, bEpNum, type, rx_state, tx_state, kind)\
   /* Get end point current value */  \
- (( PCD_GET_ENDPOINT(GetUSB(dev), bEpNum)      \
+ ((( PCD_GET_ENDPOINT(GetUSB(dev), bEpNum)      \
   /* TOG bits is write 1 to toggle, mask them with current value */\
   /* then write them back will set the TOG bits to 0*/\
-   & (USB_EP_DTOG_RX | USB_EP_DTOG_TX | USB_EPTX_STAT | USB_EPRX_STAT) \
+   & (USB_EP_DTOG_RX | USB_EP_DTOG_TX | USB_EPTX_STAT | USB_EPRX_STAT)) \
   /* tx/rx state is wirte 1 to toggle, xor them with current value */ \
   /* then write them back, will set them to desired value */ \
    ^ ((tx_state) | (rx_state)) ) \
