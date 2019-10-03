@@ -1,0 +1,8 @@
+# Compiled Lua sources
+*.bin
+DebugConfig
+out
+RTE
+*.scvd
+*.uvguix.*
+*.uvoptx
