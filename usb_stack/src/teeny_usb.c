@@ -153,7 +153,7 @@ static int tusb_vendor_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
 {
   uint32_t len = 0;
   const uint8_t* desc = 0;
-  if (setup_req->bRequest == WCID_VENDOR_CODE) {
+  if(setup_req->bRequest == WCID_VENDOR_CODE) {
     switch(setup_req->wIndex){
 #if defined(HAS_WCID)
       case 4:{

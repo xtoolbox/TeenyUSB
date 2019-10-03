@@ -35,6 +35,7 @@
 #include "string.h"
 #include "teeny_usb.h"
 
+#ifndef NO_HOST
 #if defined(USB_OTG_FS) || defined(USB_OTG_HS)
 
 void tusb_otg_driver_vbus (USB_OTG_GlobalTypeDef* USBx, uint8_t state);
@@ -1138,3 +1139,4 @@ WEAK void tusb_otg_id_changed(tusb_otg_t* otg, uint8_t id_state)
 
 #endif // #if defined(USB_OTG_FS) || defined(USB_OTG_HS)
 
+#endif // #ifndef NO_HOST

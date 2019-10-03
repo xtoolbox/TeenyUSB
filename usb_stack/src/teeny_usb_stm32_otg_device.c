@@ -35,6 +35,7 @@
 #include "string.h"
 #include "teeny_usb.h"
 
+#ifndef NO_DEVICE
 #if defined(USB_OTG_FS) || defined(USB_OTG_HS)
 
 // Private functions used by teeny usb core
@@ -58,13 +59,14 @@ void tusb_setup_handler(tusb_device_t* dev);
 
 void tusb_otg_read_data(USB_OTG_GlobalTypeDef *USBx, void* buf, uint32_t len)
 {
-  __packed uint32_t * dest = (__packed uint32_t *)buf;
+  uint32_t * dest = (uint32_t *)buf;
   len = (len + 3) / 4;
   while(len){
     if(dest){
-      *(__packed uint32_t *)dest = USBx_DFIFO(0);
+      *(uint32_t *)dest = USBx_DFIFO(0);
     }else{
       uint32_t t = USBx_DFIFO(0);
+      (void)t;
     }
     dest++;
     len--;
@@ -181,7 +183,7 @@ void tusb_fifo_empty(tusb_device_t* dev, uint8_t EPn)
   len32b = (xfer_size+3) /4;
   // push data to fifo
   while(len32b){
-    USBx_DFIFO(EPn) = *((__packed uint32_t *)src);
+    USBx_DFIFO(EPn) = *((uint32_t *)src);
     src+=4;
     len32b--;
   }
@@ -601,4 +603,6 @@ void tusb_otg_device_handler(tusb_device_t* dev)
 }
 
 #endif // #if defined(USB_OTG_FS) || defined(USB_OTG_HS)
+
+#endif // #ifndef NO_DEVICE
 

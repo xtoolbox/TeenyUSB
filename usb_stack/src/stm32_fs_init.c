@@ -34,6 +34,7 @@
 
 //  STM32F1 usb hardware handler
 #include "teeny_usb.h"
+#if defined(USB)
 
 //#define IMR_MSK (USB_CNTR_CTRM  | USB_CNTR_WKUPM | USB_CNTR_SUSPM | USB_CNTR_ERRM  | USB_CNTR_SOFM | USB_CNTR_ESOFM | USB_CNTR_RESETM)
 #define IMR_MSK   ((USB_CNTR_CTRM  | USB_CNTR_WKUPM | USB_CNTR_SUSPM | USB_CNTR_RESETM))
@@ -339,5 +340,5 @@ tusb_device_t* tusb_get_device(uint8_t id)
   return &tusb_dev;
 }
 
-
+#endif  // USB
 
