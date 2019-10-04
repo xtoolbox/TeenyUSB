@@ -61,6 +61,9 @@ f072:
 f103:
 	@echo Building stm32f103ret6
 	@$(MAKE) demo TARGET='f103bulk' BOARD='stm32f103ret6'
+f303:
+	@echo Building stm32f303vct6
+	@$(MAKE) demo TARGET='f303bulk' BOARD='stm32f3_disco'
 f407:
 	@echo Building stm32f407igt6
 	@$(MAKE) demo TARGET='f407bulk' BOARD='stm32f407_evk'
