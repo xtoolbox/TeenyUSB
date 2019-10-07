@@ -163,7 +163,9 @@ static int tusb_vendor_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
       }
       case 5:{
         desc = dev->descriptors->wcid_properties[setup_req->wValue];
-        len = desc[0] + (desc[1]<<8) + (desc[2]<<16) + (desc[3]<<24);
+        if(desc){
+            len = desc[0] + (desc[1]<<8) + (desc[2]<<16) + (desc[3]<<24);
+        }
         break;
       }
 #endif
