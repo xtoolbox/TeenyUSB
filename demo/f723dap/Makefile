@@ -55,6 +55,7 @@ LDFLAGS     += -Wl,--gc-sections
 OUTDIR = ./output
 OBJDIR = ./obj
 OBJECTS      = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(notdir $(basename $(SOURCES)))))
+DEPENDS      = $(addprefix $(OBJDIR)/, $(addsuffix .d, $(notdir $(basename $(filter %c, $(SOURCES))))))
 SRCPATH      = $(sort $(dir $(SOURCES)))
 vpath %.c $(SRCPATH)
 vpath %.S $(SRCPATH)
@@ -72,6 +73,13 @@ $(OBJDIR)/%.o:%.S
 	@echo building $<
 	@$(CC) $(ASFLAGS) -c $< -o $@
 
+$(OBJDIR)/%.d:%.c
+	@set -e; $(RM) $@; $(CC) -MM $< $(CCFLAGS) > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,$(OBJDIR)/\1.o $@ : ,g' < $@.$$$$ > $@; \
+	$(RM) $@.$$$$
+
+include $(wildcard $(DEPENDS))
+
 $(OBJDIR):
 	@mkdir $@
 $(OUTDIR):
@@ -83,7 +91,7 @@ $(OUTDIR)/$(TARGET).hex:$(OUTDIR)/$(TARGET).elf
 $(OUTDIR)/$(TARGET).bin:$(OUTDIR)/$(TARGET).elf
 	@echo generating $@
 	@$(OBJCOPY) -Obinary $< $@
-$(OUTDIR)/$(TARGET).elf: $(OBJDIR) $(OBJECTS)
+$(OUTDIR)/$(TARGET).elf: $(OBJDIR) $(DEPENDS) $(OBJECTS)
 	@echo linking $@
 	@$(LD) $(LDFLAGS) $(OBJECTS) -o $@
 	@$(SIZE) $@

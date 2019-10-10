@@ -48,12 +48,13 @@ LDFLAGS     += -Wl,--gc-sections
 OUTDIR = ./output
 OBJDIR = ./obj/$(TARGET)
 OBJECTS      = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(notdir $(basename $(SOURCES)))))
+DEPENDS      = $(addprefix $(OBJDIR)/, $(addsuffix .d, $(notdir $(basename $(filter %c, $(SOURCES))))))
 SRCPATH      = $(sort $(dir $(SOURCES)))
 vpath %.c $(SRCPATH)
 vpath %.S $(SRCPATH)
 vpath %.s $(SRCPATH)
 
-all: f072 f103 f407 f723 f767
+all: f072 f103 f303 f407 f723 f767
 
 f072:
 	@echo Building stm32f072c8t6
@@ -86,6 +87,13 @@ $(OBJDIR)/%.o:%.S
 	@echo building $<
 	@$(CC) $(ASFLAGS) -c $< -o $@
 
+$(OBJDIR)/%.d:%.c
+	@set -e; $(RM) $@; $(CC) -MM $< $(CCFLAGS) > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,$(OBJDIR)/\1.o $@ : ,g' < $@.$$$$ > $@; \
+	$(RM) $@.$$$$
+
+include $(wildcard $(DEPENDS))
+
 $(OBJDIR):
 	@$(MKDIR) $@
 $(OUTDIR):
@@ -97,7 +105,7 @@ $(OUTDIR)/$(TARGET).hex:$(OUTDIR)/$(TARGET).elf
 $(OUTDIR)/$(TARGET).bin:$(OUTDIR)/$(TARGET).elf
 	@echo generating $@
 	@$(OBJCOPY) -Obinary $< $@
-$(OUTDIR)/$(TARGET).elf: $(OBJDIR) $(OBJECTS)
+$(OUTDIR)/$(TARGET).elf: $(OBJDIR) $(DEPENDS) $(OBJECTS)
 	@echo linking $@
 	@$(LD) $(LDFLAGS) $(OBJECTS) -o $@
 	@$(SIZE) $@
