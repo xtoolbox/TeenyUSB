@@ -38,7 +38,7 @@
 #define  TX_EP   PCD_ENDP1
 #define  RX_EP   PCD_ENDP2
 
-uint8_t buf[4096];
+__ALIGN_BEGIN uint8_t buf[4096] __ALIGN_END;
 __IO uint32_t data_cnt = 0;
 
 // if data tx done, set rx valid again
