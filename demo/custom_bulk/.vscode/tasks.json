@@ -11,7 +11,7 @@
                 "--login",
                 "-i",
                 "-c",
-                "make -j4"
+                "make ${input:targetType} -j4"
             ],
             "group": {
                 "kind": "build",
@@ -46,7 +46,56 @@
                 "clear": true
             },
             "problemMatcher": "$msCompile"
-        }
-    ]
-    
+        },
+        {
+            "label": "start gdb server",
+            "type": "shell",
+            "command": "openocd",
+            "args": [
+                "-f",
+                "interface/stlink.cfg",
+                "-f",
+                "target/${input:MCUType}.cfg",
+                "-f",
+                "target/patch_stlink.cfg",
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            },
+            "problemMatcher": "$msCompile"
+        },
+    ],
+    "inputs": [
+        {
+          "type": "pickString",
+          "id": "MCUType",
+          "description": "Select the MCU family?",
+          "options": [
+            "stm32f0x",
+            "stm32f1x",
+            "stm32f2x",
+            "stm32f3x",
+            "stm32f4x",
+            "stm32f7x",
+            "stm32h7x",
+          ],
+          "default": "stm32f7x"
+        },
+        {
+            "type": "pickString",
+            "id": "targetType",
+            "description": "Select the target type?",
+            "options": [
+              "all",
+              "f072",
+              "f103",
+              "f303",
+              "f407",
+              "f723",
+              "f767"
+            ],
+            "default": "all"
+          }
+      ]
 }

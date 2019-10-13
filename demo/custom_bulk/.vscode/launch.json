@@ -1,0 +1,70 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/output/${input:targetType}bulk.elf",
+            "args": [
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    // Because the setup command can not pass the '\' into gdb
+                    // So add the elf file path here
+                    "name": "Path",
+                    "value": "${env:Path};${workspaceFolder}/output"
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "arm-none-eabi-gdb.exe",
+            // we can not pass the targetType input varible to the bulld task
+            // https://github.com/microsoft/vscode/issues/4758
+            "preLaunchTask": "build", 
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true,
+                },
+                {
+                    "text":"file ${input:targetType}bulk.elf",
+                },
+                {
+                    "text": "target remote localhost:3333",
+                },
+                {
+                    "text": "load",
+                },
+                {
+                    "text": "monitor reset",
+                },
+                {
+                    "text": "b main",
+                },
+            ],
+        }
+    ],
+    "inputs": [
+        {
+          "type": "pickString",
+          "id": "targetType",
+          "description": "Select the target type?",
+          "options": [
+            "f072",
+            "f103",
+            "f303",
+            "f407",
+            "f723",
+            "f767"
+          ],
+          "default": "f723"
+        }
+      ]
+}
