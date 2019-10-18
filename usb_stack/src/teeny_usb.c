@@ -265,18 +265,35 @@ static void tusb_standard_request(tusb_device_t* dev, tusb_setup_packet* setup_r
     tusb_send_status(dev);
     break;
   case USB_REQ_SET_FEATURE:
-    if(setup_req->wValue == USB_FEATURE_REMOTE_WAKEUP){
+    if( (setup_req->bmRequestType & USB_REQ_RECIPIENT_MASK)  == USB_REQ_RECIPIENT_ENDPOINT){
+      uint8_t ep_addr  = LO_BYTE(setup_req->wIndex);
+      if((ep_addr & 0x7f) < EP_NUM){
+        // In some case, we may report more endpoint than the device support
+        tusb_set_stall(dev, ep_addr);
+        break;
+      }
+    }else if(setup_req->wValue == USB_FEATURE_REMOTE_WAKEUP){
       dev->remote_wakeup = 1;
       tusb_send_status(dev);
       break;
     }
+    tusb_set_stall(dev, 0);
+    break;
     // otherwise fall to default
   case USB_REQ_CLEAR_FEATURE:
-    if(setup_req->wValue == USB_FEATURE_REMOTE_WAKEUP){
+    if( (setup_req->bmRequestType & USB_REQ_RECIPIENT_MASK)  == USB_REQ_RECIPIENT_ENDPOINT){
+      uint8_t ep_addr  = LO_BYTE(setup_req->wIndex);
+      if((ep_addr & 0x7f) < EP_NUM){
+        tusb_clear_stall(dev, ep_addr);
+        break;
+      }
+    }else if(setup_req->wValue == USB_FEATURE_REMOTE_WAKEUP){
       dev->remote_wakeup = 0;
       tusb_send_status(dev);
       break;
     }
+    tusb_set_stall(dev, 0);
+    break;
     // otherwise fall to default
   default:
     // Error condition, stall ep0
