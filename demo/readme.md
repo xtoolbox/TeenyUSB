@@ -12,3 +12,6 @@ CMSIS dap running on STM32F723 discovery kit.
 
 ## custom_bulk
 Custom bulk demo with WinUSB.
+
+## composite
+Composite device demo, HID + CDC + WinUSB Bulk + MSC
