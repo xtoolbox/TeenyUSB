@@ -205,7 +205,7 @@ static int msc_scsi_mode_sense_6(tusb_msc_device_t* msc)
   rsp->write_protect = 0;
   if(msc->scsi_ops && msc->scsi_ops->is_writable){
     rsp->write_protect = 
-    msc->scsi_ops->is_writable(msc, msc->state.cbw.lun) ? 1: 0;
+    msc->scsi_ops->is_writable(msc, msc->state.cbw.lun) ? 0: 1;
   }
   rsp->mode_data_length = 3;
   msc->state.csw.data_residue = 4;
@@ -226,7 +226,7 @@ static int msc_scsi_mode_sense_10(tusb_msc_device_t* msc)
   rsp->write_protect = 0;
   if(msc->scsi_ops && msc->scsi_ops->is_writable){
     rsp->write_protect = 
-    msc->scsi_ops->is_writable(msc, msc->state.cbw.lun) ? 1: 0;
+    msc->scsi_ops->is_writable(msc, msc->state.cbw.lun) ? 0: 1;
   }
   SET_BE16(rsp->block_desc_length, 6);
   int a_len =  GET_BE16(cmd->length);
