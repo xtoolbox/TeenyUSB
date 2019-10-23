@@ -36,8 +36,7 @@
 #ifndef __STM32_FS_PLATFORM_H__
 #define __STM32_FS_PLATFORM_H__
 
-#include "usbd_def.h"
-#include "usbd_core.h"
+#include "tusb_def.h"
 
 #if defined(STM32F0) || defined(STM32F302xE) || defined(STM32F303xE) || defined(STM32F302x8)
 // Define PMA buffer layout for STM32F0xx

@@ -36,7 +36,7 @@
 #define __TEENY_USB_H__
 
 #include "teeny_usb_platform.h"
-
+#include "teeny_usb_init.h"
 
 /* Public Interface - May be used in end-application: */
 

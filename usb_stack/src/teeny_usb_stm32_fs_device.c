@@ -355,6 +355,17 @@ void tusb_clear_stall(tusb_device_t* dev, uint8_t EPn)
 }
 
 
+
+// For FS core, the address set when status send done
+//void tusb_set_addr_before_status(tusb_device_t* dev);
+void tusb_set_addr_after_status(tusb_device_t* dev)
+{
+  if (dev->addr){
+    GetUSB(dev)->DADDR = (dev->addr | USB_DADDR_EF);
+    dev->addr = 0;
+  }
+}
+
 // end point handler for USB_FS core
 void tusb_ep_handler(tusb_device_t* dev, uint8_t EPn)
 {

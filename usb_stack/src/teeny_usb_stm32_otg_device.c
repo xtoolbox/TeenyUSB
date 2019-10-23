@@ -300,6 +300,16 @@ static void tusb_otg_device_prepare_setup(tusb_device_t* dev)
   }
 }
 
+// For OTG core, the address will auto take effect after status sent,
+// So we need set address before send status
+//void tusb_set_addr_after_status(tusb_device_t* dev);
+void tusb_set_addr_before_status (tusb_device_t* dev)
+{
+  USB_OTG_GlobalTypeDef *USBx = GetUSB(dev);
+  USBx_DEVICE->DCFG &= ~ (USB_OTG_DCFG_DAD);
+  USBx_DEVICE->DCFG |= (dev->addr << 4) & USB_OTG_DCFG_DAD ;
+}
+
 void tusb_set_stall(tusb_device_t* dev, uint8_t EPn)
 {
   PCD_TypeDef* USBx =  GetUSB(dev);

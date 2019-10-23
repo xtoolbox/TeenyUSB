@@ -36,8 +36,7 @@
 #ifndef __STM32_OTG_PLATFORM_H__
 #define __STM32_OTG_PLATFORM_H__
 
-#include "usbd_def.h"
-#include "usbd_core.h"
+#include "tusb_def.h"
 #define PCD_ENDP0                                                     ((uint8_t)0)
 #define PCD_ENDP1                                                     ((uint8_t)1)
 #define PCD_ENDP2                                                     ((uint8_t)2)

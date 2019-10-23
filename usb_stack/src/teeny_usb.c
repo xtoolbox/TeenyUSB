@@ -129,25 +129,6 @@ static void tusb_get_descriptor(tusb_device_t* dev, tusb_setup_packet *req)
   }
 }
 
-// Callback function for set address setup
-#if defined(USB_OTG_FS) || defined(USB_OTG_HS)
-static void tusb_otg_set_addr (tusb_device_t* dev)
-{
-  USB_OTG_GlobalTypeDef *USBx = GetUSB(dev);
-  USBx_DEVICE->DCFG &= ~ (USB_OTG_DCFG_DAD);
-  USBx_DEVICE->DCFG |= (dev->addr << 4) & USB_OTG_DCFG_DAD ;
-}
-#endif
-#if defined(USB) 
-static void tusb_fs_set_addr(tusb_device_t* dev)
-{
-  if (dev->addr){
-    GetUSB(dev)->DADDR = (dev->addr | USB_DADDR_EF);
-    dev->addr = 0;
-  }
-}
-#endif
-
 #if defined(HAS_WCID) || defined(HAS_WCID_20)
 static int tusb_vendor_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
 {
@@ -197,6 +178,12 @@ static int tusb_vendor_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
 }
 #endif
 
+// Set device address before send status
+WEAK  void tusb_set_addr_before_status(tusb_device_t* dev){}
+
+// Set device address after send status
+WEAK  void tusb_set_addr_after_status(tusb_device_t* dev){}
+
 // Standard request process function
 static void tusb_standard_request(tusb_device_t* dev, tusb_setup_packet* setup_req)
 {
@@ -228,11 +215,8 @@ static void tusb_standard_request(tusb_device_t* dev, tusb_setup_packet* setup_r
   switch (setup_req->bRequest) {
   case USB_REQ_SET_ADDRESS:
     dev->addr = LO_BYTE(setup_req->wValue);
-#if defined(USB_OTG_FS) || defined(USB_OTG_HS)
-    tusb_otg_set_addr(dev);
-#else
-    dev->ep0_tx_done = tusb_fs_set_addr;
-#endif
+    tusb_set_addr_before_status(dev);
+    dev->ep0_tx_done = tusb_set_addr_after_status;
     tusb_send_status(dev);
     break;
   
