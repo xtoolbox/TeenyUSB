@@ -43,7 +43,7 @@
                     "text": "load",
                 },
                 {
-                    "text": "monitor reset",
+                    "text": "monitor reset",
                 },
                 {
                     "text": "b main",

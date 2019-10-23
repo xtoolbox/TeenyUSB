@@ -30,7 +30,6 @@ INCLUDES += $(DAP_PATH)
 TUSB_PATH = ../../usb_stack
 SOURCES  += $(wildcard $(TUSB_PATH)/src/*.c)
 INCLUDES += $(TUSB_PATH)/inc
-INCLUDES += $(TUSB_PATH)/Drivers/Middlewares/ST/STM32_USB_Device_Library/Core/Inc
 INCLUDES += $(TUSB_PATH)/Drivers/CMSIS/Include
 
 TOOLSET     ?= arm-none-eabi-
@@ -74,6 +73,7 @@ $(OBJDIR)/%.o:%.S
 	@$(CC) $(ASFLAGS) -c $< -o $@
 
 $(OBJDIR)/%.d:%.c
+	@echo make depend $<
 	@set -e; $(RM) $@; $(CC) -MM $< $(CCFLAGS) > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,$(OBJDIR)/\1.o $@ : ,g' < $@.$$$$ > $@; \
 	$(RM) $@.$$$$
