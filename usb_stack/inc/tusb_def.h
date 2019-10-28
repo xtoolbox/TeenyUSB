@@ -46,7 +46,8 @@
 #define  USB_LEN_OTG_DESC                               0x03
 #define  USB_LEN_LANGID_STR_DESC                        0x04
 #define  USB_LEN_OTHER_SPEED_DESC_SIZ                   0x09
-#define  USB_LEN_IF_ASOC_DESC                           0x08
+#define  USB_LEN_IF_ASSOC_DESC                          0x08
+#define  USB_LEN_FUNCTION_DESC                          0x03
 
 #define  USBD_IDX_LANGID_STR                            0x00 
 #define  USBD_IDX_MFC_STR                               0x01 
@@ -188,8 +189,15 @@
 #define STATIC_ASSERT2(X,L) STATIC_ASSERT3(X,L)
 #define STATIC_ASSERT(X)   STATIC_ASSERT2(X,__LINE__)
 
+#if defined   (__GNUC__)
+#define __PACK_BEGIN
+#define __PACK_END    __packed
+#else
+#define __PACK_BEGIN  __packed
+#define __PACK_END
+#endif
 
-typedef struct _usb_device_descriptor {
+typedef __PACK_BEGIN struct _usb_device_descriptor {
   uint8_t bLength;
   uint8_t bDescriptorType;
   uint16_t bcdUSB;
@@ -204,12 +212,12 @@ typedef struct _usb_device_descriptor {
   uint8_t iProduct;
   uint8_t iSerialNumber;
   uint8_t bNumConfigurations;
-} __packed  usb_device_descriptor_t;
+} __PACK_END usb_device_descriptor_t;
 
 STATIC_ASSERT(sizeof(usb_device_descriptor_t) == USB_LEN_DEV_DESC)
 
 
-typedef struct _usb_device_qualifier_descriptor {
+typedef __PACK_BEGIN struct _usb_device_qualifier_descriptor {
   uint8_t bLength;
   uint8_t bDescriptorType;
   uint16_t bcdUSB;
@@ -219,13 +227,13 @@ typedef struct _usb_device_qualifier_descriptor {
   uint8_t bMaxPacketSize;
   uint8_t bNumConfigurations;
   uint8_t bReserved;
-} __packed usb_device_qualifier_descriptor_t;
+} __PACK_END usb_device_qualifier_descriptor_t;
 
 STATIC_ASSERT(sizeof(usb_device_qualifier_descriptor_t) == USB_LEN_DEV_QUALIFIER_DESC)
 
 
 
-typedef struct _usb_config_descriptor_header {
+typedef __PACK_BEGIN struct _usb_config_descriptor {
   uint8_t bLength;
   uint8_t bDescriptorType;
   uint16_t wTotalLength;
@@ -234,11 +242,11 @@ typedef struct _usb_config_descriptor_header {
   uint8_t iConfiguration;
   uint8_t bmAttributes;
   uint8_t bMaxPower;
-} __packed usb_config_descriptor_header_t;
+} __PACK_END usb_config_descriptor_t;
 
-STATIC_ASSERT(sizeof(usb_config_descriptor_header_t) == USB_LEN_CFG_DESC)
+STATIC_ASSERT(sizeof(usb_config_descriptor_t) == USB_LEN_CFG_DESC)
 
-typedef struct _usb_interface_descriptor_header {
+typedef __PACK_BEGIN struct _usb_interface_descriptor {
   uint8_t bLength;
   uint8_t bDescriptorType;
   uint8_t bInterfaceNumber;
@@ -248,24 +256,23 @@ typedef struct _usb_interface_descriptor_header {
   uint8_t bInterfaceSubClass;
   uint8_t bInterfaceProtocol;
   uint8_t iInterface;
-}__packed usb_interface_descriptor_header_t;
+} __PACK_END usb_interface_descriptor_t;
 
-STATIC_ASSERT(sizeof(usb_interface_descriptor_header_t) == USB_LEN_IF_DESC)
+STATIC_ASSERT(sizeof(usb_interface_descriptor_t) == USB_LEN_IF_DESC)
 
-typedef struct _usb_endpoint_descriptor {
+typedef __PACK_BEGIN struct _usb_endpoint_descriptor {
   uint8_t bLength;
   uint8_t bDescriptorType;
   uint8_t bEndpointAddress;
   uint8_t bmAttributes;
   uint16_t wMaxPacketSize;
   uint8_t bInterval;
-} __packed usb_endpoint_descriptor_t;
+} __PACK_END usb_endpoint_descriptor_t;
 
 STATIC_ASSERT(sizeof(usb_endpoint_descriptor_t) == USB_LEN_EP_DESC)
 
 
-
-typedef struct _usb_iface_assoc_descriptor {
+typedef __PACK_BEGIN struct _usb_interface_association_descriptor {
   uint8_t bLength;
   uint8_t bDescriptorType;
   uint8_t bFirstInterface;
@@ -274,8 +281,16 @@ typedef struct _usb_iface_assoc_descriptor {
   uint8_t bFunctionSubClass;
   uint8_t bFunctionProtocol;
   uint8_t iFunction;
-} __packed usb_iface_assoc_descriptor_t;
+} __PACK_END usb_interface_association_descriptor_t;
 
-STATIC_ASSERT(sizeof(usb_iface_assoc_descriptor_t) == USB_LEN_IF_ASOC_DESC)
+STATIC_ASSERT(sizeof(usb_interface_association_descriptor_t) == USB_LEN_IF_ASSOC_DESC)
+
+typedef __PACK_BEGIN struct _usb_function_descriptor {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubtype;
+} __PACK_END usb_function_descriptor_t;
+
+STATIC_ASSERT(sizeof(usb_function_descriptor_t) == USB_LEN_FUNCTION_DESC)
 
 #endif
