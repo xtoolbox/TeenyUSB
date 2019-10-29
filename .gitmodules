@@ -1,0 +1,3 @@
+[submodule "TeenyDT"]
+	path = TeenyDT
+	url = https://github.com/xtoolbox/TeenyDT.git
