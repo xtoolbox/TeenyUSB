@@ -1,6 +1,6 @@
 return {
   Device {
-    strManufacture = "TeenyUSB",
+    strManufacturer = "TeenyUSB",
     strProduct = "TeenyUSB HS CMSIS-DAP",
     strSerial = "TUSB123456HS",
     idVendor = 0x0d28,
@@ -20,7 +20,7 @@ return {
    }
  },
  Device {
-    strManufacture = "TeenyUSB",
+    strManufacturer = "TeenyUSB",
     strProduct = "TeenyUSB FS CMSIS-DAP",
     strSerial = "TUSB123456FS",
     idVendor = 0x0d28,

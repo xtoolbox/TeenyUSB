@@ -100,7 +100,7 @@ USBMEM ?= 512
 USBEP  ?= 7
 
 PWD = $(shell pwd)
-teeny_usb_desc.c:$(TEENYDT)
+teeny_usb_desc.c teeny_usb_init.h:$(TEENYDT)
 	@echo generate USB descriptor
 	cd $(PWD)/../../TeenyDT && \
 	lua gen_descriptor.lua $(PWD)/$< -maxmem=$(USBMEM) -maxep=$(USBEP) && \

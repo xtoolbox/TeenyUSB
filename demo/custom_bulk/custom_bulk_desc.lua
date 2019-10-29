@@ -1,5 +1,5 @@
 return Device {
-    strManufacture = "TeenyUSB",
+    strManufacturer = "TeenyUSB",
     strProduct = "TeenyUSB Custom Bulk",
     strSerial = "TUSB123456",
     idVendor = 0x0483,
