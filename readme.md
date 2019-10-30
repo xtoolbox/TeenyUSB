@@ -16,7 +16,7 @@ A teeny USB stack for STM32 MCUs, also contain a toolset to create USB descripto
 # 目录结构说明 Folder
 [usb_stack](./usb_stack) TeenyUSB协议栈的源码 Source code of TeenyUSB
 
-[Demo](./Demo) 演示代码目录，Demo folder. "make all" 编译所有DEMO，make all demo.
+[Demo](./demo) 演示代码目录，demo folder. "make all" 编译所有DEMO，make all demo.
 
 [pc_test_tool](./pc_test_tool) PC端测试工具及源码 Source code for USB device test tool
 
