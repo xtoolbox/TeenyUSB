@@ -59,7 +59,7 @@
 #error Embedded and external HS phy can not be used together
 #endif
 
-#if defined(OTG_FS_ENABLE_DMA)
+#if defined(OTG_HS_ENABLE_DMA)
 #ifndef DESCRIPTOR_BUFFER_SIZE
 #error DMA enabled, but descriptor buffer size not defined
 #elif DESCRIPTOR_BUFFER_SIZE == 0
@@ -211,9 +211,23 @@ void tusb_close_core(tusb_core_t* core)
 	else if(USBx == USB_OTG_HS){
 #if defined(USB_HS_PHYC)
     __HAL_RCC_OTGPHYC_CLK_DISABLE();
+    
+    // TODO: To Fixme
+    // Reset the HighSpeed phy and core here
+    // HS core will enter a un-recoverable transaction error
+    // after re-connect device to the high speed Host port
+    // The same issue in CubeMX with F7 14.0 library on HS core
+    __HAL_RCC_OTGPHYC_FORCE_RESET();
+    tusb_delay_ms(10);
+    __HAL_RCC_OTGPHYC_RELEASE_RESET();
 #endif
     __HAL_RCC_USB_OTG_HS_CLK_DISABLE();
     __HAL_RCC_USB_OTG_HS_ULPI_CLK_DISABLE();
+        
+    __HAL_RCC_USB_OTG_HS_FORCE_RESET();
+    tusb_delay_ms(10);
+    __HAL_RCC_USB_OTG_HS_RELEASE_RESET();
+        
     NVIC_DisableIRQ(OTG_HS_IRQn);
   }
 #endif
@@ -613,7 +627,7 @@ void tusb_open_host(tusb_host_t* host)
 {
   USB_OTG_GlobalTypeDef* USBx = GetUSB(host);
   tusb_otg_core_init((tusb_core_t*) host);
-  // Force to device mode
+  // Force to host mode
   USBx->GUSBCFG &= ~(USB_OTG_GUSBCFG_FHMOD | USB_OTG_GUSBCFG_FDMOD);
   USBx->GUSBCFG |= USB_OTG_GUSBCFG_FHMOD;
   memset(&host->state, 0, (sizeof(tusb_host_t) -  (uint32_t) (&((tusb_host_t*)0)->state) ) );
