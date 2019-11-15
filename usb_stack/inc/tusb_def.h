@@ -88,14 +88,35 @@
 #define  USB_DESC_TYPE_BOS                                 0x0F
 #define  USB_DESC_TYPE_DEVICE_CAPABILITY                   16
 
-
 #define USB_DEVICE_DESCRIPTOR_TYPE              0x01
 #define USB_CONFIGURATION_DESCRIPTOR_TYPE       0x02
 #define USB_STRING_DESCRIPTOR_TYPE              0x03
 #define USB_INTERFACE_DESCRIPTOR_TYPE           0x04
 #define USB_ENDPOINT_DESCRIPTOR_TYPE            0x05
 #define USB_IAD_DESCRIPTOR_TYPE                 0x0B
+#define USB_HUB_DESCRIPTOR_TYPE                 0x29
 #define USB_DESC_TYPE_REPORT                    0x22
+
+
+#define USB_CLASS_DEVICE                0x00
+#define USB_CLASS_AUDIO                 0x01
+#define USB_CLASS_CDC                   0x02
+#define USB_CLASS_HID                   0x03
+#define USB_CLASS_PHYSICAL              0x05
+#define USB_CLASS_IMAGE                 0x06
+#define USB_CLASS_PRINTER               0x07
+#define USB_CLASS_MASS_STORAGE          0x08
+#define USB_CLASS_HUB                   0x09
+#define USB_CLASS_CDC_DATA              0x0a
+#define USB_CLASS_SMART_CARD            0x0b
+#define USB_CLASS_SECURITY              0x0d
+#define USB_CLASS_VIDEO                 0x0e
+#define USB_CLASS_HEALTHCARE            0x0f
+#define USB_CLASS_DIAG_DEVICE           0xdc
+#define USB_CLASS_WIRELESS              0xe0
+#define USB_CLASS_MISC                  0xef
+#define USB_CLASS_APP_SPECIFIC          0xfe
+#define USB_CLASS_VEND_SPECIFIC         0xff
 
 
 #define USB_CONFIG_REMOTE_WAKEUP                           2
@@ -131,6 +152,7 @@
 #define USBD_EP_TYPE_ISOC                                 1
 #define USBD_EP_TYPE_BULK                                 2
 #define USBD_EP_TYPE_INTR                                 3
+#define USBD_EP_TYPE_MASK                                 3
 
 
 #ifndef  SWAPBYTE
