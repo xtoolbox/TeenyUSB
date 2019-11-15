@@ -712,6 +712,7 @@ void tusb_otg_host_handler(tusb_host_t* host)
   /* Handle Host SOF Interrupts */
   if( INTR() & USB_OTG_GINTSTS_SOF ){
     USBx->GINTSTS = USB_OTG_GINTSTS_SOF;
+      tusb_host_sof_event(host);
   }
   /* Handle Host channel Interrupts */
   if( INTR() & USB_OTG_GINTSTS_HCINT ){
@@ -808,6 +809,7 @@ void tusb_host_init_channel(tusb_host_t* host, uint8_t hc_num, uint8_t dev_addr,
   if (ep_type == EP_TYPE_INTR){
     HC->HCCHAR |= USB_OTG_HCCHAR_ODDFRM ;
   }
+  
   memset(hc, 0, sizeof(*hc));
   hc->speed = speed;
   hc->is_use = 1;
@@ -878,7 +880,7 @@ static void tusb_otg_send_data(tusb_host_t* host, uint8_t hc_num)
   }
   act_len = (act_len+3)/4;
   for(i=0;i<act_len;i++){
-    USBx_DFIFO((uint32_t)hc_num) = *((__packed uint32_t *)pSrc);
+    USBx_DFIFO((uint32_t)hc_num) = *((uint32_t *)pSrc);
     pSrc++;
   }
   if(len){
@@ -997,6 +999,8 @@ uint32_t tusb_otg_host_xfer_data(tusb_host_t* host, uint8_t hc_num, uint8_t is_d
   tusb_hc_data_t* hc = &host->hc[hc_num];
   uint32_t mps = HC->HCCHAR & USB_OTG_HCCHAR_MPSIZ;
   uint8_t is_in = (HC->HCCHAR & USB_OTG_HCCHAR_EPDIR) != 0;
+  (void)is_in;
+  (void)mps;
 #if defined(USB_OTG_HS)
   uint8_t is_dma = (USBx == USB_OTG_HS) && ((USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN) != 0);
 #endif
@@ -1116,16 +1120,22 @@ WEAK void tusb_host_port_changed(tusb_host_t* host, uint8_t port, host_port_stat
   (void)host;
 }
 
+WEAK void tusb_host_sof_event(tusb_host_t* host)
+{
+  (void)host;
+}
+
 // duplicate this functon in xx_otg_device.c with weak attribute
 WEAK void tusb_otg_read_data(USB_OTG_GlobalTypeDef *USBx, void* buf, uint32_t len)
 {
-  __packed uint32_t * dest = (__packed uint32_t *)buf;
+  uint32_t * dest = (uint32_t *)buf;
   len = (len + 3) / 4;
   while(len){
     if(dest){
-      *(__packed uint32_t *)dest = USBx_DFIFO(0);
+      *(uint32_t *)dest = USBx_DFIFO(0);
     }else{
       __IO uint32_t t = USBx_DFIFO(0);
+      (void)t;
     }
     dest++;
     len--;

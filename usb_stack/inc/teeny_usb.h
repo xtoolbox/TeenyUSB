@@ -36,7 +36,9 @@
 #define __TEENY_USB_H__
 
 #include "teeny_usb_platform.h"
+#ifndef NO_DEVICE
 #include "teeny_usb_init.h"
+#endif
 
 /* Public Interface - May be used in end-application: */
 
@@ -569,7 +571,18 @@ int tusb_pipe_close(tusb_pipe_t* pipe);
  */
 int tusb_pipe_cancel(tusb_pipe_t* pipe);
 
-
+/** transfer a packet
+ *
+ *  \ingroup Group_Host
+ *
+ *  \param[in] host           USB host handle, return from \ref tusb_get_host
+ *  \param[in] hc_num         host channel number
+ *  \param[in] is_data        0 - setup packet, 1 - data packet
+ *  \param[in] data           data buffer for read/write
+ *  \param[in] len            data length / data buffer size
+ */
+uint32_t tusb_otg_host_xfer_data(tusb_host_t* host, uint8_t hc_num, uint8_t is_data, uint8_t* data, uint32_t len);
+#define  tusb_host_xfer_data   tusb_otg_host_xfer_data
 
 /** Send a setup packet
  *
@@ -643,6 +656,15 @@ int tusb_on_channel_event(tusb_host_t* host, uint8_t hc_num);
  */
 void tusb_host_port_changed(tusb_host_t* host, uint8_t port, host_port_state_t new_state);
 
+/** Called when SOF send
+ *  This is a WEAK function, default do nothing
+ *  user application can override it to handle the SOF event
+ *
+ *  \ingroup Group_Event
+ *
+ *  \param[in]  host           USB host handle, return from \ref tusb_get_host
+ */
+void tusb_host_sof_event(tusb_host_t* host);
 
 //////////////////////////////////////////////
 // OTG functions, used in DRD mode
