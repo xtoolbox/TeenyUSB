@@ -79,7 +79,7 @@ do{\
   __HAL_RCC_GPIOG_CLK_ENABLE();\
   GPIOG->MODER &= ~(GPIO_MODER_MODER0 << (8*2));\
   GPIOG->MODER |= (GPIO_MODER_MODER0_0 << (8*2));\
-  GPIOG->BRR = GPIO_PIN_8;\
+  GPIOG->BSRR = GPIO_PIN_8<<16;\
 }while(0)
 
 
