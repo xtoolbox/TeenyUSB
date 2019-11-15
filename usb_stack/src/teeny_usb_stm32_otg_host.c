@@ -394,6 +394,7 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
     __HAL_HCD_MASK_HALT_HC_INT(ch_num);
     if(hc->is_cancel){
       hc->xfer_done = 1;
+      hc->is_cancel = 0;
       hc->state = TUSB_CS_XFER_CANCEL;
     }else if(hc->state == TUSB_CS_TRANSFER_COMPLETE)
     {
@@ -403,8 +404,7 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
     {
       hc->xfer_done = 1;
     }
-    else if((hc->state == TUSB_CS_TRANSACTION_ERROR) ||
-            (hc->state == TUSB_CS_DT_ERROR))
+    else if(hc->state == TUSB_CS_TRANSACTION_ERROR)
     {
       hc->error_count++;
       if(hc->error_count > MAX_ERROR_RETRY_TIME){
@@ -416,6 +416,10 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
         tmpreg |= USB_OTG_HCCHAR_CHENA;
         HC->HCCHAR = tmpreg;
       }
+    }
+    else if (hc->state == TUSB_CS_DT_ERROR)
+    {
+        hc->xfer_done = 1;
     }
     else if (hc->state == TUSB_CS_NAK)
     {
@@ -649,8 +653,7 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
     {
       hc->xfer_done = 1;
     }
-    else if ((hc->state == TUSB_CS_TRANSACTION_ERROR) ||
-            (hc->state == TUSB_CS_DT_ERROR))
+    else if (hc->state == TUSB_CS_TRANSACTION_ERROR)
     {
       hc->error_count++;
       if(hc->error_count > MAX_ERROR_RETRY_TIME){
@@ -662,6 +665,10 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
         tmpreg |= USB_OTG_HCCHAR_CHENA;
         HC->HCCHAR = tmpreg;
       }
+    }
+    else if (hc->state == TUSB_CS_DT_ERROR)
+    {
+        hc->xfer_done = 1;
     }
     else
     {
