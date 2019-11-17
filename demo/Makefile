@@ -12,6 +12,7 @@ all:
 	cd f723dap && '$(MAKE)'
 	cd custom_bulk && '$(MAKE)'
 	cd composite && '$(MAKE)'
+	cd host && '$(MAKE)'
 
 f723dap:
 	cd f723dap && '$(MAKE)'
@@ -22,8 +23,12 @@ bulk:
 comp:
 	cd composite && '$(MAKE)'
 
+host:
+	cd host && '$(MAKE)'
+
 clear: clean
 clean:
 	cd f723dap && '$(MAKE)' clear
 	cd custom_bulk && '$(MAKE)' clear
 	cd composite && '$(MAKE)' clear
+	cd host && '$(MAKE)' clear
