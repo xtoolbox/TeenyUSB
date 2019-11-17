@@ -452,9 +452,9 @@
               <FilePath>..\..\usb_stack\class\host\tusbh_hub.c</FilePath>
             </File>
             <File>
-              <FileName>tusbh_hid_boot.c</FileName>
+              <FileName>tusbh_hid.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\usb_stack\class\host\tusbh_hid_boot.c</FilePath>
+              <FilePath>..\..\usb_stack\class\host\tusbh_hid.c</FilePath>
             </File>
           </Files>
         </Group>
