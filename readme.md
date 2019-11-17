@@ -7,7 +7,7 @@ A teeny USB stack for STM32 MCUs, also contain a toolset to create USB descripto
 # 特性
 1. 设备例程：U盘+串口+自定义HID+WinUSB 复合设备，自定义设备批量传输(无需驱动), F723 DapLink。
 2. 主机例程：无协议栈主机，键盘鼠标+HUB。
-3. 使用lua脚本生成USB相关描述符，并根据描述符自动生成初始化配置代码，[在线试用](http://dt.tusb.org)。
+3. 使用lua脚本生成USB相关描述符，并根据描述符自动生成初始化配置代码，[在线试用](http://dt1.tusb.org)。
 # Feature
 1. Device demo: Composite(MSC+CDC+HID+WinUSB) , Custom Bulk (No custom driver need, even no inf), DAPLink V1/V2 in STM32F723
 2. Host demo: raw host, hub+keyboard+mouse
