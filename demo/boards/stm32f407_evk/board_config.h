@@ -102,5 +102,22 @@ do { \
 
 #define  HOST_PORT_POWER_ON()
 
+#define  HOST_PORT_POWER_ON_HS()
+
+#define  HOST_PORT_POWER_ON_FS() \
+do{\
+  __HAL_RCC_GPIOC_CLK_ENABLE();\
+  GPIOC->MODER &= ~(GPIO_MODER_MODER0 << (1*2));\
+  GPIOC->MODER |= (GPIO_MODER_MODER0_0 << (1*2));\
+  GPIOC->BSRR = GPIO_PIN_1<<16;\
+}while(0)
+
+// init the stdio hardware
+void stdio_init(void);
+// stdin recv char handler
+void stdin_recvchar(int ch);
+// stdout send char handler 
+void stdout_sendchar(int ch);
+
 #endif
 

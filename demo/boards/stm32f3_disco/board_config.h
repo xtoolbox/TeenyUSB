@@ -59,6 +59,11 @@
 
 #define  TEST_APP_USB_CORE          USB_CORE_ID_FS
 
+/* STM32F303 flash size */
+#define  FLASH_SIZE  (256*1024)
+
+void flash_write(uint32_t addr, const uint8_t* buf, uint32_t size);
+
 
 #endif
 

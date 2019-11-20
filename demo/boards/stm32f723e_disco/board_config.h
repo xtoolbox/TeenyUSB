@@ -86,6 +86,13 @@ do{\
 
 #define  HOST_PORT_POWER_ON()  HOST_PORT_POWER_ON_HS()
 
+// init the stdio hardware
+void stdio_init(void);
+// stdin recv char handler
+void stdin_recvchar(int ch);
+// stdout send char handler 
+void stdout_sendchar(int ch);
+
 
 #endif
 

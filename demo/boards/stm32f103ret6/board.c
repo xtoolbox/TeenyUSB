@@ -31,52 +31,79 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
-#ifndef __BOARD_CONFIG_H__
-#define __BOARD_CONFIG_H__
 
-/* Use external phy for high speed core */
-// #define  OTG_HS_EXTERNAL_PHY
 
-/* Use embedded phy for high speed core */
-// #define  OTG_HS_EMBEDDED_PHY
+////////////////////////////////////////////////
+/// TeenyUSB board related API
+////////////////////////////////////////////////
 
-/* Use embedded phy for full speed core */ 
-#define  OTG_FS_EMBEDDED_PHY
+#include "teeny_usb.h"
 
-/* Enable DMA for High speed phy */
-// #define  OTG_HS_ENABLE_DMA
+static int flash_init;
 
-/* Support for other speed config and device qualifier descriptor */
-#define  SUPPORT_OTHER_SPEED
+static void wait_flash(void)
+{
+  int cnt = 0x100000;
+  while( (FLASH->SR & FLASH_FLAG_BSY) == FLASH_FLAG_BSY){
+    if(cnt<=0)break;
+    cnt--;
+  }
+  if ( (FLASH->SR & FLASH_FLAG_EOP) == FLASH_FLAG_EOP ){
+    FLASH->SR = FLASH_FLAG_EOP;
+  }
+}
 
-/* Setup descriptor buffer size, used for other speed config and DMA */
-#define  DESCRIPTOR_BUFFER_SIZE  256
 
-/* USB core ID used in test app, 0 - FS core, 1 - HS core */
-#define  USB_CORE_ID_FS             0
-//#define  USB_CORE_ID_HS             1
+static void erase_page(uint32_t addr)
+{
+    wait_flash();
 
-#define  TEST_APP_USB_CORE          USB_CORE_ID_FS
+    FLASH->CR |= FLASH_CR_PER;
+    FLASH->AR = addr;
+    FLASH->CR |= FLASH_CR_STRT;
 
-#define  HOST_PORT_POWER_ON_HS()
+    wait_flash();
+    FLASH->CR &= ~FLASH_CR_PER;
+}
 
-#define  HOST_PORT_POWER_ON_FS() \
-do{\
-  __HAL_RCC_GPIOG_CLK_ENABLE();\
-  GPIOG->MODER &= ~(GPIO_MODER_MODER0 << (6*2));\
-  GPIOG->MODER |= (GPIO_MODER_MODER0_0 << (6*2));\
-  GPIOG->BSRR = GPIO_PIN_6;\
-}while(0)
+static void wirte_flash(uint32_t addr, const uint8_t* buf, uint32_t size)
+{
 
-#define  HOST_PORT_POWER_ON()  HOST_PORT_POWER_ON_FS()
+    wait_flash();
+    FLASH->CR |= FLASH_CR_PG;
+    while(size>=2){
+        *((uint16_t*)addr) = (buf[0]) | ((uint16_t)buf[1]<<8);
+        wait_flash();
+        size-=2;
+        buf+=2;
+        addr+=2;
+    }
+    CLEAR_BIT(FLASH->CR, FLASH_CR_PG);
+}
 
-// init the stdio hardware
-void stdio_init(void);
-// stdin recv char handler
-void stdin_recvchar(int ch);
-// stdout send char handler 
-void stdout_sendchar(int ch);
+static void flash_unlock()
+{
+  if ( FLASH->CR & FLASH_CR_LOCK)
+  {
+    /* Authorize the FLASH Registers access */
+    FLASH->KEYR = FLASH_KEY1;
+    FLASH->KEYR = FLASH_KEY2;
+  }
+}
 
-#endif
-
+void flash_write(uint32_t addr, const uint8_t* buf, uint32_t size)
+{
+    if(size % FLASH_PAGE_SIZE){
+        while(1);
+    }
+    if(!flash_init){
+        flash_init = 1;
+        flash_unlock();
+    }
+    while(size >= FLASH_PAGE_SIZE){
+        erase_page(addr);
+        wirte_flash(addr,buf, FLASH_PAGE_SIZE);
+        size-=FLASH_PAGE_SIZE;
+        addr+=FLASH_PAGE_SIZE;
+    }
+}
