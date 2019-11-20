@@ -201,7 +201,7 @@ void tusb_send_data_done(tusb_device_t* dev, uint8_t EPn)
     ep->tx_pushed = 0;
     pma = PMA_TX(dev, EPn);
   }
-  if(ep->tx_remain_size || ( (EPn == 0 || ep->tx_need_zlp) && ep->tx_last_size == GetInMaxPacket(dev, EPn) )) {
+  if(ep->tx_remain_size || ( (ep->tx_need_zlp) && ep->tx_last_size == GetInMaxPacket(dev, EPn) )) {
     copy_tx(dev, ep, pma, ep->tx_buf, ep->tx_remain_size, GetInMaxPacket(dev, EPn));
     PCD_SET_EP_TX_STATUS(GetUSB(dev), EPn, USB_EP_TX_VALID);
     return;
@@ -323,7 +323,8 @@ void tusb_set_stall(tusb_device_t* dev, uint8_t EPn)
 {
   uint8_t ep = EPn & 0x7f;
   if(ep == 0){
-    PCD_SET_EP_TXRX_STATUS(GetUSB(dev), 0, USB_EP_RX_STALL, USB_EP_TX_STALL);
+    //PCD_SET_EP_TXRX_STATUS(GetUSB(dev), 0, USB_EP_RX_STALL, USB_EP_TX_STALL);
+      PCD_SET_EP_TX_STATUS(GetUSB(dev), 0, USB_EP_TX_STALL);
     // We should prepare endpoint 0 to receive setup packet
     // But the setup packet always success receive, so do nothing here
   }else{

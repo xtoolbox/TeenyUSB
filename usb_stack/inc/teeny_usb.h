@@ -370,7 +370,7 @@ int tusb_send_data(tusb_device_t* dev, uint8_t EPn, const void* data, uint16_t l
  *  \return  0 for success, -1 for end point not ready or data is on going
  */
 #define tusb_control_send(dev, data, len) \
-  tusb_send_data(dev, 0, data, len, 0)
+  tusb_send_data(dev, 0, data, len,  (len)!=(dev)->setup.wLength ? TUSB_TXF_ZLP:0)
 
 /** USB device set endpoint stall state
  *

@@ -209,7 +209,7 @@ void tusb_send_data_done(tusb_device_t* dev, uint8_t EPn)
   if(EPn == 0){    
     if(ep->tx_remain_size){
       tusb_send_data(dev, EPn, ep->tx_buf, ep->tx_remain_size, 0);
-    }else if(ep->tx_last_size == maxpacket){
+    }else if(ep->tx_last_size == maxpacket && ep->tx_need_zlp){
       // Send a ZLP
       tusb_send_data(dev, EPn, ep->tx_buf, 0, 0);
       // Set the total size to 1, so ep0 done will start to recv status out
