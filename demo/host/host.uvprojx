@@ -411,6 +411,11 @@
               <FileType>1</FileType>
               <FilePath>.\main.c</FilePath>
             </File>
+            <File>
+              <FileName>retarget_stdio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\retarget_stdio.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -425,6 +430,11 @@
               <FileName>system_stm32f7xx_HSE25MHz.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\boards\stm32f723e_disco\system_stm32f7xx_HSE25MHz.c</FilePath>
+            </File>
+            <File>
+              <FileName>board.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\boards\stm32f723e_disco\board.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -37,6 +37,8 @@
 #include "tusbh_vendor.h"
 #include "tusbh_hub.h"
 #include "tusbh_hid.h"
+#include "string.h"
+#include "usb_key_code.h"
 
 extern uint32_t SystemCoreClock;
 
@@ -53,12 +55,13 @@ void tusb_delay_ms(uint32_t ms)
   while( tick_ms - t < ms);
 }
 
+static int process_key(tusbh_ep_info_t* ep, const uint8_t* key);
 
 static tusbh_root_hub_t root_fs;
 static tusbh_root_hub_t root_hs;
 static const tusbh_boot_key_class_t cls_boot_key = {
     .backend = &tusbh_boot_keyboard_backend,
-    // .on_key = process_key
+    .on_key = process_key
 };
 
 static const tusbh_boot_mouse_class_t cls_boot_mouse = {
@@ -90,49 +93,159 @@ static const tusbh_class_reg_t class_table[] = {
     0,
 };
 
-void open_console(uint32_t baud);
+
+static tusb_host_t* fs;
+static tusb_host_t* hs;
+
+void show_memory(void);
+static void process_command(const char* cmd)
+{
+    if(strstr(cmd, "lsusb") == cmd){
+        if(fs)ls_usb(fs);
+        if(hs)ls_usb(hs);
+        return;
+    }else if(strstr(cmd, "showmem") == cmd){
+        show_memory();
+        return;
+    }
+    printf("Unkown command: %s\n", cmd);
+}
+
+#define PROMPT  "TeenyUSB > "
+
+static char cmd_buf[256];
+static int cmd_len;
+static void command_loop(void)
+{
+    int ch = getchar();
+    if(ch > 0){
+        if(ch == '\r'){
+            cmd_buf[cmd_len] = 0;
+            if(cmd_buf[0]){
+                process_command(cmd_buf);
+            }
+            cmd_len = 0;
+            printf(PROMPT);
+        }else if(ch == '\t'){
+            printf("\nlsusb showmem\n");
+            printf(PROMPT);
+            cmd_len = 0;
+        }else{
+            if(cmd_len < sizeof(cmd_buf)-1){
+                cmd_buf[cmd_len] = ch;
+                cmd_len++;
+            }
+        }
+    }
+}
 
 int main()
 {
+    setbuf (stdout, NULL);
+    setvbuf (stdout, NULL, _IONBF, BUFSIZ);
+    stdio_init();
+  
     SystemCoreClockUpdate();
     
-    open_console(115200);
-  
     SysTick_Config(SystemCoreClock/1000);
   
-    TUSB_OS_INFO("Start USB host\n");
-    tusb_host_t* fs = tusb_get_host(USB_CORE_ID_FS);
-    tusb_host_t* hs = tusb_get_host(USB_CORE_ID_HS);
+    printf("Start USB host demo\n" PROMPT);
+    
     tusbh_msg_q_t* mq = tusbh_mq_create();
     tusbh_mq_init(mq);
-  
+    
+#if defined(USB_CORE_ID_FS)
+    fs = tusb_get_host(USB_CORE_ID_FS);
     HOST_PORT_POWER_ON_FS();
-    HOST_PORT_POWER_ON_HS();
-  
-    // two host core use same message queue, 
-    // so we can manage them in single thread
     root_fs.mq = mq;
     root_fs.id = "FS";
     root_fs.support_classes = class_table;
-  
+    tusb_host_init(fs, &root_fs);
+    tusb_open_host(fs);
+#else
+    (void)root_fs;
+    fs = 0;
+#endif    
+
+#if defined(USB_CORE_ID_HS)
+    hs = tusb_get_host(USB_CORE_ID_HS);    
+    HOST_PORT_POWER_ON_HS();
     root_hs.mq = mq;
     root_hs.id = "HS";
     root_hs.support_classes = class_table;
-  
-    tusb_host_init(fs, &root_fs);
     tusb_host_init(hs, &root_hs);
-
-    tusb_open_host(fs);
     tusb_open_host(hs);
+#else
+    (void)root_hs;
+    hs = 0;
+#endif
 
+    cmd_len = 0;
     while(1){
+        command_loop();
         // there is only one message q for every thing
         tusbh_msg_loop(mq);
-        
-        //tusbh_msg_loop(root_fs.mq);
-        //tusbh_msg_loop(root_hs.mq);
     }
 }
+
+
+#define MOD_CTRL      (0x01 | 0x10)
+#define MOD_SHIFT     (0x02 | 0x20)
+#define MOD_ALT       (0x04 | 0x40)
+#define MOD_WIN       (0x08 | 0x80)
+
+#define LED_NUM_LOCK    1
+#define LED_CAPS_LOCK   2
+#define LED_SCROLL_LOCK 4
+
+
+static uint8_t key_leds;
+static const char knum[] = "1234567890";
+static const char ksign[] = "!@#$%^&*()";
+static const char tabA[] = "\t -=[]\\#;'`,./";
+static const char tabB[] = "\t _+{}|~:\"~<>?";
+// route the key event to stdin
+static int process_key(tusbh_ep_info_t* ep, const uint8_t* keys)
+{
+    uint8_t modify = keys[0];
+    uint8_t key = keys[2];
+    uint8_t last_leds = key_leds;
+    if(key >= KEY_A && key <= KEY_Z){
+        char ch = 'A' + key - KEY_A;
+        if( (!!(modify & MOD_SHIFT)) == (!!(key_leds & LED_CAPS_LOCK)) ){
+            ch += 'a'-'A';
+        }
+        stdin_recvchar(ch);
+    }else if(key >= KEY_1 && key <= KEY_0){
+        if(modify & MOD_SHIFT){
+            stdin_recvchar(ksign[key - KEY_1]);
+        }else{
+            stdin_recvchar(knum[key - KEY_1]);
+        }
+    }else if(key >= KEY_TAB && key <= KEY_SLASH){
+        if(modify & MOD_SHIFT){
+            stdin_recvchar(tabB[key - KEY_TAB]);
+        }else{
+            stdin_recvchar(tabA[key - KEY_TAB]);
+        }
+    }else if(key == KEY_ENTER){
+        stdin_recvchar('\r');
+    }else if(key == KEY_CAPSLOCK){
+        key_leds ^= LED_CAPS_LOCK;
+    }else if(key == KEY_NUMLOCK){
+        key_leds ^= LED_NUM_LOCK;
+    }else if(key == KEY_SCROLLLOCK){
+        key_leds ^= LED_SCROLL_LOCK;
+    }
+    
+    if(key_leds != last_leds){
+        tusbh_set_keyboard_led(ep, key_leds);
+    }
+    return 0;
+}
+
+
+
 
 #ifdef DEBUG
 
@@ -173,63 +286,3 @@ void hc_log_end(tusb_host_t* host, uint8_t hc_num)
 
 #endif
 
-
-#ifdef STM32F723xx
-
-#define MODE(x, pin)  ((x) << ((pin)*2))
-#define TYPE(x, pin)  ((x) << ((pin)))
-#define AF(x,  pin)    (((pin)<8) ? ((uint32_t)(x) << ((pin)*4)) : ((uint32_t)(x) << ( ((pin)-8)*4)) )
-
-void open_console(uint32_t baud)
-{
-    __HAL_RCC_USART6_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-  
-    __HAL_RCC_USART6_CONFIG(RCC_USART6CLKSOURCE_SYSCLK);
-  
-     /**USART6 GPIO Configuration
-        PC7     ------> USART6_RX
-        PC6     ------> USART6_TX
-     */
-    GPIOC->MODER &= ~ (MODE(3,6) | MODE(3,7));
-    GPIOC->MODER |=   (MODE(2,6) | MODE(2,7));  
-    GPIOC->OTYPER &= ~(TYPE(1,6) | TYPE(1,7));
-    GPIOC->OSPEEDR |= (MODE(3,6) | MODE(3,7));
-    GPIOC->AFR[0] &= ~(AF(0xf,6) | AF(0xf,7));
-    GPIOC->AFR[0] |=  (AF(GPIO_AF8_USART6,6) | AF(GPIO_AF8_USART6,7));
-  
-    USART6->CR1 &=  ~USART_CR1_UE;
-  
-#define UART_CR1_FIELDS  ((uint32_t)(USART_CR1_M | USART_CR1_PCE | USART_CR1_PS | \
-                                     USART_CR1_TE | USART_CR1_RE | USART_CR1_OVER8))
-
-    MODIFY_REG(USART6->CR1, UART_CR1_FIELDS, 
-      UART_WORDLENGTH_8B|UART_PARITY_NONE|UART_MODE_TX_RX|UART_OVERSAMPLING_16);
-  
-    MODIFY_REG(USART6->CR2, USART_CR2_STOP, UART_STOPBITS_1);
-    
-    // No flow control, 1 bit oversample
-    MODIFY_REG(USART6->CR3, (USART_CR3_RTSE | USART_CR3_CTSE | USART_CR3_ONEBIT), UART_ONE_BIT_SAMPLE_ENABLE);
-    
-    USART6->BRR = UART_DIV_SAMPLING16(SystemCoreClock, baud);
-    
-  
-    CLEAR_BIT(USART6->CR2, (USART_CR2_LINEN | USART_CR2_CLKEN));
-    CLEAR_BIT(USART6->CR3, (USART_CR3_SCEN | USART_CR3_HDSEL | USART_CR3_IREN));
-    
-    USART6->CR1 |=  USART_CR1_UE;
-}
-
-int tusb_putchar(int ch){
-    // TODO putchar
-    while ((USART6->ISR & UART_FLAG_TC) == RESET);
-    USART6->ICR = UART_CLEAR_TCF;
-    USART6->TDR = (uint32_t)ch;
-    while ((USART6->ISR & UART_FLAG_TC) == RESET);
-    return 0;
-}
-
-#else
-#warning Device print channel not set
-
-#endif

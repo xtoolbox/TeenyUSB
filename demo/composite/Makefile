@@ -12,7 +12,7 @@ USBEP = 5
 SOURCES  = composite_device.c \
            teeny_usb_desc.c
 INCLUDES = . 
-DEFINES  = __forceinline=inline NO_HOST
+DEFINES  = __forceinline=inline NO_HOST MSC_DATA_PACKET_LENGTH=2048
 # board source
 SOURCES  += $(BOARD_SRC)
 INCLUDES += $(BOARD_INC)
@@ -40,7 +40,7 @@ CP           = cp
 MKDIR        = mkdir -p
 
 CPU ?= cortex-m3
-CCFLAGS     += -Wall -mcpu=$(CPU) -mthumb -g -Os
+CCFLAGS     += -Wall -mcpu=$(CPU) -mthumb -g -Os -MMD
 CCFLAGS     += $(addprefix -D, $(DEFINES)) 
 CCFLAGS     += $(addprefix -I, $(INCLUDES))
 CCFLAGS     += -ffunction-sections -fdata-sections
@@ -90,14 +90,6 @@ $(OBJDIR)/%.o:%.S
 	@echo building $<
 	@$(CC) $(ASFLAGS) -c $< -o $@
 
-$(OBJDIR)/%.d:%.c
-	@echo make depend $<
-	@set -e; $(RM) $@; $(CC) -MM $< $(CCFLAGS) > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,$(OBJDIR)/\1.o $@ : ,g' < $@.$$$$ > $@; \
-	$(RM) $@.$$$$
-
-include $(wildcard $(DEPENDS))
-
 $(OBJDIR):
 	@$(MKDIR) $@
 $(OUTDIR):
@@ -109,7 +101,7 @@ $(OUTDIR)/$(TARGET).hex:$(OUTDIR)/$(TARGET).elf
 $(OUTDIR)/$(TARGET).bin:$(OUTDIR)/$(TARGET).elf
 	@echo generating $@
 	@$(OBJCOPY) -Obinary $< $@
-$(OUTDIR)/$(TARGET).elf: $(OBJDIR) $(DEPENDS) $(OBJECTS)
+$(OUTDIR)/$(TARGET).elf: $(OBJDIR) $(OBJECTS)
 	@echo linking $@
 	@$(LD) $(LDFLAGS) $(OBJECTS) -o $@
 	@$(SIZE) $@
@@ -132,3 +124,5 @@ clear:
 	$(RM) $(OUTDIR) obj
 
 .PHONY: all clean clear
+
+-include $(DEPENDS)

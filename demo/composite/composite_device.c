@@ -222,10 +222,17 @@ int main(void)
   }
 }
 
-#if  defined(STM32F723xx)
+#if  defined(STM32F723xx) || defined(STM32F767xx) || defined(STM32F407xx)
 #define BLOCK_SIZE   512
 // the stack is start at RAM end in GCC linker script, reserve the last 2 blocks
-#define BLOCK_COUNT  (190*2)
+#if defined(STM32F723xx)
+#define BLOCK_COUNT  ((256-64-2)*2)
+#elif defined(STM32F767xx)
+#define BLOCK_COUNT  ((512-64-2)*2)
+#else
+#define BLOCK_COUNT  ((128-64-2)*2)
+#endif
+
 #define START_ADDR   (uint8_t*)(0x20000000ul + 64*1024ul)
 
 int msc_get_cap(tusb_msc_device_t* msc, uint8_t lun, uint32_t *block_num, uint32_t *block_size)
@@ -251,16 +258,34 @@ int msc_block_write(tusb_msc_device_t* msc, uint8_t lun, const uint8_t *buf, uin
   return (int)len;
 }
 #else
-#define BLOCK_SIZE   512
-#define BLOCK_COUNT  (190*2)
-#define START_ADDR   (uint8_t*)(0x20000000ul + 64*1024ul)
-int msc_get_cap(tusb_msc_device_t* msc, uint8_t lun, uint32_t *block_num, uint32_t *block_size) { return -1; }
 
-int msc_block_read(tusb_msc_device_t* msc, uint8_t lun, uint8_t *buf, uint32_t block_addr, uint16_t block_len){ return -1; }
+#if defined(FLASH_SIZE)
+#define START_ADDR   (const uint8_t*)(0x08000000ul + 16*1024ul)
+#define BLOCK_SIZE FLASH_PAGE_SIZE
+#define BLOCK_COUNT  ((FLASH_SIZE - 16*1024ul) / FLASH_PAGE_SIZE)
+int msc_get_cap(tusb_msc_device_t* msc, uint8_t lun, uint32_t *block_num, uint32_t *block_size) {
+  *block_size = BLOCK_SIZE;
+  *block_num =  BLOCK_COUNT;
+  return 0;
+}
 
-int msc_block_write(tusb_msc_device_t* msc, uint8_t lun, const uint8_t *buf, uint32_t block_addr, uint16_t block_len){ return -1; }
+int msc_block_read(tusb_msc_device_t* msc, uint8_t lun, uint8_t *buf, uint32_t block_addr, uint16_t block_len)
+{
+  uint32_t len = block_len*BLOCK_SIZE;
+  memcpy(buf, START_ADDR+block_addr*BLOCK_SIZE, len);
+  return len;
+}
 
+int msc_block_write(tusb_msc_device_t* msc, uint8_t lun, const uint8_t *buf, uint32_t block_addr, uint16_t block_len)
+{
+  uint32_t len = block_len*BLOCK_SIZE;
+  flash_write( (uint32_t)START_ADDR+block_addr*BLOCK_SIZE, buf, len);
+  return len;
+}
+
+#else
 #warning MSC storage not set
+#endif
 
 #endif
 

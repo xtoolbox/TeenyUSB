@@ -4,9 +4,10 @@ help:
 	@echo ' f723dap    HS/FS cmsis-dap based on STM32F723 discovery kit'
 	@echo ' bulk       custom bulk demo'
 	@echo ' comp       composite demp, HID + CDC + WinUSB_Bulk + MSC'
+	@echo ' host       host demo for HUB/HID/Vendor'
 	@echo ' clean      clear all generate data'
 
-.PHONY: f723dap clean clear all bulk comp
+.PHONY: f723dap clean clear all bulk comp host
 
 all:
 	cd f723dap && '$(MAKE)'

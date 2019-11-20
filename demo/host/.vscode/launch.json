@@ -8,7 +8,7 @@
             "name": "Debug",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/output/${input:targetType}comp.elf",
+            "program": "${workspaceFolder}/output/${input:targetType}host.elf",
             "args": [
             ],
             "stopAtEntry": false,
@@ -34,7 +34,7 @@
                     "ignoreFailures": true,
                 },
                 {
-                    "text":"file ${input:targetType}comp.elf",
+                    "text":"file ${input:targetType}host.elf",
                 },
                 {
                     "text": "target remote localhost:3333",
