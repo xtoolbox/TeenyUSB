@@ -292,10 +292,11 @@ static int hub_data_xfered(tusbh_ep_info_t* ep)
         res = -1;
         goto error;
     }
-    
+    TUSB_HUB_INFO("HUB port state = %02x\n", port_state);
     for(;port_state; port_state>>=1, port++){
         if( (port_state & 1) == 0 ) continue;
         usb_hub_port_status_t status;
+        TUSB_HUB_INFO("HUB get port %d status\n", port);
         res = tusbh_get_hub_port_staus(dev, port, &status);
         if(res < 0){
             TUSB_HUB_INFO("HUB fail to get port status\n");
@@ -345,10 +346,11 @@ static int hub_data_xfered(tusbh_ep_info_t* ep)
                 tusbh_device_t* child = dev->children[port-1];
                 if(child){
                     TUSB_HUB_INFO("aleary has a child\n");
-                }else{
-                    child = tusbh_new_device();
-                    dev->children[port-1] = child;
+                    tusbh_device_deinit(child);
+                    dev->children[port-1] = 0;
                 }
+                child = tusbh_new_device();
+                dev->children[port-1] = child;
                 tusbh_set_hub_port_feature(dev, port, HUB_FEATURE_SEL_PORT_RESET);
             }
         }else{
@@ -380,5 +382,6 @@ const tusbh_interface_backend_t  tusbh_hub_backend = {
     .init = tusbh_hub_init,
     .deinit = tusbh_hub_deinit,
     .data_xfered = hub_data_xfered,
+    .desc = "HUB",
 };
 

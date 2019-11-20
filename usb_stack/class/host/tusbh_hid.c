@@ -51,13 +51,18 @@
 #define USB_HID_OUTPUT_REPORT   0x02
 #define USB_HID_FEATURE_REPORT  0x03
 
-typedef struct _tusbh_hid_boot_info
-{
-    tusbh_ep_info_t* ep_in;
-    tusbh_ep_info_t* ep_out;
-    uint8_t*         report_desc;
-    uint32_t         report_desc_len;
-}tusbh_hid_boot_info_t;
+typedef __PACK_BEGIN struct _usb_hid_descriptor {
+    uint8_t  bLength;
+    uint8_t  bDescriptorType;
+    uint16_t bcdHID;
+    uint8_t  bCountryCode;
+    uint8_t  bNumDescriptors;
+    __PACK_BEGIN struct {
+        uint8_t  bDescriptorType;
+        uint16_t wDescriptorLength;
+    } __PACK_END report_desc[1];
+} __PACK_END usb_hid_descriptor_t;
+
 
 static int tusbh_hid_init(tusbh_device_t* dev, tusbh_interface_t* interface, int cfg_offset)
 {
@@ -66,9 +71,9 @@ static int tusbh_hid_init(tusbh_device_t* dev, tusbh_interface_t* interface, int
     uint8_t ep_index = 0;
     uint8_t itf_cnt = 0;
     interface->ep_num = itf->bNumEndpoints;
-    create_info_pool(interface, tusbh_hid_boot_info_t);
-    memset(interface->info_pool,0,sizeof(tusbh_hid_boot_info_t));
-    tusbh_hid_boot_info_t* info = tusbh_get_info(interface, tusbh_hid_boot_info_t);
+    create_info_pool(interface, tusbh_hid_info_t);
+    memset(interface->info_pool,0,sizeof(tusbh_hid_info_t));
+    tusbh_hid_info_t* info = tusbh_get_info(interface, tusbh_hid_info_t);
     
     memset(interface->endpoints, 0, sizeof(interface->endpoints));
     
@@ -92,8 +97,18 @@ static int tusbh_hid_init(tusbh_device_t* dev, tusbh_interface_t* interface, int
                 TUSB_ITF_INFO("Endpoint count large than TUSBH_MAX_EP in HUB interface\n");
             }
             ep_index++;
-        // TODO: get the report descriptor
-        //}else if(t == USB_REPORT_DESCRIPTOR_TYPE){
+        }else if(t == USB_HID_DESCRIPTOR_TYPE){
+            usb_hid_descriptor_t* hid = (usb_hid_descriptor_t*)(dev->config_desc+cfg_offset);
+            if(hid->bNumDescriptors > 0){
+                if(hid->report_desc[0].bDescriptorType != USB_REPORT_DESCRIPTOR_TYPE){
+                    TUSB_ITF_INFO("Warning: HID class descriptor type is not REPORT, %02x\n", hid->report_desc[0].bDescriptorType);
+                }
+                uint8_t* p = (uint8_t*) &hid->report_desc[0].wDescriptorLength;;
+                info->report_desc_len = p[0] | (p[1]<<8);
+            }
+            if(hid->bNumDescriptors > 1){
+                TUSB_ITF_INFO("Warning: HID class descriptor count large than 1\n");
+            }
         }else if(t == USB_INTERFACE_DESCRIPTOR_TYPE){
             if(itf_cnt > 0){
                 break;
@@ -137,16 +152,39 @@ static int tusbh_hid_init(tusbh_device_t* dev, tusbh_interface_t* interface, int
         }
     }
     
-    int r = tusbh_control_xfer(
-       dev,
-       USB_H2D | USB_REQ_RECIPIENT_INTERFACE | USB_REQ_TYPE_CLASS,
-       USB_HID_SET_PROTOCOL,
-       0,
-       0,
-       0, 0);
-    if(r<0){
-        TUSB_ITF_INFO("Fail to set boot protocol\n");
-        return -1;
+    if(itf->bInterfaceSubClass == 1){        
+        int r = tusbh_control_xfer(
+           dev,
+           USB_H2D | USB_REQ_RECIPIENT_INTERFACE | USB_REQ_TYPE_CLASS,
+           USB_HID_SET_PROTOCOL,
+           0,
+           0,
+           0, 0);
+        if(r<0){
+            TUSB_ITF_INFO("Fail to set boot protocol\n");
+            return -1;
+        }
+    }else{
+        if(info->report_desc_len > 0){
+            info->report_desc = tusbh_malloc(info->report_desc_len);
+            if(info->report_desc){
+                   int r = tusbh_control_xfer(
+                    dev,
+                    USB_D2H | USB_REQ_RECIPIENT_INTERFACE | USB_REQ_TYPE_STANDARD,
+                    USB_REQ_GET_DESCRIPTOR,
+                    (USB_REPORT_DESCRIPTOR_TYPE<<8) | 0,
+                    0,
+                    info->report_desc,
+                    info->report_desc_len
+                );
+                if(r<0){
+                    TUSB_ITF_INFO("Fail to get report descriptor\n");
+                    return -1;
+                }
+            }else{
+                TUSB_ITF_INFO("Fail to allocate memory for report descriptor\n");
+            }
+        }
     }
     
     TUSB_ITF_INFO("HID interface init\n");
@@ -160,7 +198,7 @@ static int tusbh_hid_init(tusbh_device_t* dev, tusbh_interface_t* interface, int
 static int tusbh_hid_deinit(tusbh_device_t* dev, tusbh_interface_t* interface)
 {
     TUSB_ITF_INFO("HID interface deinit\n");
-    tusbh_hid_boot_info_t* info = tusbh_get_info(interface, tusbh_hid_boot_info_t);
+    tusbh_hid_info_t* info = tusbh_get_info(interface, tusbh_hid_info_t);
     if(info->ep_in->data){
         tusbh_free(info->ep_in->data);
         info->ep_in->data = 0;
@@ -199,7 +237,7 @@ static int tusbh_on_boot_mouse(tusbh_ep_info_t* ep, const uint8_t* mouse)
 
 static int keyboard_xfered(tusbh_ep_info_t* ep)
 {
-    tusbh_hid_boot_info_t* info = tusbh_get_info(ep->interface, tusbh_hid_boot_info_t);
+    tusbh_hid_info_t* info = tusbh_get_info(ep->interface, tusbh_hid_info_t);
     tusb_hc_data_t* hc = &ep_host(ep)->hc[ep->pipe_num];
     tusbh_device_t* dev = ep_device(ep);
     if(hc->state != TUSB_CS_TRANSFER_COMPLETE){
@@ -222,7 +260,7 @@ static int keyboard_xfered(tusbh_ep_info_t* ep)
 
 static int mouse_xfered(tusbh_ep_info_t* ep)
 {
-    tusbh_hid_boot_info_t* info = tusbh_get_info(ep->interface, tusbh_hid_boot_info_t);
+    tusbh_hid_info_t* info = tusbh_get_info(ep->interface, tusbh_hid_info_t);
     tusb_hc_data_t* hc = &ep_host(ep)->hc[ep->pipe_num];
     tusbh_device_t* dev = ep_device(ep);
     if(hc->state != TUSB_CS_TRANSFER_COMPLETE){
@@ -245,20 +283,21 @@ static int mouse_xfered(tusbh_ep_info_t* ep)
 
 static int hid_xfered(tusbh_ep_info_t* ep)
 {
-    tusbh_hid_boot_info_t* info = tusbh_get_info(ep->interface, tusbh_hid_boot_info_t);
+    tusbh_hid_info_t* info = tusbh_get_info(ep->interface, tusbh_hid_info_t);
     tusb_hc_data_t* hc = &ep_host(ep)->hc[ep->pipe_num];
     tusbh_device_t* dev = ep_device(ep);
-    
-    if(ep->desc->bEndpointAddress != info->ep_in->desc->bEndpointAddress){
-        TUSB_DEV_INFO("HID Mouse Wrong ep xfered handler, espect %02x, got %02x\n", info->ep_in->desc->bEndpointAddress, ep->desc->bEndpointAddress);
-        return -1;
-    }
     
     if(ep == info->ep_out){
         TUSB_ASSERT(ep->interface->cls->backend == &tusbh_hid_backend);
         if(ep_class(ep, tusbh_hid_class_t)->on_send_done){
             ep_class(ep, tusbh_hid_class_t)->on_send_done(ep, (channel_state_t)hc->state);
         }
+        return 0;
+    }
+    
+    if(ep->desc->bEndpointAddress != info->ep_in->desc->bEndpointAddress){
+        TUSB_DEV_INFO("HID Mouse Wrong ep xfered handler, espect %02x, got %02x\n", info->ep_in->desc->bEndpointAddress, ep->desc->bEndpointAddress);
+        return -1;
     }
     
     if(hc->state != TUSB_CS_TRANSFER_COMPLETE){
@@ -312,6 +351,7 @@ const tusbh_interface_backend_t  tusbh_boot_keyboard_backend = {
     .init = tusbh_hid_init,
     .deinit = tusbh_hid_deinit,
     .data_xfered = keyboard_xfered,
+    .desc = "HID Boot Keyboard",
 };
 
 const tusbh_interface_backend_t  tusbh_boot_mouse_backend = {
@@ -323,6 +363,7 @@ const tusbh_interface_backend_t  tusbh_boot_mouse_backend = {
     .init = tusbh_hid_init,
     .deinit = tusbh_hid_deinit,
     .data_xfered = mouse_xfered,
+    .desc = "HID Boot Mouse",
 };
 
 const tusbh_interface_backend_t  tusbh_hid_backend = {
@@ -334,4 +375,5 @@ const tusbh_interface_backend_t  tusbh_hid_backend = {
     .init = tusbh_hid_init,
     .deinit = tusbh_hid_deinit,
     .data_xfered = hid_xfered,
+    .desc = "HID Device",
 };

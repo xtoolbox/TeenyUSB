@@ -78,6 +78,7 @@ typedef struct _tusbh_interface_backend
     int(*init)(tusbh_device_t* dev, tusbh_interface_t* interface, int cfg_offset);
     int(*deinit)(tusbh_device_t* dev, tusbh_interface_t* interface);
     int(*data_xfered)(tusbh_ep_info_t* ep);
+    const char* desc;
 }tusbh_interface_backend_t;
 
 struct _tusbh_class
@@ -199,6 +200,8 @@ typedef struct _tusbh_root_hub{
 
 void tusb_host_init(tusb_host_t* host, tusbh_root_hub_t* root_hub_info);
 
+void ls_usb(tusb_host_t* host);
+
 void tusbh_msg_loop(tusbh_msg_q_t* mq);
 
 int tusbh_control_xfer(tusbh_device_t* dev, uint8_t bmRequest, uint8_t bRequest, uint32_t value, uint32_t index, void* data, uint32_t len);
@@ -213,9 +216,7 @@ void tusbh_ep_free_pipe(tusbh_ep_info_t* ep);
 
 int tusbh_ep_allocate_pipe(tusbh_ep_info_t* ep);
 
-int tusb_printf(const char * format, ...);
-
-#define  TUSB_DBG(fmt,  ...)           tusb_printf(fmt, ## __VA_ARGS__)
+#define  TUSB_DBG(fmt,  ...)           printf(fmt, ## __VA_ARGS__)
 #define  TUSB_ASSERT(exp)                                       \
 do{                                                             \
     if(exp){}else{                                              \
@@ -225,6 +226,7 @@ do{                                                             \
 
 
 // LOG for better format
+#define TUSB_PRINTF(fmt, ...)     printf(fmt, ## __VA_ARGS__)
 #define TUSB_OS_INFO(msg, ...)    TUSB_DBG("OS             " msg , ## __VA_ARGS__)
 #define TUSB_HOST_INFO(msg, ...)  TUSB_DBG("HOST %s:       " msg , host_root(host)->id, ## __VA_ARGS__)
 #define TUSB_ROOT_INFO(msg, ...)  TUSB_DBG("RHUB %s:%d      " msg , root->id, port, ## __VA_ARGS__)

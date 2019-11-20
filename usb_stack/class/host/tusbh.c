@@ -175,6 +175,18 @@ static channel_state_t tusbh_control_xfer_and_wait(tusbh_device_t* dev, int pipe
 
 int tusbh_control_xfer(tusbh_device_t* dev, uint8_t bmRequest, uint8_t bRequest, uint32_t value, uint32_t index, void* data, uint32_t len)
 {
+    int free_ctrl_in = 0;
+    int free_ctrl_out = 0;
+    int res = 0;
+    if(dev->ctrl_in<0){
+        free_ctrl_in = 1;
+        dev->ctrl_in = tusbh_allocate_pipe(dev, 0x80, EP_TYPE_CTRL, dev->device_desc.bMaxPacketSize);
+    }
+    if(dev->ctrl_out<0){
+        free_ctrl_out = 1;
+        dev->ctrl_out = tusbh_allocate_pipe(dev, 0x00, EP_TYPE_CTRL, dev->device_desc.bMaxPacketSize);
+    }
+    
     TUSB_ASSERT( dev && dev->host && dev->ctrl_in>=0 && dev->ctrl_out>=0);
     channel_state_t state;
 
@@ -187,7 +199,8 @@ int tusbh_control_xfer(tusbh_device_t* dev, uint8_t bmRequest, uint8_t bRequest,
     state = tusbh_control_xfer_and_wait(dev, dev->ctrl_out, 0, &setup, sizeof(setup), SETUP_DELAY);
     if( state != TUSB_CS_TRANSFER_COMPLETE){
         TUSB_DEV_INFO("Setup stage fail, %s\n", channelState(state));
-        return -1;
+        res = -1;
+        goto error;
     }
 
     if(bmRequest & USB_D2H){
@@ -195,13 +208,15 @@ int tusbh_control_xfer(tusbh_device_t* dev, uint8_t bmRequest, uint8_t bRequest,
         state = tusbh_control_xfer_and_wait(dev, dev->ctrl_in, 1, data, len, SETUP_DELAY);
         if( state != TUSB_CS_TRANSFER_COMPLETE){
             TUSB_DEV_INFO("Data IN stage fail, %s\n", channelState(state));
-            return -1;
+            res = -1;
+            goto error;
         }
         // status out
         state = tusbh_control_xfer_and_wait(dev, dev->ctrl_out, 1, 0, 0, SETUP_DELAY);
         if( state != TUSB_CS_TRANSFER_COMPLETE){
             TUSB_DEV_INFO("Status OUT stage fail, %s\n", channelState(state));
-            return -1;
+            res = -1;
+            goto error;
         }
     }else{
         // data OUT
@@ -209,17 +224,29 @@ int tusbh_control_xfer(tusbh_device_t* dev, uint8_t bmRequest, uint8_t bRequest,
             state = tusbh_control_xfer_and_wait(dev, dev->ctrl_out, 1, data, len, SETUP_DELAY);
             if( state != TUSB_CS_TRANSFER_COMPLETE){
                 TUSB_DEV_INFO("Data OUT stage fail, %s\n", channelState(state));
-                return -1;
+                res = -1;
+                goto error;
             }
         }
         // status in
         state = tusbh_control_xfer_and_wait(dev, dev->ctrl_in, 1, 0, 0, SETUP_DELAY);
         if( state != TUSB_CS_TRANSFER_COMPLETE){
             TUSB_DEV_INFO("Data IN stage fail, %s\n", channelState(state));
-            return -1;
+            res = -1;
+            goto error;
         }
     }
-    return 0;
+error:
+    if(free_ctrl_in && dev->ctrl_in > 0){
+        tusbh_close_pipe(dev, dev->ctrl_in);
+        dev->ctrl_in = -1;
+    }
+    if(free_ctrl_out && dev->ctrl_out > 0){
+        tusbh_close_pipe(dev, dev->ctrl_out);
+        dev->ctrl_out = -1;
+    }
+    
+    return res;
 }
 
 int tusbh_get_descriptor(tusbh_device_t* dev, uint8_t type, uint8_t index, void* data, int len)
@@ -851,4 +878,47 @@ int tusbh_test_parse_config(const void* cfg, int len)
     memcpy(dev->config_desc, cfg, len);
     return tusbh_parse_config(dev);
 }
+
+static void ls_device(const tusbh_device_t* dev, int port, const tusbh_device_t* parent)
+{
+    if(parent){
+        TUSB_PRINTF("  Device VID:%04x PID:%04x, Parent: Dev %02x:%d\n", 
+            dev->device_desc.idVendor, dev->device_desc.idProduct, parent->address, port);
+    }else{
+        TUSB_PRINTF("  Device VID:%04x PID:%04x, Parent: ROOT %s:%d\n", 
+            dev->device_desc.idVendor, dev->device_desc.idProduct, dev_root(dev)->id, port);
+    }
+    for(int i=0;i<dev->interface_num;i++){
+        const tusbh_interface_t* itf = &dev->interfaces[i];
+        if(itf->cls && itf->cls->backend ){
+            if(itf->cls->backend->desc){
+                TUSB_PRINTF("    Interface %d: %s\n", itf->desc->bInterfaceNumber, itf->cls->backend->desc);
+            }else{
+                TUSB_PRINTF("    Interface %d: Backend(%p)\n", itf->desc->bInterfaceNumber, itf->cls->backend);
+            }
+        }else{
+            TUSB_PRINTF("    Interface %d: Unknown type\n", itf->desc->bInterfaceNumber);
+        }
+    }
+    
+    for(int i=0;i<TUSBH_MAX_CHILD;i++){
+        tusbh_device_t* child = dev->children[i];
+        if(child){
+            ls_device(child, i+1, dev);
+        }
+    }
+}
+
+void ls_usb(tusb_host_t* host)
+{
+    tusbh_root_hub_t* root = (tusbh_root_hub_t*)host->user_data;
+    TUSB_PRINTF("Device of %s root hub\n", root->id);
+    for(int i=0;i<TUSHH_ROOT_CHILD_COUNT;i++){
+        tusbh_device_t* dev = root->children[i];
+        if(dev){
+            ls_device(dev, i, 0);
+        }
+    }
+}
+
 

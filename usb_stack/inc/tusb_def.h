@@ -95,6 +95,8 @@
 #define USB_ENDPOINT_DESCRIPTOR_TYPE            0x05
 #define USB_IAD_DESCRIPTOR_TYPE                 0x0B
 #define USB_HUB_DESCRIPTOR_TYPE                 0x29
+#define USB_HID_DESCRIPTOR_TYPE                 0x21
+#define USB_REPORT_DESCRIPTOR_TYPE              0x22
 #define USB_DESC_TYPE_REPORT                    0x22
 
 

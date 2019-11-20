@@ -110,8 +110,13 @@ static int tusbh_vendor_deinit(tusbh_device_t* dev, tusbh_interface_t* interface
 
 int tusbh_vendor_xfer_data(tusbh_ep_info_t* ep, void* data, uint32_t len)
 {
-    int pipe_num = tusbh_ep_allocate_pipe(ep);
-    if( pipe_num < 0 )return pipe_num;
+    int pipe_num = ep->pipe_num;
+    if(pipe_num<0){
+        pipe_num = tusbh_ep_allocate_pipe(ep);
+    }
+    if( pipe_num < 0 ){
+        return pipe_num;
+    }
     tusb_host_xfer_data(ep_host(ep), pipe_num, 1, data, len);
     return 0;
 }
@@ -128,7 +133,6 @@ static int vendor_xfer_done(tusbh_ep_info_t* ep)
     channel_state_t state = TUSB_CS_UNKNOWN_ERROR;
     if(ep->pipe_num>=0){
         state = (channel_state_t)ep_host(ep)->hc[ep->pipe_num].state;
-        tusbh_ep_free_pipe(ep);
     }
     TUSB_ASSERT(ep->interface->cls->backend == &tusbh_vendor_backend);
     if( ((tusbh_vendor_class_t*)ep->interface->cls)->transfer_done){
@@ -146,5 +150,6 @@ const tusbh_interface_backend_t  tusbh_vendor_backend = {
     .init = tusbh_vendor_init,
     .deinit = tusbh_vendor_deinit,
     .data_xfered = vendor_xfer_done,
+    .desc = "vendor class",
 };
 

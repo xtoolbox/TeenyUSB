@@ -120,13 +120,13 @@ int tusbh_mq_get(tusbh_msg_q_t* mq, tusbh_message_t* msg)
 
 #define MAX_DEVICE_COUNT   16
 static tusbh_device_t device_pool[MAX_DEVICE_COUNT];
-static uint8_t dev_usage[MAX_DEVICE_COUNT] = {0};
+static uint8_t dev_used[MAX_DEVICE_COUNT] = {0};
 
 tusbh_device_t* tusbh_new_device()
 {
     for(int i=0;i<MAX_DEVICE_COUNT;i++){
-        if(!dev_usage[i]){
-            dev_usage[i] = 1;
+        if(!dev_used[i]){
+            dev_used[i] = 1;
             return &device_pool[i];
         }
     }
@@ -138,10 +138,10 @@ void tusbh_free_device(tusbh_device_t* device)
 {
     for(int i=0;i<MAX_DEVICE_COUNT;i++){
         if(device == &device_pool[i]){
-            if(!dev_usage[i]){
+            if(!dev_used[i]){
                 TUSB_OS_INFO("Error: device not in use\n");
             }
-            dev_usage[i] = 0;
+            dev_used[i] = 0;
             return;
         }
     }
@@ -211,41 +211,59 @@ int tusbh_evt_wait(tusbh_evt_t* evt, uint32_t timeout_ms)
     return -1;
 }
 
-static int mem_track;
+static int mem_used;
+static int mem_max;
 void* tusbh_malloc(uint32_t size)
 {
-    mem_track++;
     size = (size + 3) & (~3);
-    void* r = malloc(size);
+    mem_used+=size;
+    if(mem_max < mem_used){
+        mem_max = mem_used;
+    }
+    void* r = malloc(size+8);
     TUSB_ASSERT( (r != 0) && (((uint32_t)r) & 3) == 0 );
-    return r;
+    uint32_t* p = (uint32_t*)r;
+    *p = size;
+    *(p + (size/4) + 1) = 0xdeadbeef;
+    //TUSB_OS_INFO("Allocate %p %d\n", p, size);
+    return (void*)(p+1);
 }
 
-void tusbh_free(void* p)
+void tusbh_free(void* ptr)
 {
-    mem_track--;
-    TUSB_ASSERT(p != 0);
+    TUSB_ASSERT(ptr != 0);
+    uint32_t* p = (uint32_t*)ptr;
+    p = p - 1;
+    uint32_t size = *p;
+    mem_used -= size;
+    TUSB_ASSERT(*(p+(size/4)+1) == 0xdeadbeef);
+    //TUSB_OS_INFO("Free %p %d\n", p, size);
     free(p);
 }
 
-WEAK int tusb_putchar(int ch){
-    // TODO putchar
-    return 0;
-}
-
-static char print_buf[128];
-int tusb_printf(const char * format, ...)
+void show_memory(void)
 {
-    va_list va;
-    int r;
-    va_start(va, format);
-    r = vsprintf(print_buf, format, va);
-    va_end(va);
-    for(int i=0;i<sizeof(print_buf)&&print_buf[i];i++){
-      if(print_buf[i] == '\n'){
-          tusb_putchar('\r');
-      }
-      tusb_putchar(print_buf[i]);
+    printf("  Memory used %d, max %d\n", mem_used, mem_max);
+    int used;
+    used = 0;
+    for(int i=0;i<sizeof(mq_used);i++){
+        if(mq_used[i]){
+            used++;
+        }
     }
-    return r;
+    printf("  MQ used %d\n", used);
+    used = 0;
+    for(int i=0;i<sizeof(dev_used);i++){
+        if(dev_used[i]){
+            used++;
+        }
+    }
+    printf("  Device used %d\n", used);
+    used = 0;
+    for(int i=0;i<sizeof(event_used);i++){
+        if(event_used[i]){
+            used++;
+        }
+    }
+    printf("  Event used %d\n", used);
 }

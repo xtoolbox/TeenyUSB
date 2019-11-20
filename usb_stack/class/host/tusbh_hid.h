@@ -56,6 +56,14 @@ typedef struct _tusbh_boot_mouse_class
     int(*on_mouse)(tusbh_ep_info_t* ep, const uint8_t* mouse);
 }tusbh_boot_mouse_class_t;
 
+typedef struct _tusbh_hid_info
+{
+    tusbh_ep_info_t* ep_in;
+    tusbh_ep_info_t* ep_out;
+    uint8_t*         report_desc;
+    uint32_t         report_desc_len;
+}tusbh_hid_info_t;
+
 
 int tusbh_hid_send_data(tusbh_ep_info_t* ep, void* data, uint32_t len);
 
