@@ -38,6 +38,7 @@
 #include "teeny_usb.h"
 #include "tusb_def.h"
 #include "tusbh_os.h"
+#include <stdio.h>
 
 #define  USB_REQ_DIR_MASK                                  0x80U
 #define  USB_H2D                                           0x00U

@@ -337,7 +337,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F723xx,HSE_VALUE=25000000,NO_DEVICE</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\usb_stack\inc;.;..\..\usb_stack\Drivers\STM32F7xx_HAL_Driver\Inc;..\..\usb_stack\Drivers\CMSIS\Device\ST\STM32F7xx\Include;..\boards\stm32f723e_disco;..\..\usb_stack\class;..\..\usb_stack\class\host</IncludePath>
+              <IncludePath>..\..\usb_stack\inc;.;..\..\mcu_lib\st_driver\STM32F7xx_HAL_Driver\Inc;..\..\mcu_lib\st_driver\CMSIS\Device\ST\STM32F7xx\Include;..\boards\stm32f723e_disco;..\..\usb_stack\class;..\..\usb_stack\class\host</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

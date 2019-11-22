@@ -337,7 +337,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F072xB,HSE_VALUE=8000000,NO_HOST,MSC_DATA_PACKET_LENGTH=2048</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\usb_stack\inc;.;..\..\usb_stack\Drivers\STM32F0xx_HAL_Driver\Inc;..\..\usb_stack\Drivers\CMSIS\Device\ST\STM32F7xx\Include;..\boards\stm32f072c8t6;..\..\usb_stack\class</IncludePath>
+              <IncludePath>..\..\usb_stack\inc;.;..\..\mcu_lib\st_driver\STM32F0xx_HAL_Driver\Inc;..\..\mcu_lib\st_driver\CMSIS\Device\ST\STM32F7xx\Include;..\boards\stm32f072c8t6;..\..\usb_stack\class</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1160,7 +1160,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xE,HSE_VALUE=8000000,NO_HOST,MSC_DATA_PACKET_LENGTH=2048</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\usb_stack\inc;.;..\..\usb_stack\Drivers\STM32F1xx_HAL_Driver\Inc;..\..\usb_stack\Drivers\CMSIS\Device\ST\STM32F1xx\Include;..\boards\stm32f103ret6;..\..\usb_stack\class</IncludePath>
+              <IncludePath>..\..\usb_stack\inc;.;..\..\mcu_lib\st_driver\STM32F1xx_HAL_Driver\Inc;..\..\mcu_lib\st_driver\CMSIS\Device\ST\STM32F1xx\Include;..\boards\stm32f103ret6;..\..\usb_stack\class</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1983,7 +1983,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F303xC,HSE_VALUE=8000000,NO_HOST,MSC_DATA_PACKET_LENGTH=2048</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\usb_stack\inc;.;..\..\usb_stack\Drivers\STM32F3xx_HAL_Driver\Inc;..\..\usb_stack\Drivers\CMSIS\Device\ST\STM32F7xx\Include;..\..\usb_stack\Drivers\Middlewares\ST\STM32_USB_Device_Library\Core\Inc;..\boards\stm32f3_disco;..\..\usb_stack\class</IncludePath>
+              <IncludePath>..\..\usb_stack\inc;.;..\..\mcu_lib\st_driver\STM32F3xx_HAL_Driver\Inc;..\..\mcu_lib\st_driver\CMSIS\Device\ST\STM32F7xx\Include;..\..\mcu_lib\st_driver\Middlewares\ST\STM32_USB_Device_Library\Core\Inc;..\boards\stm32f3_disco;..\..\usb_stack\class</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -2806,7 +2806,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx,HSE_VALUE=8000000,NO_HOST</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\usb_stack\inc;.;..\..\usb_stack\Drivers\STM32F4xx_HAL_Driver\Inc;..\..\usb_stack\Drivers\CMSIS\Device\ST\STM32F4x\Include;..\boards\stm32f407_evk;..\..\usb_stack\class</IncludePath>
+              <IncludePath>..\..\usb_stack\inc;.;..\..\mcu_lib\st_driver\STM32F4xx_HAL_Driver\Inc;..\..\mcu_lib\st_driver\CMSIS\Device\ST\STM32F4x\Include;..\boards\stm32f407_evk;..\..\usb_stack\class</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -3629,7 +3629,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F723xx,HSE_VALUE=25000000,NO_HOST</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\usb_stack\inc;.;..\..\usb_stack\Drivers\STM32F7xx_HAL_Driver\Inc;..\..\usb_stack\Drivers\CMSIS\Device\ST\STM32F7xx\Include;..\..\usb_stack\Drivers\Middlewares\ST\STM32_USB_Device_Library\Core\Inc;..\boards\stm32f723e_disco;..\..\usb_stack\class</IncludePath>
+              <IncludePath>..\..\usb_stack\inc;.;..\..\mcu_lib\st_driver\STM32F7xx_HAL_Driver\Inc;..\..\mcu_lib\st_driver\CMSIS\Device\ST\STM32F7xx\Include;..\..\mcu_lib\st_driver\Middlewares\ST\STM32_USB_Device_Library\Core\Inc;..\boards\stm32f723e_disco;..\..\usb_stack\class</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

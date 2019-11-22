@@ -21,7 +21,7 @@ DEFINES  += $(BOARD_DEF)
 TUSB_PATH = ../../usb_stack
 SOURCES  += $(wildcard $(TUSB_PATH)/src/*.c)
 INCLUDES += $(TUSB_PATH)/inc
-INCLUDES += $(TUSB_PATH)/Drivers/CMSIS/Include
+INCLUDES += $(TUSB_PATH)/../mcu_lib/st_driver/CMSIS/Include
 
 # Teeny USB device class source
 INCLUDES += $(TUSB_PATH)/class
