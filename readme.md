@@ -12,9 +12,9 @@ A teeny USB device and host stack for STM32 MCUs
 - CDC 通讯设备类，目前只支持串口。 communication device class
 - Vendor 厂商自定义设备。 vendor class
 
-设备描述符由TeenyDT生成 [在线试用TeenyDT](http://dt1.tusb.org)
+设备描述符由TeenyDT生成。 [在线试用TeenyDT](http://dt1.tusb.org)
 
-Device descriptor is generate by TeenyDT [Try TeenyDT online](http://dt.tusb.org)
+Device descriptor is generate by TeenyDT. [Try TeenyDT online](http://dt.tusb.org)
 
 ## 主机栈 Host Stack
 - HUB class, 支持多设备级连, support multiple device and hub
@@ -26,7 +26,7 @@ Device descriptor is generate by TeenyDT [Try TeenyDT online](http://dt.tusb.org
 
 编译工具为 [arm-none-eabi-gcc](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads), compile toolchain is arm-none-eabi-gcc. 
 
-调试使用VSCode+OpenOCD，[何在VSCode中配置STM32开发调试环境?(http://blog.xtoolbox.org/stm32_open_source_toolchain/)
+调试使用VSCode+OpenOCD，[何在VSCode中配置STM32开发调试环境?](http://blog.xtoolbox.org/stm32_open_source_toolchain/)
 
 ``` batch
 git clone https://github.com/xtoolbox/TeenyUSB.git
