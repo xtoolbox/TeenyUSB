@@ -23,6 +23,11 @@ Device descriptor is generate by TeenyDT [Try TeenyDT online](http://dt.tusb.org
 
 
 ## 如何生成示例程序 How make demo
+
+编译工具为 [arm-none-eabi-gcc](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads), compile toolchain is arm-none-eabi-gcc. 
+
+调试使用VSCode+OpenOCD，[何在VSCode中配置STM32开发调试环境?(http://blog.xtoolbox.org/stm32_open_source_toolchain/)
+
 ``` batch
 git clone https://github.com/xtoolbox/TeenyUSB.git
 cd TeenyUSB
