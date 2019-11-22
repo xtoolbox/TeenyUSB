@@ -7,10 +7,10 @@ A teeny USB device and host stack for STM32 MCUs
 关于TeenyUSB的实现细节和使用方式请阅读《STM32 USB设备开发指南》 [Github下载](https://github.com/xtoolbox/TeenyUSB/releases/download/0.1/STM32_USB_desgin_guide.pdf) , [21IC下载](http://dl.21ic.com/download/stm32_usb-285543.html)
 
 ## 设备栈 Device Stack
--- HID class
--- MSC 大容量存储设备，U盘。 Mass storage class
--- CDC 通讯设备类，目前只支持串口。 communication device class
--- Vendor 厂商自定义设备。 vendor class
+- HID class
+- MSC 大容量存储设备，U盘。 Mass storage class
+- CDC 通讯设备类，目前只支持串口。 communication device class
+- Vendor 厂商自定义设备。 vendor class
 
 ## 主机栈 Host Stack
 - HUB class, 支持多设备级连, support multiple device and hub
