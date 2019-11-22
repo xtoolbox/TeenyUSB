@@ -12,6 +12,10 @@ A teeny USB device and host stack for STM32 MCUs
 - CDC 通讯设备类，目前只支持串口。 communication device class
 - Vendor 厂商自定义设备。 vendor class
 
+设备描述符由TeenyDT生成 [在线试用TeenyDT](dt1.tusb.org)
+
+Device descriptor is generate by TeenyDT [Try TeenyDT online](dt.tusb.org)
+
 ## 主机栈 Host Stack
 - HUB class, 支持多设备级连, support multiple device and hub
 - HID class, 支持键盘、鼠标以及自定义HIDden设备。support keyboard, mouse, custom device
