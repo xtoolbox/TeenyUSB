@@ -2,6 +2,15 @@ Teeny USB
 ==========
 A teeny USB stack for STM32 MCUs, also contain a toolset to create USB descriptors and drivers.
 
+# 如何生成示例程序 How make demo
+``` batch
+git clone https://github.com/xtoolbox/TeenyUSB.git
+cd TeenyUSB
+git submodule update --init
+cd demo
+make all -j8
+```
+
 关于TeenyUSB的实现细节和使用方式请阅读《STM32 USB设备开发指南》 [Github下载](https://github.com/xtoolbox/TeenyUSB/releases/download/0.1/STM32_USB_desgin_guide.pdf) , [21IC下载](http://dl.21ic.com/download/stm32_usb-285543.html)
 
 # 特性
