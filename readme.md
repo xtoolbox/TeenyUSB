@@ -1,8 +1,22 @@
 Teeny USB
 ==========
-A teeny USB stack for STM32 MCUs, also contain a toolset to create USB descriptors and drivers.
+一个简易STM32 USB主机和设备协议栈
+
+A teeny USB device and host stack for STM32 MCUs
 
 关于TeenyUSB的实现细节和使用方式请阅读《STM32 USB设备开发指南》 [Github下载](https://github.com/xtoolbox/TeenyUSB/releases/download/0.1/STM32_USB_desgin_guide.pdf) , [21IC下载](http://dl.21ic.com/download/stm32_usb-285543.html)
+
+## 设备栈 Device Stack
+-- HID class
+-- MSC 大容量存储设备，U盘。 Mass storage class
+-- CDC 通讯设备类，目前只支持串口。 communication device class
+-- Vendor 厂商自定义设备。 vendor class
+
+## 主机栈 Host Stack
+- HUB class, 支持多设备级连, support star connection
+- HID class, 支持键盘、鼠标以及自定义HIDden设备。support keyboard, mouse, custom device
+- Vendor class，厂商自定义设备
+
 
 ## 如何生成示例程序 How make demo
 ``` batch
@@ -33,6 +47,7 @@ make all -j8
 ## USB主机例程 Demo for host
 
 - 简易交互式主机，支持HUB、键盘、鼠标以及自定义设备 [更多说明][host_readme]。 Interactive host, support HUB,Keyboard,Mouse and generic device. [more info][host_readme]
+
 [host_readme]: https://github.com/xtoolbox/TeenyUSB/blob/master/demo/host/readme.md
 
 ## Demo测试用的开发板 Demo tested boards
