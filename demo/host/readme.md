@@ -1,4 +1,4 @@
-# 无RTOS支持的例程 
+# 无RTOS的主机例程 
 
 host demo without RTOS
 
@@ -8,12 +8,12 @@ A simple terminal through serial port with default setting "115200 N 8 1". The t
 
 ## 显示连接的设备 list attched device
 ```
-lsusb
+TeenyUSB > lsusb
 ```
 
 ## 显示内存使用情况 list memory usage
 ```
-showmem
+TeenyUSB > showmem
 ```
 
 
