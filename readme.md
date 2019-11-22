@@ -1,5 +1,7 @@
-Teeny USB
+Teeny USB 
 ==========
+[![Build Status](https://travis-ci.org/xtoolbox/teenyusb.svg?branch=master)](https://travis-ci.org/xtoolbox/teenyusb)
+
 一个简易的STM32 USB主机和设备协议栈
 
 A teeny USB device and host stack for STM32 MCUs
