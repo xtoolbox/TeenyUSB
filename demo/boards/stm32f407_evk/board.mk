@@ -1,6 +1,6 @@
 CPU = cortex-m4
 
-DEV_TYPE = STM32f4xx
+DEV_TYPE = STM32F4xx
 BOARD_INC = $(BOARD_PATH) $(TUSB_PATH)/../mcu_lib/st_driver/$(DEV_TYPE)_HAL_Driver/Inc $(TUSB_PATH)/../mcu_lib/st_driver/CMSIS/Device/ST/$(DEV_TYPE)/Include
 BOARD_DEF = USE_HAL_DRIVER STM32F407xx HSE_VALUE=8000000
 BOARD_SRC = $(BOARD_PATH)/system_stm32f4xx.c board.c
