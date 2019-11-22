@@ -1,6 +1,6 @@
 Teeny USB
 ==========
-一个简易STM32 USB主机和设备协议栈
+一个简易的STM32 USB主机和设备协议栈
 
 A teeny USB device and host stack for STM32 MCUs
 
@@ -68,7 +68,7 @@ make all -j8
 [303]: https://www.st.com/en/evaluation-tools/stm32f3discovery.html
 
 ## 其它开源STM32 USB协议栈 Other USB stack for STM32
-[tinyusb](https://github.com/hathach/tinyusb.git)  全静态内存分配，不支持多设备和同类型多接口，暂时不支持STM32主机模式。
-[libopencm3](https://github.com/libopencm3/libopencm3.git) 动态生成描述符，不依赖官方库。设备类型少，不支持主机模式。
-[libusb_stm32](https://github.com/dmitrystu/libusb_stm32.git) 资源占用极少的USB设备库，不支持主机模式。
+- [tinyusb](https://github.com/hathach/tinyusb.git)  全静态内存分配，不支持多设备和同类型多接口，暂时不支持STM32主机模式。
+- [libopencm3](https://github.com/libopencm3/libopencm3.git) 动态生成描述符，不依赖官方库。设备类型少，不支持主机模式。
+- [libusb_stm32](https://github.com/dmitrystu/libusb_stm32.git) 资源占用极少的USB设备库，不支持主机模式。
 
