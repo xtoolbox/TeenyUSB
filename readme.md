@@ -13,7 +13,7 @@ A teeny USB device and host stack for STM32 MCUs
 -- Vendor 厂商自定义设备。 vendor class
 
 ## 主机栈 Host Stack
-- HUB class, 支持多设备级连, support star connection
+- HUB class, 支持多设备级连, support multiple device and hub
 - HID class, 支持键盘、鼠标以及自定义HIDden设备。support keyboard, mouse, custom device
 - Vendor class，厂商自定义设备
 
