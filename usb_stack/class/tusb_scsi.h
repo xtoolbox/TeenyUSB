@@ -395,5 +395,12 @@ typedef struct
   uint8_t  control;
 }scsi_prevent_removal_cmd_t;
 
+typedef struct
+{
+  uint8_t  cmd_code;
+  uint8_t  lun;
+  uint8_t  reserved[3];
+  uint8_t  control;
+}scsi_test_unit_ready_cmd_t;
 
 #endif
