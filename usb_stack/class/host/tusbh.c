@@ -112,18 +112,18 @@ int tusb_on_channel_event(tusb_host_t* host, uint8_t hc_num)
 {
     tusb_hc_data_t* hc = &host->hc[hc_num];
     if(hc->xfer_done){
-        tusbh_channel_evt_t* h = (tusbh_channel_evt_t*)hc->user_data;
-        if(h && h->func){
-            h->func(host, hc_num, h);
+        tusbh_xfered_action_t* action = (tusbh_xfered_action_t*)hc->user_data;
+        if(action && action->func){
+            action->func(host, hc_num, action);
         }
     }
     return 0;
 }
 
-static void tusbh_channel_set_control_event(tusb_host_t* host, uint8_t hc_num, tusbh_control_evt_t* evt)
+static void tusbh_xfered_set_event_handler(tusb_host_t* host, uint8_t hc_num, tusbh_xfered_set_event_t* data)
 {
-    if(evt->event){
-        tusbh_evt_set(evt->event);
+    if(data->event){
+        tusbh_evt_set(data->event);
     }
 }
 
@@ -137,10 +137,10 @@ void tusbh_close_pipe(tusbh_device_t* dev, int pipe_num)
 #if 0
     tusb_hc_data_t* hc = &dev->host->hc[pipe_num];
     
-    hc->user_data = &dev->ctrl_evt;
+    hc->user_data = &dev->xfer_evt;
     
     tusb_pipe_cancel(&pipe);
-    int res = tusbh_evt_wait(dev->ctrl_evt.event, timeout);
+    int res = tusbh_evt_wait(dev->xfer_evt.event, timeout);
     hc->user_data = 0;
     
     if(res != 0){
@@ -151,16 +151,16 @@ void tusbh_close_pipe(tusbh_device_t* dev, int pipe_num)
     tusb_pipe_close(&pipe);
 }
 
-static channel_state_t tusbh_control_xfer_and_wait(tusbh_device_t* dev, int pipe_num, uint8_t is_data, void* data, uint16_t len, uint32_t timeout)
+static channel_state_t tusbh_pipe_xfer_and_wait(tusbh_device_t* dev, int pipe_num, uint8_t is_data, void* data, uint16_t len, uint32_t timeout)
 {   
     void* bak = dev->host->hc[pipe_num].user_data;
-    dev->host->hc[pipe_num].user_data = &dev->ctrl_evt;
+    dev->host->hc[pipe_num].user_data = &dev->xfer_evt;
     
     tusb_host_xfer_data(dev->host, pipe_num, is_data, data, len);
     
     channel_state_t r = TUSB_CS_UNKNOWN_ERROR;
     
-    int res = tusbh_evt_wait(dev->ctrl_evt.event, timeout);
+    int res = tusbh_evt_wait(dev->xfer_evt.event, timeout);
     
     if(res == 0){
         r = (channel_state_t)dev->host->hc[pipe_num].state;
@@ -172,7 +172,7 @@ static channel_state_t tusbh_control_xfer_and_wait(tusbh_device_t* dev, int pipe
 
 int tusbh_ep_xfer(tusbh_ep_info_t* ep, void* data, uint16_t len, uint32_t timeout)
 {
-    channel_state_t s = tusbh_control_xfer_and_wait(ep_device(ep), ep->pipe_num, 1, data, len, timeout);
+    channel_state_t s = tusbh_pipe_xfer_and_wait(ep_device(ep), ep->pipe_num, 1, data, len, timeout);
     if(s == TUSB_CS_TRANSFER_COMPLETE){
         tusb_hc_data_t* hc = &ep_device(ep)->host->hc[ep->pipe_num];
         return (int)hc->count;
@@ -216,7 +216,7 @@ int tusbh_control_xfer(tusbh_device_t* dev, uint8_t bmRequest, uint8_t bRequest,
     setup.wValue = value;
     setup.wIndex = index;
     setup.wLength = len;
-    state = tusbh_control_xfer_and_wait(dev, dev->ctrl_out, 0, &setup, sizeof(setup), SETUP_DELAY);
+    state = tusbh_pipe_xfer_and_wait(dev, dev->ctrl_out, 0, &setup, sizeof(setup), SETUP_DELAY);
     if( state != TUSB_CS_TRANSFER_COMPLETE){
         TUSB_DEV_INFO("Setup stage fail, %s\n", channelState(state));
         res = -1;
@@ -225,14 +225,14 @@ int tusbh_control_xfer(tusbh_device_t* dev, uint8_t bmRequest, uint8_t bRequest,
 
     if(bmRequest & USB_D2H){
         // data IN
-        state = tusbh_control_xfer_and_wait(dev, dev->ctrl_in, 1, data, len, SETUP_DELAY);
+        state = tusbh_pipe_xfer_and_wait(dev, dev->ctrl_in, 1, data, len, SETUP_DELAY);
         if( state != TUSB_CS_TRANSFER_COMPLETE){
             TUSB_DEV_INFO("Data IN stage fail, %s\n", channelState(state));
             res = -1;
             goto error;
         }
         // status out
-        state = tusbh_control_xfer_and_wait(dev, dev->ctrl_out, 1, 0, 0, SETUP_DELAY);
+        state = tusbh_pipe_xfer_and_wait(dev, dev->ctrl_out, 1, 0, 0, SETUP_DELAY);
         if( state != TUSB_CS_TRANSFER_COMPLETE){
             TUSB_DEV_INFO("Status OUT stage fail, %s\n", channelState(state));
             res = -1;
@@ -241,7 +241,7 @@ int tusbh_control_xfer(tusbh_device_t* dev, uint8_t bmRequest, uint8_t bRequest,
     }else{
         // data OUT
         if(data && len){
-            state = tusbh_control_xfer_and_wait(dev, dev->ctrl_out, 1, data, len, SETUP_DELAY);
+            state = tusbh_pipe_xfer_and_wait(dev, dev->ctrl_out, 1, data, len, SETUP_DELAY);
             if( state != TUSB_CS_TRANSFER_COMPLETE){
                 TUSB_DEV_INFO("Data OUT stage fail, %s\n", channelState(state));
                 res = -1;
@@ -249,7 +249,7 @@ int tusbh_control_xfer(tusbh_device_t* dev, uint8_t bmRequest, uint8_t bRequest,
             }
         }
         // status in
-        state = tusbh_control_xfer_and_wait(dev, dev->ctrl_in, 1, 0, 0, SETUP_DELAY);
+        state = tusbh_pipe_xfer_and_wait(dev, dev->ctrl_in, 1, 0, 0, SETUP_DELAY);
         if( state != TUSB_CS_TRANSFER_COMPLETE){
             TUSB_DEV_INFO("Data IN stage fail, %s\n", channelState(state));
             res = -1;
@@ -502,9 +502,9 @@ int tusbh_device_attach(tusbh_device_t* dev)
         goto error;
     }
     
-    dev->ctrl_evt.func = tusbh_channel_set_control_event;
-    dev->ctrl_evt.event = tusbh_evt_create();
-    if(!dev->ctrl_evt.event){
+    dev->xfer_evt.func = tusbh_xfered_set_event_handler;
+    dev->xfer_evt.event = tusbh_evt_create();
+    if(!dev->xfer_evt.event){
         TUSB_DEV_INFO("Fail to allocate device control event\n");
         res = -1;
         goto error;
@@ -597,9 +597,9 @@ error:
     if(dev->ctrl_out>=0){ tusbh_close_pipe(dev, dev->ctrl_out); }
     dev->ctrl_in = dev->ctrl_out = -1;
     
-    if(dev->ctrl_evt.event){
-        tusbh_evt_free(dev->ctrl_evt.event);
-        dev->ctrl_evt.event = 0;
+    if(dev->xfer_evt.event){
+        tusbh_evt_free(dev->xfer_evt.event);
+        dev->xfer_evt.event = 0;
     }
         
     if(dev->address){
@@ -639,9 +639,9 @@ int tusbh_device_deinit(tusbh_device_t* dev)
         }
     }
     
-    if(dev->ctrl_evt.event){
-        tusbh_evt_free(dev->ctrl_evt.event);
-        dev->ctrl_evt.event = 0;
+    if(dev->xfer_evt.event){
+        tusbh_evt_free(dev->xfer_evt.event);
+        dev->xfer_evt.event = 0;
     }
     
     if(dev->address){
@@ -759,8 +759,8 @@ static void tusbh_msg_root_disable(tusbh_message_t* msg)
 static void tusbh_ep_data_xfered(tusbh_message_t* msg)
 {
     uint8_t hc_num = (uint8_t)msg->param;
-    tusbh_ep_xfer_evt_t* evt = (tusbh_ep_xfer_evt_t*) msg->data;
-    tusbh_ep_info_t* ep = evt->ep;
+    tusbh_xfered_notify_ep_t* data = (tusbh_xfered_notify_ep_t*) msg->data;
+    tusbh_ep_info_t* ep = data->ep;
     tusb_hc_data_t* hc = &ep->interface->device->host->hc[hc_num];
     ep->data_len = hc->count;
     if(ep->interface->cls && ep->interface->cls->backend->data_xfered){
@@ -770,10 +770,10 @@ static void tusbh_ep_data_xfered(tusbh_message_t* msg)
     //tusbh_ep_free_pipe(ep);
 }
 
-static void tusbh_channel_event_ep_data_xfered(tusb_host_t* host, uint8_t hc_num, tusbh_ep_xfer_evt_t* evt)
+static void tusbh_xfered_notify_ep_handler(tusb_host_t* host, uint8_t hc_num, tusbh_xfered_notify_ep_t* data)
 {
     tusbh_root_hub_t* root = (tusbh_root_hub_t*)host->user_data;
-    POST_MESSAGE(root->mq, tusbh_ep_data_xfered, hc_num, evt, 0);
+    POST_MESSAGE(root->mq, tusbh_ep_data_xfered, hc_num, data, 0);
 }
 
 void tusbh_ep_free_pipe(tusbh_ep_info_t* ep)
@@ -812,9 +812,9 @@ int tusbh_ep_allocate_pipe(tusbh_ep_info_t* ep)
     }
     
     ep->pipe_num = (int8_t)pipe_num;
-    ep->ep_evt.func = tusbh_channel_event_ep_data_xfered;
-    ep->ep_evt.ep = ep;
-    dev->host->hc[pipe_num].user_data = &ep->ep_evt;
+    ep->ep_notify.func = tusbh_xfered_notify_ep_handler;
+    ep->ep_notify.ep = ep;
+    dev->host->hc[pipe_num].user_data = &ep->ep_notify;
     
     return pipe_num;
     

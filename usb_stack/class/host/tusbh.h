@@ -90,22 +90,21 @@ struct _tusbh_class
 typedef const tusbh_class_t* tusbh_class_reg_t;
 
 ///////////////////////////////////////////////////////////
-/// Channel event handler struct
-typedef struct _tusbh_channel_evt tusbh_channel_evt_t;
-struct _tusbh_channel_evt{
-    void(*func)(tusb_host_t* host, uint8_t hc_num, tusbh_channel_evt_t* evt);
-    uint8_t data[4];
+/// Channel xfer done action handler struct
+typedef struct _tusbh_xfered_action tusbh_xfered_action_t;
+struct _tusbh_xfered_action{
+    void(*func)(tusb_host_t* host, uint8_t hc_num, void* data);
 };
-
-typedef struct _tusbh_control_evt tusbh_control_evt_t;
-struct _tusbh_control_evt{
-    void(*func)(tusb_host_t* host, uint8_t hc_num, tusbh_control_evt_t* evt);
+// xfer done set event
+typedef struct _tusbh_xfered_set_event tusbh_xfered_set_event_t;
+struct _tusbh_xfered_set_event{
+    void(*func)(tusb_host_t* host, uint8_t hc_num, tusbh_xfered_set_event_t* data);
     tusbh_evt_t* event;
 };
-
-typedef struct _tusbh_ep_xfer_evt tusbh_ep_xfer_evt_t;
-struct _tusbh_ep_xfer_evt{
-    void(*func)(tusb_host_t* host, uint8_t hc_num, tusbh_ep_xfer_evt_t* evt);
+// xfer done notify ep
+typedef struct _tusbh_xfered_notify_ep tusbh_xfered_notify_ep_t;
+struct _tusbh_xfered_notify_ep{
+    void(*func)(tusb_host_t* host, uint8_t hc_num, tusbh_xfered_notify_ep_t* data);
     tusbh_ep_info_t* ep;
 };
 
@@ -116,7 +115,7 @@ struct _tusbh_ep_info
     tusbh_interface_t* interface;                  /**< interface of this ep */
     void*   data;                                  /**< data buffer for this endpoint */
     uint32_t data_len;                             /**< actual xfered data length of this endpoint */
-    tusbh_ep_xfer_evt_t  ep_evt;                   /**< endpoint data xfer event */
+    tusbh_xfered_notify_ep_t  ep_notify;           /**< endpoint data xfer done send a notify message */
     uint8_t remain_interval;                       /**< remain interval for periodic endpoint */
     uint8_t xfer_in_progress;                      /**< endpoint transfer in progress */
     int8_t pipe_num;                               /**< pipe number for this endpoint */
@@ -168,7 +167,7 @@ struct _tusbh_device{
     tusb_host_t*    host;                              /**< host controller for this device */
     int             ctrl_in;                           /**< Control In pipe */
     int             ctrl_out;                          /**< Control Out pipe */
-    tusbh_control_evt_t  ctrl_evt;                     /**< Control channel event handler */
+    tusbh_xfered_set_event_t  xfer_evt;                /**< device endpoint xfer event handler */
     uint8_t address;                                   /**< device address */
     uint8_t speed;                                     /**< device speed   */
     uint8_t config;                                    /**< device current configuartion */
