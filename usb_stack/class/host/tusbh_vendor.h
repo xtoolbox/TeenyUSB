@@ -32,8 +32,8 @@
  * SOFTWARE.
  */
 
-#ifndef __TUSHB_VENDOR_H__
-#define __TUSHB_VENDOR_H__
+#ifndef __TUSBH_VENDOR_H__
+#define __TUSBH_VENDOR_H__
 
 #include "tusbh.h"
 
