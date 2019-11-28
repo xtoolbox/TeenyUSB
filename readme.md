@@ -18,11 +18,22 @@ A teeny USB device and host stack for STM32 MCUs
 
 Device descriptor is generate by TeenyDT. [Try TeenyDT online](http://dt.tusb.org)
 
+### USB设备例程 Demo for device
+
+- 复合设备，HID MSC WinUSB HID复合设备 Composite device, HID+MSC+WinUSB+HID
+- 支持WinUSB的bulk设备, Bulk device with WinUSB support
+- CMSIS DAP on STM32F723 discovery
+
 ## 主机栈 Host Stack
 - HUB class, 支持多设备级连, support multiple device and hub
 - HID class, 支持键盘、鼠标以及自定义HIDden设备。support keyboard, mouse, custom device
 - Vendor class，厂商自定义设备
 
+### USB主机例程 Demo for host
+
+- 简易交互式主机，支持HUB、键盘、鼠标以及自定义设备 [更多说明][host_readme]。 Interactive host, support HUB,Keyboard,Mouse and generic device. [more info][host_readme]
+
+[host_readme]: https://github.com/xtoolbox/TeenyUSB/blob/master/demo/host/readme.md
 
 ## 如何生成示例程序 How make demo
 
@@ -49,18 +60,6 @@ make all -j8
 └── pc_test_tool    # 基于lua Qt的Windows USB 测试程序 A luaQt based Windows program to test CDC/HID/WinUSB devices
 ```
 
-## USB设备例程 Demo for device
-
-- 复合设备，HID MSC WinUSB HID复合设备 Composite device, HID+MSC+WinUSB+HID
-- 支持WinUSB的bulk设备, Bulk device with WinUSB support
-- CMSIS DAP on STM32F723 discovery
-
-## USB主机例程 Demo for host
-
-- 简易交互式主机，支持HUB、键盘、鼠标以及自定义设备 [更多说明][host_readme]。 Interactive host, support HUB,Keyboard,Mouse and generic device. [more info][host_readme]
-
-[host_readme]: https://github.com/xtoolbox/TeenyUSB/blob/master/demo/host/readme.md
-
 ## Demo测试用的开发板 Demo tested boards
 
 | Board Folder     |      Board Type             |      Chip     |HSE Freq | USB Core            |
@@ -78,8 +77,8 @@ make all -j8
 [407]: http://www.waveshare.net/wiki/EVK407I
 [303]: https://www.st.com/en/evaluation-tools/stm32f3discovery.html
 
-## 其它开源STM32 USB协议栈 Other USB stack for STM32
-- [tinyusb](https://github.com/hathach/tinyusb.git)  全静态内存分配，不支持多设备和同类型多接口，暂时不支持STM32主机模式。
-- [libopencm3](https://github.com/libopencm3/libopencm3.git) 动态生成描述符，不依赖官方库。设备类型少，不支持主机模式。
+## 其它支持STM32的开源USB协议栈 Other open source USB stack for STM32
+- [tinyusb](https://github.com/hathach/tinyusb.git)  全静态内存分配，不支持多设备，不支持同一设备上使用多个同类型接口，暂时不支持STM32主机模式。
+- [libopencm3](https://github.com/libopencm3/libopencm3.git) 动态生成描述符，不依赖官方库。USB设备类型少，不支持主机模式。
 - [libusb_stm32](https://github.com/dmitrystu/libusb_stm32.git) 资源占用极少的USB设备库，不支持主机模式。
 
