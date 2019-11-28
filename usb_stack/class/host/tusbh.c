@@ -151,9 +151,9 @@ void tusbh_close_pipe(tusbh_device_t* dev, int pipe_num)
     tusb_pipe_close(&pipe);
 }
 
-
 static channel_state_t tusbh_control_xfer_and_wait(tusbh_device_t* dev, int pipe_num, uint8_t is_data, void* data, uint16_t len, uint32_t timeout)
 {   
+    void* bak = dev->host->hc[pipe_num].user_data;
     dev->host->hc[pipe_num].user_data = &dev->ctrl_evt;
     
     tusb_host_xfer_data(dev->host, pipe_num, is_data, data, len);
@@ -165,11 +165,31 @@ static channel_state_t tusbh_control_xfer_and_wait(tusbh_device_t* dev, int pipe
     if(res == 0){
         r = (channel_state_t)dev->host->hc[pipe_num].state;
     }
-    dev->host->hc[pipe_num].user_data = 0;
+    dev->host->hc[pipe_num].user_data = bak;
     
     return r;
 }
 
+int tusbh_ep_xfer(tusbh_ep_info_t* ep, void* data, uint16_t len, uint32_t timeout)
+{
+    channel_state_t s = tusbh_control_xfer_and_wait(ep_device(ep), ep->pipe_num, 1, data, len, timeout);
+    if(s == TUSB_CS_TRANSFER_COMPLETE){
+        tusb_hc_data_t* hc = &ep_device(ep)->host->hc[ep->pipe_num];
+        return (int)hc->count;
+    }
+    return -(int)s;
+}
+
+int tusbh_ep_clear_feature(tusbh_ep_info_t* ep)
+{
+    return tusbh_control_xfer(
+        ep_device(ep),
+        USB_H2D | USB_REQ_RECIPIENT_ENDPOINT | USB_REQ_TYPE_STANDARD,
+        USB_REQ_CLEAR_FEATURE,
+        USB_FEATURE_EP_HALT,
+        ep->desc->bEndpointAddress,
+        0, 0);
+}
 
 #define SETUP_DELAY  1000
 

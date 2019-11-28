@@ -217,6 +217,10 @@ void tusbh_ep_free_pipe(tusbh_ep_info_t* ep);
 
 int tusbh_ep_allocate_pipe(tusbh_ep_info_t* ep);
 
+int tusbh_ep_xfer(tusbh_ep_info_t* ep, void* data, uint16_t len, uint32_t timeout);
+
+int tusbh_ep_clear_feature(tusbh_ep_info_t* ep);
+
 #define  TUSB_DBG(fmt,  ...)           printf(fmt, ## __VA_ARGS__)
 #define  TUSB_ASSERT(exp)                                       \
 do{                                                             \
