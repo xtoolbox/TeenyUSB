@@ -158,7 +158,7 @@ static int tusbh_hid_init(tusbh_device_t* dev, tusbh_interface_t* interface, int
            USB_H2D | USB_REQ_RECIPIENT_INTERFACE | USB_REQ_TYPE_CLASS,
            USB_HID_SET_PROTOCOL,
            0,
-           0,
+           interface->desc->bInterfaceNumber,
            0, 0);
         if(r<0){
             TUSB_ITF_INFO("Fail to set boot protocol\n");
@@ -173,7 +173,7 @@ static int tusbh_hid_init(tusbh_device_t* dev, tusbh_interface_t* interface, int
                     USB_D2H | USB_REQ_RECIPIENT_INTERFACE | USB_REQ_TYPE_STANDARD,
                     USB_REQ_GET_DESCRIPTOR,
                     (USB_REPORT_DESCRIPTOR_TYPE<<8) | 0,
-                    0,
+                    interface->desc->bInterfaceNumber,
                     info->report_desc,
                     info->report_desc_len
                 );
