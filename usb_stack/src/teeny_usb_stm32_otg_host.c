@@ -375,7 +375,10 @@ static void tusb_otg_in_channel_handler(tusb_host_t* host, uint8_t ch_num)
     (void)HcEpType;
     HC_LOG_DATA(host, ch_num, TUSB_CS_TRANSFER_COMPLETE);
     if (USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN){
-      hc->count = hc->size - (HC->HCTSIZ & USB_OTG_HCTSIZ_XFRSIZ);
+      uint32_t mps = HC->HCCHAR & USB_OTG_HCCHAR_MPSIZ;
+      uint32_t pkt_cnt = (hc->size + mps - 1) / mps;
+      uint32_t remain = (HC->HCTSIZ & USB_OTG_HCTSIZ_XFRSIZ);
+      hc->count = mps*pkt_cnt - remain;
     }
 
     hc->state = TUSB_CS_TRANSFER_COMPLETE;
