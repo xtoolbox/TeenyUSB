@@ -20,18 +20,19 @@ Device descriptor is generate by TeenyDT. [Try TeenyDT online](http://dt.tusb.or
 
 ### USB设备例程 Demo for device
 
-- 复合设备，HID MSC WinUSB HID复合设备 Composite device, HID+MSC+WinUSB+HID
+- 支持HID CDC(虚拟串口) WinUSB MSC(U盘)的复合设备 Composite device with HID+CDC+WinUSB+MSC
 - 支持WinUSB的bulk设备, Bulk device with WinUSB support
 - CMSIS DAP on STM32F723 discovery
 
 ## 主机栈 Host Stack
 - HUB class, 支持多设备级连, support multiple device and hub
 - HID class, 支持键盘、鼠标以及自定义HIDden设备。support keyboard, mouse, custom device
+- MSC class, 大容量存储类(U盘)，使用BOT协议。 mass storage class with BOT protocol
 - Vendor class，厂商自定义设备
 
 ### USB主机例程 Demo for host
 
-- 简易交互式主机，支持HUB、键盘、鼠标以及自定义设备 [更多说明][host_readme]。 Interactive host, support HUB,Keyboard,Mouse and generic device. [more info][host_readme]
+- 简易交互式主机，支持U盘、HUB、键盘、鼠标以及自定义设备 [更多说明][host_readme]。 Interactive host, support HUB,MSC,Keyboard,Mouse and generic device. [more info][host_readme]
 
 [host_readme]: https://github.com/xtoolbox/TeenyUSB/blob/master/demo/host/readme.md
 
@@ -57,7 +58,8 @@ make all -j8
 ├── demo            # 示例代码 Sample projects
 ├── mcu_lib         # MCU文件子仓库，MCU library sub module
 ├── usb_stack       # USB主机及设备类文件 TeenyUSB host and deivce class
-└── pc_test_tool    # 基于lua Qt的Windows USB 测试程序 A luaQt based Windows program to test CDC/HID/WinUSB devices
+├── pc_test_tool    # 基于lua Qt的Windows USB 测试程序 A luaQt based Windows program to test CDC/HID/WinUSB devices
+└── third_part      # 第三方代码,如FatFs,rt-thread。 Third part source code, e.g. FatFs, rt-thread.
 ```
 
 ## Demo测试用的开发板 Demo tested boards
