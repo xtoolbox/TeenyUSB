@@ -557,7 +557,9 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
     hc->state = TUSB_CS_NAK;
     if (hc->do_ping == 0){
       if (hc->speed == PORT_SPEED_HIGH){
-        hc->do_ping = 1;
+        if (!(USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN)){
+            hc->do_ping = 1;
+        }
       }
     }
     __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
