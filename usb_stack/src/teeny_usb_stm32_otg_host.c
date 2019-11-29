@@ -621,10 +621,10 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
       if(hc->nak_count > MAX_NAK_RETRY_TIME){
         hc->xfer_done = 1;
       }else{
-        hc->state = TUSB_CS_XFER_ONGOING;
-        __HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
-        tusb_otg_halt_channel(USBx, ch_num);
-        //tusb_otg_host_submit(host, ch_num);
+        hc->state = TUSB_CS_INIT;
+        //__HAL_HCD_UNMASK_HALT_HC_INT(ch_num);
+        //tusb_otg_halt_channel(USBx, ch_num);
+        tusb_otg_host_submit(host, ch_num);
         /*
         if (USBx->GAHBCFG & USB_OTG_GAHBCFG_DMAEN){
           tmpreg = HC->HCCHAR;
