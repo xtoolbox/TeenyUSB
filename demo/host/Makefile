@@ -9,9 +9,13 @@ TEENYDT = host_desc.lua
 USBMEM = 512
 USBEP = 5
 # project source
-SOURCES  = main.c retarget_stdio.c
+SOURCES  = main.c retarget_stdio.c msc_diskio.c
 INCLUDES = . 
 DEFINES  = __forceinline=inline NO_DEVICE
+# FatFs source
+SOURCES  += ../../third_part/fatfs/source/ff.c
+INCLUDES += ../../third_part/fatfs/source
+
 # board source
 SOURCES  += $(BOARD_SRC)
 INCLUDES += $(BOARD_INC)
@@ -61,11 +65,8 @@ vpath %.c $(SRCPATH)
 vpath %.S $(SRCPATH)
 vpath %.s $(SRCPATH)
 
-all: f107 f407 f723 f767
+all: f407 f723 f767
 
-f107:
-	@echo Building stm32f107vct6
-	@$(MAKE) demo TARGET='f107host' BOARD='stm32f107vc'
 f407:
 	@echo Building stm32f407igt6
 	@$(MAKE) demo TARGET='f407host' BOARD='stm32f407_evk'

@@ -37,8 +37,19 @@
 #include "tusbh_vendor.h"
 #include "tusbh_hub.h"
 #include "tusbh_hid.h"
+#include "tusbh_msc.h"
 #include "string.h"
 #include "usb_key_code.h"
+
+#define TEENYUSB_LOGO \
+" _______                    _    _  _____ ____  \n"           \
+"|__   __|                  | |  | |/ ____|  _ \\ \n"          \
+"   | | ___  ___ _ __  _   _| |  | | (___ | |_) |\n"           \
+"   | |/ _ \\/ _ \\ '_ \\| | | | |  | |\\___ \\|  _ < \n"      \
+"   | |  __/  __/ | | | |_| | |__| |____) | |_) |\n"           \
+"   |_|\\___|\\___|_| |_|\\__, |\\____/|_____/|____/ \n"       \
+"                       __/ |                    \n"           \
+"                      |___/                     \n"
 
 extern uint32_t SystemCoreClock;
 
@@ -84,10 +95,20 @@ static const tusbh_vendor_class_t cls_vendor = {
     //.transfer_done = process_vendor_xfer_done
 };
 
+int msc_ff_mount(tusbh_interface_t* interface, int max_lun, const tusbh_block_info_t* blocks);
+int msc_ff_unmount(tusbh_interface_t* interface);
+
+static const tusbh_msc_class_t cls_msc_bot = {
+    .backend = &tusbh_msc_bot_backend,
+    .mount = msc_ff_mount,
+    .unmount = msc_ff_unmount,
+};
+
 static const tusbh_class_reg_t class_table[] = {
     (tusbh_class_reg_t)&cls_boot_key,
     (tusbh_class_reg_t)&cls_boot_mouse,
     (tusbh_class_reg_t)&cls_hub,
+    (tusbh_class_reg_t)&cls_msc_bot,
     (tusbh_class_reg_t)&cls_hid,
     (tusbh_class_reg_t)&cls_vendor,
     0,
@@ -97,16 +118,72 @@ static const tusbh_class_reg_t class_table[] = {
 static tusb_host_t* fs;
 static tusb_host_t* hs;
 
-void show_memory(void);
-static void process_command(const char* cmd)
+void show_memory(char* argv[], int argc);
+void cmd_lsusb(char* argv[], int argc)
 {
-    if(strstr(cmd, "lsusb") == cmd){
-        if(fs)ls_usb(fs);
-        if(hs)ls_usb(hs);
-        return;
-    }else if(strstr(cmd, "showmem") == cmd){
-        show_memory();
-        return;
+    if(fs)ls_usb(fs);
+    if(hs)ls_usb(hs);
+}
+
+void cmd_ls(char* argv[], int argc);
+void cmd_mkdir(char* argv[], int argc);
+void cmd_mv(char* argv[], int argc);
+void cmd_cat(char* argv[], int argc);
+void cmd_cp(char* argv[], int argc);
+void cmd_rm(char* argv[], int argc);
+void cmd_append(char* argv[], int argc);
+
+
+typedef struct _cli
+{
+    const char* cmd;
+    const char* desc;
+    void (*action)(char* argv[], int argc);
+}cli_t;
+
+
+
+const cli_t commands[] = {
+    {"lsusb",     "list usb devices",    cmd_lsusb    },
+    {"showmem",   "show memory usage",   show_memory  },
+    {"ls",        "ls <dir>   list dir", cmd_ls       },
+    {"mkdir",     "mkdir <dir>  create dir", cmd_mkdir},
+    {"mv",        "mv <oldfile> <newfile> move file", cmd_mv},
+    {"cat",       "cat <file> display file", cmd_cat},
+    {"cp",        "cp <source> <dest> copy file", cmd_cp},
+    {"rm",        "rm <target> remove file or path", cmd_rm},
+    {"append",    "append <file> <data> [data data ...] add data to file", cmd_append},
+};
+
+static void process_command(char* cmd)
+{
+#define MAX_ARGC 8
+    char * argv[MAX_ARGC];
+    for(int i=0;i< sizeof(commands)/sizeof(commands[0]); i++){
+        const cli_t* c = &commands[i];
+        if(strstr(cmd, c->cmd) == cmd && c->action){
+            int argc = 1;
+            argv[0] = cmd;
+            while(*cmd){
+                if(*cmd == ' '){
+                    while(*cmd && *cmd == ' '){
+                        *cmd = 0;
+                        cmd++;
+                    }
+                    if(*cmd){
+                        if(argc<MAX_ARGC){
+                            argv[argc] = cmd;
+                            argc++;
+                        }
+                        cmd++;
+                    }
+                }else{
+                    cmd++;
+                }
+            }
+            c->action(argv, argc);
+            return;
+        }
     }
     printf("Unkown command: %s\n", cmd);
 }
@@ -127,7 +204,11 @@ static void command_loop(void)
             cmd_len = 0;
             printf(PROMPT);
         }else if(ch == '\t'){
-            printf("\nlsusb showmem\n");
+            printf("\n");
+            for(int i=0;i< sizeof(commands)/sizeof(commands[0]); i++){
+                const cli_t* c = &commands[i];
+                printf("%-10s - %s\n", c->cmd, c->desc?c->desc:"");
+            }
             printf(PROMPT);
             cmd_len = 0;
         }else{
@@ -148,8 +229,7 @@ int main()
     SystemCoreClockUpdate();
     
     SysTick_Config(SystemCoreClock/1000);
-  
-    printf("Start USB host demo\n" PROMPT);
+    printf("\n" TEENYUSB_LOGO PROMPT);
     
     tusbh_msg_q_t* mq = tusbh_mq_create();
     tusbh_mq_init(mq);
