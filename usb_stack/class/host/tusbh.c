@@ -160,11 +160,12 @@ static channel_state_t tusbh_pipe_xfer_and_wait(tusbh_device_t* dev, int pipe_nu
     
     channel_state_t r = TUSB_CS_UNKNOWN_ERROR;
     
-    int res = tusbh_evt_wait(dev->xfer_evt.event, timeout);
+    //int res = 
+    tusbh_evt_wait(dev->xfer_evt.event, timeout);
     
-    if(res == 0){
+    //if(res == 0){
         r = (channel_state_t)dev->host->hc[pipe_num].state;
-    }
+    //}
     dev->host->hc[pipe_num].user_data = bak;
     
     return r;
