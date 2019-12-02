@@ -35,54 +35,7 @@
 #ifndef __TUSBD_CDC_H__
 #define __TUSBD_CDC_H__
 #include "tusbd.h"
-
-#define TUSB_CDC_DTR   0x01
-#define TUSB_CDC_RTS   0x02
-
-/** Enums for \ref tusb_cdc_line_coding_t  stopbits field
- *  indicating the CDC stopbits
- */
-typedef enum{
-    CDC_1STOP = 0,
-    CDC_1_5STOP = 1,
-    CDC_2_STOP = 2,
-}cdc_stopbits_t;
-
-/** Enums for \ref tusb_cdc_line_coding_t  parity field
- *  indicating the CDC parity
- */
-typedef enum{
-    CDC_NONE = 0,
-    CDC_ODD = 1,
-    CDC_EVEN = 2,
-    CDC_MARK = 3,
-    CDC_SPACE = 4,
-}cdc_parity_t;
-
-/* Type Defines: */
-/** Type define for CDC line coding
- */
-typedef struct _tusb_cdc_line_coding
-{
-    uint32_t bitrate;        /**< bit rate */
-    uint8_t  stopbits;       /**< stop bits, \ref cdc_stopbits_t*/
-    uint8_t  parity;         /**< parity, \ref cdc_parity_t */
-    uint8_t  databits;       /**< data bits: 5,6,7,8 */
-}tusb_cdc_line_coding_t;
-
-
-typedef struct _tusb_cdc_state
-{
-    tusb_setup_packet req;
-    uint16_t CDC:1;
-    uint16_t DSR:1;
-    uint16_t Break:1;
-    uint16_t Ring:1;
-    uint16_t FramingError:1;
-    uint16_t ParityError:1;
-    uint16_t Overrun:1;
-    uint16_t revserved: 9;
-}tusb_cdc_state;
+#include "tusb_cdc.h"
 
 typedef struct _tusb_cdc_device tusb_cdc_device_t;
 
@@ -106,7 +59,7 @@ struct _tusb_cdc_device
     void(* on_set_break)(tusb_cdc_device_t* cdc, uint16_t break_time_in_ms);
     void* user_data;
     tusb_cdc_line_coding_t line_coding;
-    tusb_cdc_state state;
+    tusb_cdc_state_t state;
 };
 
 

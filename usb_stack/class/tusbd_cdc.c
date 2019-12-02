@@ -34,17 +34,6 @@
 
 #include "tusbd_cdc.h"
 
-#define SEND_ENCAPSULATED_COMMAND               0x00
-#define GET_ENCAPSULATED_RESPONSE               0x01
-#define SET_COMM_FEATURE                        0x02
-#define GET_COMM_FEATURE                        0x03
-#define CLEAR_COMM_FEATURE                      0x04
-#define SET_LINE_CODING                         0x20
-#define GET_LINE_CODING                         0x21
-#define SET_CONTROL_LINE_STATE                  0x22
-#define SEND_BREAK                              0x23
-#define SERIAL_STATE                            0x20
-
 int tusb_cdc_send_state(tusb_cdc_device_t* cdc)
 {
   if(cdc->ep_int_busy) return -1;
@@ -56,7 +45,7 @@ int tusb_cdc_send_state(tusb_cdc_device_t* cdc)
     }
   }
   cdc->state.req.bmRequestType = 0xA1;
-  cdc->state.req.bRequest = SERIAL_STATE;
+  cdc->state.req.bRequest = CDC_SERIAL_STATE;
   cdc->state.req.wValue = 0;
   cdc->state.req.wIndex = ifn;
   cdc->state.req.wLength = 2;
@@ -79,34 +68,34 @@ static uint16_t cdc_ctrl (tusb_cdc_device_t* cdc, tusb_setup_packet* setup_req, 
 {
   switch (setup_req->bRequest)
   {
-  case SEND_ENCAPSULATED_COMMAND:
+  case CDC_SEND_ENCAPSULATED_COMMAND:
     /* Not  needed for this driver */
     break;
 
-  case GET_ENCAPSULATED_RESPONSE:
+  case CDC_GET_ENCAPSULATED_RESPONSE:
     /* Not  needed for this driver */
     break;
 
-  case SET_COMM_FEATURE:
+  case CDC_SET_COMM_FEATURE:
     /* Not  needed for this driver */
     break;
 
-  case GET_COMM_FEATURE:
+  case CDC_GET_COMM_FEATURE:
     /* Not  needed for this driver */
     break;
 
-  case CLEAR_COMM_FEATURE:
+  case CDC_CLEAR_COMM_FEATURE:
     /* Not  needed for this driver */
     break;
 
-  case SET_LINE_CODING:
+  case CDC_SET_LINE_CODING:
     cdc->line_coding.bitrate = (uint32_t)(buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24));
     cdc->line_coding.stopbits = buf[4];
     cdc->line_coding.parity = buf[5];
     cdc->line_coding.databits = buf[6];
     break;
 
-  case GET_LINE_CODING:
+  case CDC_GET_LINE_CODING:
     buf[0] = (uint8_t)(cdc->line_coding.bitrate);
     buf[1] = (uint8_t)(cdc->line_coding.bitrate >> 8);
     buf[2] = (uint8_t)(cdc->line_coding.bitrate >> 16);
@@ -116,13 +105,13 @@ static uint16_t cdc_ctrl (tusb_cdc_device_t* cdc, tusb_setup_packet* setup_req, 
     buf[6] = cdc->line_coding.databits; 
     break;
 
-  case SET_CONTROL_LINE_STATE:
+  case CDC_SET_CONTROL_LINE_STATE:
     if(cdc->on_line_state_change){
       cdc->on_line_state_change(cdc, setup_req->wValue);
     }
     break;
 
-  case SEND_BREAK:
+  case CDC_SEND_BREAK:
     if(cdc->on_set_break){
       cdc->on_set_break(cdc, setup_req->wValue);
     }
