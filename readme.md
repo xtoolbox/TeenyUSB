@@ -14,9 +14,9 @@ A teeny USB device and host stack for STM32 MCUs
 - CDC 通讯设备类，目前只支持串口。 communication device class
 - Vendor 厂商自定义设备。 vendor class
 
-设备描述符由TeenyDT生成。 [在线试用TeenyDT](http://dt1.tusb.org)
+USB描述符由TeenyDT生成。 [在线试用TeenyDT](http://dt1.tusb.org)
 
-Device descriptor is generate by TeenyDT. [Try TeenyDT online](http://dt.tusb.org)
+USB descriptor is generate by TeenyDT. [Try TeenyDT online](http://dt.tusb.org)
 
 ### USB设备例程 Demo for device
 
@@ -50,6 +50,29 @@ cd demo
 make all -j8
 ```
 如果更新mcu库很慢，可以使用gitee.com镜像。[https://gitee.com/xtoolbox/st_driver.git](https://gitee.com/xtoolbox/st_driver.git)
+
+### demo编译后各字段大小信息 Section size info of each demo
+```
+$ echo "   text    data     bss     dec     hex filename" && make all -j8 LOG_INFO=0 | grep '^[^l].*output/.*.elf'
+   text    data     bss     dec     hex filename
+  12072    1084   69296   82452   14214 output/f723dap.elf
+   4480    1080    6068   11628    2d6c output/f072bulk.elf
+   6392    1084    6416   13892    3644 output/f407bulk.elf
+   5396    1084    6064   12544    3100 output/f303bulk.elf
+   4972    1080    6068   12120    2f58 output/f103bulk.elf
+   6524    1084    6416   14024    36c8 output/f723bulk.elf
+   6284    1084    6416   13784    35d8 output/f767bulk.elf
+   8100    3500    2200   13800    35e8 output/f103comp.elf
+   8324    3500    2200   14024    36c8 output/f072comp.elf
+  10132    3504    2588   16224    3f60 output/f407comp.elf
+  10240    3504    2588   16332    3fcc output/f723comp.elf
+   8528    3504    2196   14228    3794 output/f303comp.elf
+  10000    3504    2588   16092    3edc output/f767comp.elf
+  27560    1092   35776   64428    fbac output/f107host.elf
+  28704    1092   28608   58404    e424 output/f407host.elf
+  28860    1092   28832   58784    e5a0 output/f723host.elf
+  28504    1092   28792   58388    e414 output/f767host.elf
+```
 
 ## 目录结构说明 Folder
 ```
