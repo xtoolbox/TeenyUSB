@@ -98,6 +98,7 @@
 #define USB_HID_DESCRIPTOR_TYPE                 0x21
 #define USB_REPORT_DESCRIPTOR_TYPE              0x22
 #define USB_DESC_TYPE_REPORT                    0x22
+#define USB_FUCNTION_DESCRIPTOR_TYPE            0x24
 
 
 #define USB_CLASS_DEVICE                0x00
