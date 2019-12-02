@@ -220,7 +220,17 @@ int tusbh_ep_xfer(tusbh_ep_info_t* ep, void* data, uint16_t len, uint32_t timeou
 
 int tusbh_ep_clear_feature(tusbh_ep_info_t* ep);
 
+#ifndef LOG_INFO
+#define LOG_INFO 1
+#endif
+
+#if LOG_INFO
 #define  TUSB_DBG(fmt,  ...)           printf(fmt, ## __VA_ARGS__)
+#else
+static inline int dummy_printf(const char* fmt, ...) { (void)fmt; return 0; }
+#define  TUSB_DBG(fmt,  ...)           dummy_printf(fmt, ## __VA_ARGS__)
+#endif
+
 #define  TUSB_ASSERT(exp)                                       \
 do{                                                             \
     if(exp){}else{                                              \
