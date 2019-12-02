@@ -40,7 +40,11 @@
 
 #ifndef MAX_EP_ID
 #ifdef EP_NUM
+#if EP_NUM < 2
+#define MAX_EP_ID   (1)
+#else
 #define MAX_EP_ID   (EP_NUM-1)
+#endif
 #else
 #define MAX_EP_ID   7
 #endif
