@@ -124,7 +124,7 @@ static int tusbh_hid_init(tusbh_device_t* dev, tusbh_interface_t* interface, int
         return -1;
     }
     if(!info->ep_in){
-        TUSB_ITF_INFO("Fail to get hub in endpoint\n");
+        TUSB_ITF_INFO("Fail to get hid in endpoint\n");
         return -1;
     }else{
         // allocate a buffer for the IN ep, so it will start automatically
@@ -219,7 +219,7 @@ static int tusbh_hid_deinit(tusbh_device_t* dev, tusbh_interface_t* interface)
     return 0;
 }
 
-WEAK int tusbh_on_boot_key(tusbh_ep_info_t* ep, const uint8_t* keys)
+static int tusbh_on_boot_key(tusbh_ep_info_t* ep, const uint8_t* keys)
 {
     TUSB_EP_INFO("Key: %02x %02x %02x %02x %02x %02x %02x %02x\n",
     keys[0],keys[1],keys[2],keys[3],keys[4],keys[5],keys[6],keys[7] );

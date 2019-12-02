@@ -32,8 +32,8 @@
  * SOFTWARE.
  */
 
-#ifndef __TUSHB_HID_H__
-#define __TUSHB_HID_H__
+#ifndef __TUSBH_HID_H__
+#define __TUSBH_HID_H__
 
 #include "tusbh.h"
 
