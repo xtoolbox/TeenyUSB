@@ -3,7 +3,7 @@ BOARD ?= stm32f723e_disco
 
 BOARD_PATH = ../boards/$(BOARD)
 include $(BOARD_PATH)/board.mk
-
+LOG_INFO ?= 1
 # TeenyDT format descriptor
 TEENYDT = host_desc.lua
 USBMEM = 512
@@ -11,7 +11,7 @@ USBEP = 5
 # project source
 SOURCES  = main.c retarget_stdio.c msc_diskio.c
 INCLUDES = . 
-DEFINES  = __forceinline=inline NO_DEVICE
+DEFINES  = __forceinline=inline NO_DEVICE LOG_INFO=$(LOG_INFO)
 # FatFs source
 SOURCES  += ../../third_part/fatfs/source/ff.c
 INCLUDES += ../../third_part/fatfs/source
@@ -65,8 +65,11 @@ vpath %.c $(SRCPATH)
 vpath %.S $(SRCPATH)
 vpath %.s $(SRCPATH)
 
-all: f407 f723 f767
+all: f107 f407 f723 f767
 
+f107:
+	@echo Building stm32f107vc
+	@$(MAKE) demo TARGET='f107host' BOARD='stm32f107vc'
 f407:
 	@echo Building stm32f407igt6
 	@$(MAKE) demo TARGET='f407host' BOARD='stm32f407_evk'
