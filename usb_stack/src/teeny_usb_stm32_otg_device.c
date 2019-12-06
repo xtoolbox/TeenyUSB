@@ -242,6 +242,20 @@ void tusb_send_data_done(tusb_device_t* dev, uint8_t EPn)
   }
 }
 
+int tusb_cancel_send(tusb_device_t* dev, uint8_t EPn)
+{
+  PCD_TypeDef* USBx = GetUSB(dev);
+  tusb_ep_data* ep = &dev->Ep[EPn];
+  (void)ep;
+  USB_OTG_INEndpointTypeDef* epin = USBx_INEP(EPn);
+  int res = epin->DIEPTSIZ & USB_OTG_DIEPTSIZ_XFRSIZ;
+  if(epin->DIEPCTL & USB_OTG_DIEPCTL_EPENA){
+    epin->DIEPCTL |= (USB_OTG_DIEPCTL_SNAK|USB_OTG_DIEPCTL_EPDIS);
+    // TODO: wait ep real disable
+  }
+  return res;
+}
+
 // un-like the USB FS core, we need buffer size to set the ep valid
 void tusb_set_rx_valid(tusb_device_t* dev, uint8_t EPn)
 {

@@ -333,6 +333,16 @@ void tusb_open_device(tusb_device_t* dev);
  */
 void tusb_close_device(tusb_device_t* dev);
 
+/** get USB device current speed
+ *
+ *  \ingroup Group_Device
+ *
+ *  \param  dev          USB device handle, return from \ref tusb_get_device
+ *
+ *   \return Actual device speed, \ref PORT_SPEED_HIGH, \ref PORT_SPEED_FULL, \ref PORT_SPEED_LOW
+ */
+int tusb_get_device_speed(tusb_device_t* dev);
+
 /** USB device send data
  *
  *  \ingroup Group_Device
@@ -347,6 +357,16 @@ void tusb_close_device(tusb_device_t* dev);
  */
 int tusb_send_data(tusb_device_t* dev, uint8_t EPn, const void* data, uint16_t len, uint8_t option);
 
+/** USB device cancel send, make the EP in NAK status
+ *
+ *  \ingroup Group_Device
+ *
+ *  \param[in]  dev          USB device handle, return from \ref tusb_get_device
+ *  \param[in]  EPn          endpoint number
+ *
+ *  \return  remain data count
+ */
+int tusb_cancel_send(tusb_device_t* dev, uint8_t EPn);
 
 /** USB device send status packet
  *

@@ -667,6 +667,24 @@ void tusb_open_otg(tusb_otg_t* otg)
   */
 }
 
+int tusb_get_device_speed(tusb_device_t* dev)
+{
+    PCD_TypeDef* USBx = GetUSB(dev);
+#if defined(USB_OTG_FS)
+    if(USBx == USB_OTG_FS){
+        return PORT_SPEED_FULL;
+    }
+#endif
+#if defined(USB_OTG_HS)
+    if(USBx == USB_OTG_HS){
+        if( (USBx_DEVICE->DCFG & USB_OTG_DCFG_DSPD) == 0){
+            return PORT_SPEED_HIGH;
+        }
+    }
+#endif
+    return PORT_SPEED_FULL;
+}
+
 void tusb_otg_device_handler(tusb_device_t* dev);
 void tusb_otg_host_handler(tusb_host_t* dev);
 

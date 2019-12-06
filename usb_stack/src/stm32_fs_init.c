@@ -250,6 +250,11 @@ void tsub_resume(tusb_device_t* dev)
   GetUSB(dev)->CNTR = (IMR_MSK);
 }
 
+int tusb_get_device_speed(tusb_device_t* dev)
+{
+  return PORT_SPEED_FULL;
+}
+
 static tusb_device_t tusb_dev;
 // end point data handler, also called in USB_HP IRQ
 void tusb_ep_handler(tusb_device_t* dev, uint8_t EPn);

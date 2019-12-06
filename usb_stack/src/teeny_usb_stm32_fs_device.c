@@ -226,6 +226,31 @@ void tusb_send_data_done(tusb_device_t* dev, uint8_t EPn)
   }
 }
 
+int tusb_cancel_send(tusb_device_t* dev, uint8_t EPn)
+{
+  uint16_t  EP = PCD_GET_ENDPOINT(GetUSB(dev), EPn);
+  tusb_ep_data* ep = &dev->Ep[EPn];
+  int res = ep->tx_remain_size;
+  ep->tx_remain_size = 0;
+  if( DOUBLE_BUFF  && (EP & (USB_EP_TYPE_MASK | USB_EP_KIND)) == (USB_EP_BULK | USB_EP_KIND)){
+    uint16_t TOG = (EP & (USB_EP_DTOG_RX | USB_EP_DTOG_TX));
+    if( TOG != 0 && TOG != (USB_EP_DTOG_RX | USB_EP_DTOG_TX)){
+      // make sure toogle bit is the same, so the ep will enter nak mode
+      TUSB_RX_DTOG(GetUSB(dev), EPn, EP);
+    }
+  }else if( ISO_EP && ((EP & USB_EP_TYPE_MASK) == USB_EP_ISOCHRONOUS ) ){
+    // just the count to zero
+    PMA_TX0(dev, EPn)->cnt = 0;
+    PMA_TX1(dev, EPn)->cnt = 0;
+  }else{
+    // normal ep send data
+    if( (EP & USB_EPTX_STAT) != USB_EP_TX_NAK){
+      TUSB_SET_TX_STATUS(GetUSB(dev), EPn, EP, USB_EP_TX_NAK);
+    }
+  }
+  return res;
+}
+
 // set ep rx valid
 void tusb_set_rx_valid(tusb_device_t* dev, uint8_t EPn)
 {
