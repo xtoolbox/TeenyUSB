@@ -125,19 +125,19 @@ static int tusbh_msc_bot_xfer(tusbh_interface_t* interface, tusb_msc_cbw_t* cbw,
     tusbh_ep_info_t* ep = info->out_ep;
     int res = 0;
     do{
-        res = tusbh_ep_xfer(ep, cbw, BOT_CBW_LENGTH, 2000);
+        res = tusbh_ep_xfer(ep, cbw, BOT_CBW_LENGTH, 5000);
         if(res<0){
             break;
         }
         if(cbw->total_bytes){
             ep = cbw->dir & CBW_DIR_IN ? info->in_ep : info->out_ep;
-            res = tusbh_ep_xfer(ep, buffer, cbw->total_bytes, 5000);
+            res = tusbh_ep_xfer(ep, buffer, cbw->total_bytes, 10000);
             if(res<0){
                 break;
             }
         }
         ep = info->in_ep;
-        res = tusbh_ep_xfer(ep, &csw, BOT_CSW_LENGTH, 2000);
+        res = tusbh_ep_xfer(ep, &csw, BOT_CSW_LENGTH, 5000);
         if(res<0){
             break;
         }

@@ -53,7 +53,6 @@ typedef struct _tusbh_msc_info
     uint8_t pad1;
     uint8_t pad2;
     uint8_t pad3;
-    uint8_t buffer[64];
     tusbh_block_info_t* blocks;
     scsi_sense_fixed_resp_t sense;
 }tusbh_msc_info_t;
