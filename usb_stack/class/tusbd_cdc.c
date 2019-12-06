@@ -142,7 +142,7 @@ static int tusb_cdc_device_request(tusb_cdc_device_t* cdc, tusb_setup_packet* se
 {
   tusb_device_t* dev = cdc->dev;
   tusb_device_config_t* dev_config = (tusb_device_config_t*)dev->user_data;
-  if( (setup_req->bRequest & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_CLASS){
+  if( (setup_req->bmRequestType & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_CLASS){
     if(setup_req->wLength > 0){ 
       if (setup_req->bmRequestType & 0x80){
         cdc_ctrl(cdc, setup_req, dev_config->cmd_buffer);
