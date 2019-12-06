@@ -37,6 +37,8 @@
 #include "string.h"
 #include <stdlib.h>
 
+#ifndef TUSB_HAS_OS
+
 #define  TUSBH_MSG_Q_LENGTH        16
 struct _tusbh_msg_q{
     uint16_t  rd_index;
@@ -267,3 +269,5 @@ void show_memory(void)
     }
     printf("  Event used %d\n", used);
 }
+
+#endif  // TUSB_HAS_OS

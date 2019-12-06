@@ -224,8 +224,12 @@ int tusbh_ep_clear_feature(tusbh_ep_info_t* ep);
 #define LOG_INFO 1
 #endif
 
+#ifndef TUSB_PRINTF
+#define TUSB_PRINTF printf
+#endif
+
 #if LOG_INFO
-#define  TUSB_DBG(fmt,  ...)           printf(fmt, ## __VA_ARGS__)
+#define  TUSB_DBG(fmt,  ...)           TUSB_PRINTF(fmt, ## __VA_ARGS__)
 #else
 static inline int dummy_printf(const char* fmt, ...) { (void)fmt; return 0; }
 #define  TUSB_DBG(fmt,  ...)           dummy_printf(fmt, ## __VA_ARGS__)
@@ -240,7 +244,6 @@ do{                                                             \
 
 
 // LOG for better format
-#define TUSB_PRINTF(fmt, ...)     printf(fmt, ## __VA_ARGS__)
 #define TUSB_OS_INFO(msg, ...)    TUSB_DBG("OS             " msg , ## __VA_ARGS__)
 #define TUSB_HOST_INFO(msg, ...)  TUSB_DBG("HOST %s:       " msg , host_root(host)->id, ## __VA_ARGS__)
 #define TUSB_ROOT_INFO(msg, ...)  TUSB_DBG("RHUB %s:%d      " msg , root->id, port, ## __VA_ARGS__)
