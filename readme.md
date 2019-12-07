@@ -11,7 +11,8 @@ A teeny USB device and host stack for STM32 MCUs
 ## 设备栈 Device Stack
 - HID class
 - MSC 大容量存储设备，U盘。 Mass storage class
-- CDC 通讯设备类，目前只支持串口。 communication device class
+- CDC ACM 虚拟串口。 Communication device class, abstract control mode, known as virtual serial port.
+- CDC RNDIS 虚拟网口。 Communication device class, remote NDIS
 - Vendor 厂商自定义设备。 vendor class
 
 USB描述符由TeenyDT生成。 [在线试用TeenyDT](http://dt1.tusb.org)
@@ -20,14 +21,17 @@ USB descriptor is generate by TeenyDT. [Try TeenyDT online](http://dt.tusb.org)
 
 ### USB设备例程 Demo for device
 
-- 支持HID CDC(虚拟串口) WinUSB MSC(U盘)的复合设备 Composite device with HID+CDC+WinUSB+MSC
-- 支持WinUSB的bulk设备, Bulk device with WinUSB support
+- 复合设备，包含HID CDC(虚拟串口) WinUSB MSC(U盘) Composite device with HID+CDC+WinUSB+MSC
+- WinUSB设备，Bulk传输免驱动。 Bulk device with WinUSB support
 - CMSIS DAP on STM32F723 discovery
+- 虚拟网卡, CDC RNDIS device
 
 ## 主机栈 Host Stack
 - HUB class, 支持多设备级连, support multiple device and hub
 - HID class, 支持键盘、鼠标以及自定义HIDden设备。support keyboard, mouse, custom device
 - MSC class, 大容量存储类(U盘)，使用BOT协议。 mass storage class with BOT protocol
+- CDC ACM class, 虚拟串口。 Communication device class, abstract control mode
+- CDC RNDIS class,  虚拟网口。 Communication device class, remote NDIS
 - Vendor class，厂商自定义设备
 
 ### USB主机例程 Demo for host
@@ -36,11 +40,11 @@ USB descriptor is generate by TeenyDT. [Try TeenyDT online](http://dt.tusb.org)
 
 [host_readme]: https://github.com/xtoolbox/TeenyUSB/blob/master/demo/host/readme.md
 
-## 如何生成示例程序 How make demo
+## 如何生成示例程序 How to make demo
 
 编译工具为 [arm-none-eabi-gcc](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads) is the compile toolchain.
 
-调试使用VSCode+OpenOCD，[何在VSCode中配置STM32开发调试环境?](http://blog.xtoolbox.org/stm32_open_source_toolchain/)
+调试使用VSCode+OpenOCD，[如何在VSCode中配置STM32开发调试环境?](http://blog.xtoolbox.org/stm32_open_source_toolchain/)
 
 ``` batch
 git clone https://github.com/xtoolbox/TeenyUSB.git
