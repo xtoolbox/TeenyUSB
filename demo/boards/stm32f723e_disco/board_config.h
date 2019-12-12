@@ -63,7 +63,8 @@
 #include <rtthread.h>
 #define RTOS_INTERRUPT_ENTER()  rt_interrupt_enter()
 #define RTOS_INTERRUPT_LEAVE()  rt_interrupt_leave()
-
+#define TUSB_PRINTF  rt_kprintf
+#define TUSB_HAS_OS
 #endif
 
 #define  HOST_PORT_POWER_ON_HS() \
@@ -74,12 +75,50 @@ do{\
   GPIOH->BSRR = GPIO_PIN_12;\
 }while(0)
 
+#define  HOST_PORT_POWER_OFF_HS() \
+do{\
+  __HAL_RCC_GPIOH_CLK_ENABLE();\
+  GPIOH->MODER &= ~(GPIO_MODER_MODER0 << (12*2));\
+  GPIOH->MODER |= (GPIO_MODER_MODER0_0 << (12*2));\
+  GPIOH->BSRR = GPIO_PIN_12<<16;\
+}while(0)
+
+
+#define GET_HOST_PORT_ID_HS() (GPIOB->IDR & GPIO_PIN_12)
+#define SETUP_HOST_PORT_ID_HS() \
+do{\
+    __HAL_RCC_GPIOB_CLK_ENABLE();\
+    GPIOB->MODER &= ~(GPIO_MODER_MODER0 << (12*2));\
+    GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPDR0 << (12*2));\
+    GPIOB->PUPDR |=  (GPIO_PUPDR_PUPDR0_0 << (12*2));\
+}while(0)
+    
+    
+
 #define  HOST_PORT_POWER_ON_FS() \
 do{\
   __HAL_RCC_GPIOG_CLK_ENABLE();\
   GPIOG->MODER &= ~(GPIO_MODER_MODER0 << (8*2));\
   GPIOG->MODER |= (GPIO_MODER_MODER0_0 << (8*2));\
   GPIOG->BSRR = GPIO_PIN_8<<16;\
+}while(0)
+
+#define  HOST_PORT_POWER_OFF_FS() \
+do{\
+  __HAL_RCC_GPIOG_CLK_ENABLE();\
+  GPIOG->MODER &= ~(GPIO_MODER_MODER0 << (8*2));\
+  GPIOG->MODER |= (GPIO_MODER_MODER0_0 << (8*2));\
+  GPIOG->BSRR = GPIO_PIN_8;\
+}while(0)
+
+
+#define GET_HOST_PORT_ID_FS() (GPIOA->IDR & GPIO_PIN_10)
+#define SETUP_HOST_PORT_ID_FS() \
+do{\
+    __HAL_RCC_GPIOA_CLK_ENABLE();\
+    GPIOA->MODER &= ~(GPIO_MODER_MODER0 << (10*2));\
+    GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPDR0 << (10*2));\
+    GPIOA->PUPDR |=  (GPIO_PUPDR_PUPDR0_0 << (10*2));\
 }while(0)
 
 

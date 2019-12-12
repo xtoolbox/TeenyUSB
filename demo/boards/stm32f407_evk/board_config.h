@@ -59,6 +59,14 @@
 
 #define  TEST_APP_USB_CORE          USB_CORE_ID_HS
 
+#if defined(USE_RTTHREAD)
+#include <rtthread.h>
+#define RTOS_INTERRUPT_ENTER()  rt_interrupt_enter()
+#define RTOS_INTERRUPT_LEAVE()  rt_interrupt_leave()
+#define TUSB_PRINTF  rt_kprintf
+#define TUSB_HAS_OS
+#endif
+
     /**USB_OTG_HS GPIO Configuration    
     PA3     ------> USB_OTG_HS_ULPI_D0
     PB0     ------> USB_OTG_HS_ULPI_D1
