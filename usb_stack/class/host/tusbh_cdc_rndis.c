@@ -94,6 +94,21 @@ int tusbh_rndis_send_message(tusbh_interface_t* interface, rndis_generic_msg_t* 
     return tusbh_rndis_set_enc_data(interface);
 }
 
+static int prepare_tx_packet(tusbh_interface_t* interface, void* data, uint32_t len)
+{
+    tusbh_cdc_rndis_info_t* info = tusbh_get_info(interface, tusbh_cdc_rndis_info_t);
+    rndis_data_packet_t* hdr = (rndis_data_packet_t*)info->tx_buffer;
+    memset(hdr, 0, sizeof(rndis_data_packet_t));
+    hdr->MessageType = REMOTE_NDIS_PACKET_MSG;
+    hdr->MessageLength = sizeof(rndis_data_packet_t) + len;
+    hdr->DataOffset = sizeof(rndis_data_packet_t) - 8;
+    hdr->DataLength = len;
+    if(  info->tx_buffer +  sizeof(rndis_data_packet_t) != (uint8_t*)data ){
+        memcpy(info->tx_buffer + sizeof(rndis_data_packet_t), data, len);
+    }
+    return hdr->MessageLength;
+}
+
 int tusbh_rndis_send_packet(tusbh_interface_t* interface, void* data, uint32_t len, uint32_t timeout)
 {
     tusbh_cdc_rndis_info_t* info = tusbh_get_info(interface, tusbh_cdc_rndis_info_t);
@@ -106,7 +121,7 @@ int tusbh_rndis_send_packet(tusbh_interface_t* interface, void* data, uint32_t l
     if(  info->tx_buffer +  sizeof(rndis_data_packet_t) != (uint8_t*)data ){
         memcpy(info->tx_buffer + sizeof(rndis_data_packet_t), data, len);
     }
-    return tusbh_ep_xfer(info->ep_out, data, len, timeout);
+    return tusbh_ep_xfer(info->ep_out, hdr, hdr->MessageLength, timeout);
 }
 
 int tusbh_rndis_recv_packet(tusbh_interface_t* interface, void* data, uint32_t len, uint32_t timeout)
@@ -130,7 +145,43 @@ int tusbh_rndis_recv_packet(tusbh_interface_t* interface, void* data, uint32_t l
     return recv_len;
 }
 
-static int tusbh_rndis_keepalive(tusbh_interface_t* interface)
+int tusbh_rndis_send_packet_with_event(tusbh_interface_t* interface, void* data, uint32_t len, tusbh_xfered_set_event_t* action, uint32_t timeout)
+{
+    tusbh_cdc_rndis_info_t* info = tusbh_get_info(interface, tusbh_cdc_rndis_info_t);
+    int size = prepare_tx_packet(interface, data, len);
+    return tusbh_ep_xfer_with_event(info->ep_out, info->tx_buffer, size, action, timeout);
+}
+
+int tusbh_rndis_recv_packet_with_event(tusbh_interface_t* interface, void* data, uint32_t len, tusbh_xfered_set_event_t* action, uint32_t timeout)
+{
+    tusbh_cdc_rndis_info_t* info = tusbh_get_info(interface, tusbh_cdc_rndis_info_t);
+    int recv_len = tusbh_ep_xfer_with_event(info->ep_in, info->rx_buffer, sizeof(info->rx_buffer), action, timeout);
+    if(recv_len <= 0) return recv_len;
+    
+    if(!interface->info_pool) return -1;
+    rndis_data_packet_t* hdr = (rndis_data_packet_t*)info->rx_buffer;
+    if(hdr->MessageType != REMOTE_NDIS_PACKET_MSG){
+        return -1;
+    }
+    recv_len = hdr->MessageLength - sizeof(rndis_data_packet_t);
+    if(hdr->DataLength != recv_len){
+        return -1;
+    }
+    if(  info->rx_buffer +  sizeof(rndis_data_packet_t) != (uint8_t*)data ){
+        if(len >= recv_len){
+            memcpy(data, info->rx_buffer + sizeof(rndis_data_packet_t), recv_len);
+        }
+    }
+    return (int)recv_len;
+}
+
+int tusbh_rndis_start_recv_packet(tusbh_interface_t* interface, tusbh_xfered_set_event_t* action)
+{
+    tusbh_cdc_rndis_info_t* info = tusbh_get_info(interface, tusbh_cdc_rndis_info_t);
+    return tusbh_ep_xfer_with_event(info->ep_in, info->rx_buffer, sizeof(info->rx_buffer), action, 0);
+}
+
+int tusbh_rndis_keepalive(tusbh_interface_t* interface)
 {
     tusbh_cdc_rndis_info_t* info = tusbh_get_info(interface, tusbh_cdc_rndis_info_t);
     rndis_keepalive_msg_t* msg = (rndis_keepalive_msg_t*)info->enc_buffer;
@@ -430,14 +481,6 @@ static int cdc_rndis_xfered(tusbh_ep_info_t* ep)
     }
     tusb_hc_data_t* hc = &ep_host(ep)->hc[ep->pipe_num];
     if(hc->state != TUSB_CS_TRANSFER_COMPLETE){
-        // not incoming data, send a keep alive message
-        if(info->keep_alive < KEEP_ALIVE_FREQ){
-            info->keep_alive++;
-        }
-        if(info->keep_alive >= KEEP_ALIVE_FREQ){
-            tusbh_rndis_keepalive(ep->interface);
-            info->keep_alive = 0;
-        }
         return -1;
     }
     if( tusbh_rndis_get_enc_data(ep->interface)<0 ){

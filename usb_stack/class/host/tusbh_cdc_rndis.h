@@ -57,6 +57,13 @@ int tusbh_rndis_send_packet(tusbh_interface_t* itf, void* data, uint32_t len, ui
 
 int tusbh_rndis_recv_packet(tusbh_interface_t* itf, void* data, uint32_t len, uint32_t timeout);
 
+int tusbh_rndis_send_packet_with_event(tusbh_interface_t* itf, void* data, uint32_t len, tusbh_xfered_set_event_t* action, uint32_t timeout);
+
+int tusbh_rndis_recv_packet_with_event(tusbh_interface_t* itf, void* data, uint32_t len, tusbh_xfered_set_event_t* action, uint32_t timeout);
+
+int tusbh_rndis_keepalive(tusbh_interface_t* interface);
+    
+
 extern const tusbh_interface_backend_t  tusbh_cdc_rndis_backend;
 
 #endif
