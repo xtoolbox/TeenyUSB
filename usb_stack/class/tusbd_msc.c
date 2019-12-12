@@ -535,12 +535,18 @@ void tusb_msc_device_loop(tusb_msc_device_t* msc)
 static int tusb_msc_device_send_done(tusb_msc_device_t* msc, uint8_t EPn)
 {
     msc->state.data_in_length = msc->state.last_tx_length;
+    if(msc->on_send_done){
+        msc->on_send_done(msc);
+    }
     return 0;
 }
 
 static int tusb_msc_device_recv_done(tusb_msc_device_t* msc, uint8_t EPn, const void* data, uint16_t len)
 {
     msc->state.data_out_length = len;
+    if(msc->on_recv_data){
+        return msc->on_recv_data(msc, data, len);
+    }
     return 1; // Mark the out ep invalid, it will be enable after process the command
 }
 

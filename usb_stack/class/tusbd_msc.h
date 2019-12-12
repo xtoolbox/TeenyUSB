@@ -76,6 +76,8 @@ struct _tusb_msc_device
     uint8_t ep_out;
     uint8_t max_lun;
     uint8_t pad1;
+    int(* on_recv_data)(tusb_msc_device_t* msc, const void* data, uint16_t len);
+    int(* on_send_done)(tusb_msc_device_t* msc);
     int (*get_cap)(tusb_msc_device_t* msc, uint8_t lun, uint32_t *block_num, uint32_t *block_size);
     // return actual bytes read/write, or -1 to indicates an error
     int (*block_read)(tusb_msc_device_t* msc, uint8_t lun, uint8_t *buf, uint32_t block_addr, uint16_t block_len);
