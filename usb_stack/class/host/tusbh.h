@@ -218,6 +218,8 @@ int tusbh_ep_allocate_pipe(tusbh_ep_info_t* ep);
 
 int tusbh_ep_xfer(tusbh_ep_info_t* ep, void* data, uint16_t len, uint32_t timeout);
 
+int tusbh_ep_xfer_with_event(tusbh_ep_info_t* ep, void* data, uint16_t len, tusbh_xfered_set_event_t* action, uint32_t timeout);
+
 int tusbh_ep_clear_feature(tusbh_ep_info_t* ep);
 
 #ifndef LOG_INFO

@@ -173,12 +173,94 @@ static channel_state_t tusbh_pipe_xfer_and_wait(tusbh_device_t* dev, int pipe_nu
 
 int tusbh_ep_xfer(tusbh_ep_info_t* ep, void* data, uint16_t len, uint32_t timeout)
 {
-    channel_state_t s = tusbh_pipe_xfer_and_wait(ep_device(ep), ep->pipe_num, 1, data, len, timeout);
-    if(s == TUSB_CS_TRANSFER_COMPLETE){
+    return tusbh_ep_xfer_with_event(ep, data, len, &ep_device(ep)->xfer_evt, timeout);
+}
+
+static int tusbh_ep_in_xfer_with_event(tusbh_ep_info_t* ep, void* data, uint16_t len, tusbh_xfered_set_event_t* action, uint32_t timeout)
+{
+    void* bak = ep_host(ep)->hc[ep->pipe_num].user_data;
+    ep_host(ep)->hc[ep->pipe_num].user_data = action;
+    uint16_t remain = len;
+    uint8_t* p = (uint8_t*)data;
+    int res = 0;
+    do{
+        uint16_t xfer_len = EP_MPS(ep->desc);
+        if(xfer_len > remain){
+            xfer_len = remain;
+        }
+        tusb_host_xfer_data(ep_host(ep), ep->pipe_num, 1, p, xfer_len);
+        tusbh_evt_wait(action->event, timeout);
         tusb_hc_data_t* hc = &ep_device(ep)->host->hc[ep->pipe_num];
-        return (int)hc->count;
+        channel_state_t s = (channel_state_t)hc->state;
+        if(s != TUSB_CS_TRANSFER_COMPLETE){
+            res = -(int)s;
+            goto error;
+        }
+        remain -= hc->count;
+        p += hc->count;
+        if(hc->count != xfer_len){
+            // short packet
+            break;
+        }
+    }while(remain);
+    res = p - ((uint8_t*)data);
+error:
+    ep_host(ep)->hc[ep->pipe_num].user_data = bak;
+    return res;
+    
+    
+    //tusb_host_xfer_data(ep_host(ep), ep->pipe_num, 1, data, len);
+    //tusbh_evt_wait(action->event, timeout);
+    //tusb_hc_data_t* hc = &ep_device(ep)->host->hc[ep->pipe_num];
+    //channel_state_t s = (channel_state_t)hc->state;
+    //if(s != TUSB_CS_TRANSFER_COMPLETE){
+    //    return -s;
+    //}
+    //return hc->count;
+}
+
+static int tusbh_ep_out_xfer_with_event(tusbh_ep_info_t* ep, void* data, uint16_t len, tusbh_xfered_set_event_t* action, uint32_t timeout)
+{
+    void* bak = ep_host(ep)->hc[ep->pipe_num].user_data;
+    ep_host(ep)->hc[ep->pipe_num].user_data = action;
+    uint16_t remain = len;
+    uint8_t* p = (uint8_t*)data;
+    int res = 0;
+    do{
+        uint16_t xfer_len;
+        if(remain > EP_MPS(ep->desc)){
+            xfer_len = EP_MPS(ep->desc);
+        }else{
+            xfer_len = remain;
+        }
+        tusb_host_xfer_data(ep_host(ep), ep->pipe_num, 1, p, xfer_len);
+        tusbh_evt_wait(action->event, timeout);
+        tusb_hc_data_t* hc = &ep_device(ep)->host->hc[ep->pipe_num];
+        channel_state_t s = (channel_state_t)hc->state;
+        if(s != TUSB_CS_TRANSFER_COMPLETE){
+            res = -(int)s;
+            goto error;
+        }
+        if(hc->count != xfer_len){
+            res = -1;
+            goto error;
+        }
+        remain -= xfer_len;
+        p += xfer_len;
+    }while(remain);
+    res = len;
+error:
+    ep_host(ep)->hc[ep->pipe_num].user_data = bak;
+    return res;
+}
+
+int tusbh_ep_xfer_with_event(tusbh_ep_info_t* ep, void* data, uint16_t len, tusbh_xfered_set_event_t* action, uint32_t timeout)
+{
+    if(ep->desc->bEndpointAddress & 0x80){
+        return tusbh_ep_in_xfer_with_event(ep, data, len, action, timeout);
+    }else{
+        return tusbh_ep_out_xfer_with_event(ep, data, len, action, timeout);
     }
-    return -(int)s;
 }
 
 int tusbh_ep_clear_feature(tusbh_ep_info_t* ep)
