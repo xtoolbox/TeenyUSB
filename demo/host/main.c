@@ -38,6 +38,8 @@
 #include "tusbh_hub.h"
 #include "tusbh_hid.h"
 #include "tusbh_msc.h"
+#include "tusbh_cdc_acm.h"
+#include "tusbh_cdc_rndis.h"
 #include "string.h"
 #include "usb_key_code.h"
 
@@ -104,11 +106,21 @@ static const tusbh_msc_class_t cls_msc_bot = {
     .unmount = msc_ff_unmount,
 };
 
+static const tusbh_cdc_acm_class_t cls_cdc_acm = {
+    .backend = &tusbh_cdc_acm_backend,
+};
+
+static const tusbh_cdc_rndis_class_t cls_cdc_rndis = {
+    .backend = &tusbh_cdc_rndis_backend,
+};
+
 static const tusbh_class_reg_t class_table[] = {
     (tusbh_class_reg_t)&cls_boot_key,
     (tusbh_class_reg_t)&cls_boot_mouse,
     (tusbh_class_reg_t)&cls_hub,
     (tusbh_class_reg_t)&cls_msc_bot,
+    (tusbh_class_reg_t)&cls_cdc_acm,
+    (tusbh_class_reg_t)&cls_cdc_rndis,
     (tusbh_class_reg_t)&cls_hid,
     (tusbh_class_reg_t)&cls_vendor,
     0,
@@ -133,6 +145,56 @@ void cmd_cp(char* argv[], int argc);
 void cmd_rm(char* argv[], int argc);
 void cmd_append(char* argv[], int argc);
 
+static tusbh_interface_t* find_cdc(tusbh_device_t* dev)
+{
+    if(!dev)return 0;
+    for(int i=0;i<dev->interface_num;i++){
+        tusbh_interface_t* itf = &dev->interfaces[i];
+        if(itf->cls ==  (tusbh_class_reg_t)&cls_cdc_acm){
+            return itf;
+        }
+    }
+    for(int i=0;i<TUSBH_MAX_CHILD;i++){
+        tusbh_device_t* child = dev->children[i];
+        if(child){
+            return find_cdc(child);
+        }
+    }
+    return 0;
+}
+
+__ALIGN_BEGIN static uint8_t test_cdc_data[64] __ALIGN_END = {
+    0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,
+    0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f,
+};
+
+
+void cmd_cdc_test(char* argv[], int argc)
+{
+    tusbh_interface_t* cdc = 0;
+    if(fs){
+        cdc = find_cdc(  ((tusbh_root_hub_t*)fs->user_data)->children[0]);
+    }
+    
+    if(!cdc && hs){
+        cdc = find_cdc(  ((tusbh_root_hub_t*)hs->user_data)->children[0]);
+    }
+    
+    if(!cdc){
+        printf("No CDC interface attached\n");
+    }
+    
+    int r = tusbh_cdc_send_data(cdc, test_cdc_data, 32, 2000);
+    printf("Send data result = %d\n", r);
+    if(r<0)return;
+    r = tusbh_cdc_recv_data(cdc, test_cdc_data+32, 32, 2000);
+    printf("Recv data result = %d\n", r);
+    for(int i=0;i<r;i++){
+        printf("%02x ", test_cdc_data[32+i]);
+    }
+    printf("\n");
+}
+
 
 typedef struct _cli
 {
@@ -153,6 +215,7 @@ const cli_t commands[] = {
     {"cp",        "cp <source> <dest> copy file", cmd_cp},
     {"rm",        "rm <target> remove file or path", cmd_rm},
     {"append",    "append <file> <data> [data data ...] add data to file", cmd_append},
+    {"testcdc",   "testcdc   test cdc loopback interface", cmd_cdc_test},
 };
 
 static void process_command(char* cmd)
