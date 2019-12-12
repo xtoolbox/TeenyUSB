@@ -249,6 +249,7 @@ int tusb_cancel_send(tusb_device_t* dev, uint8_t EPn)
   (void)ep;
   USB_OTG_INEndpointTypeDef* epin = USBx_INEP(EPn);
   int res = epin->DIEPTSIZ & USB_OTG_DIEPTSIZ_XFRSIZ;
+  flush_tx(USBx, EPn & 0x7f);
   if(epin->DIEPCTL & USB_OTG_DIEPCTL_EPENA){
     epin->DIEPCTL |= (USB_OTG_DIEPCTL_SNAK|USB_OTG_DIEPCTL_EPDIS);
     // TODO: wait ep real disable
