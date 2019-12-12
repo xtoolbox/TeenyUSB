@@ -134,8 +134,10 @@ int cdc_recv_data(tusb_rndis_device_t* cdc, const void* data, uint16_t len)
     return 0; // return 1 means the recv buffer is busy
 }
 
+__IO int send_done = 1;
 int cdc_send_done(tusb_rndis_device_t* cdc)
 {
+    send_done = 1;
     return 0;
 }
 
@@ -160,7 +162,8 @@ int main(void)
         }
         
         int len = eth_recv(cdc_dev.tx_buf + sizeof(rndis_data_packet_t), sizeof(cdc_dev.tx_buf) - sizeof(rndis_data_packet_t));
-        if( len > 0){
+        if( len > 0 && send_done){
+            send_done = 0;
             tusb_rndis_send_packet(&cdc_dev, cdc_dev.tx_buf + sizeof(rndis_data_packet_t), len);
         }
         if(link_state_changed){
