@@ -85,6 +85,8 @@ int tusbh_evt_init(tusbh_evt_t* evt);
 
 int tusbh_evt_set(tusbh_evt_t* evt);
 
+int tusbh_evt_clear(tusbh_evt_t* evt);
+
 // return 0 for success, otherwise fail
 int tusbh_evt_wait(tusbh_evt_t* evt, uint32_t timeout_ms);
 

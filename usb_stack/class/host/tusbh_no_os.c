@@ -198,6 +198,13 @@ int tusbh_evt_set(tusbh_evt_t* evt)
     return 0;
 }
 
+
+int tusbh_evt_clear(tusbh_evt_t* evt)
+{
+    evt->event = 0;
+    return 0;
+}
+
 int tusbh_evt_wait(tusbh_evt_t* evt, uint32_t timeout_ms)
 {
     while(timeout_ms>0){
