@@ -16,5 +16,11 @@ Custom bulk demo with WinUSB.
 ## composite
 Composite device demo, HID + CDC + WinUSB Bulk + MSC.
 
+## rndis
+RNDIS device demo
+
 ## host
 Host demo, support HUB, HID and vendor class.
+
+## drd_rtt
+Dual role device demo with rt-thread.

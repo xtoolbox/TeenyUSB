@@ -37,8 +37,10 @@ USB descriptor is generate by TeenyDT. [Try TeenyDT online](http://dt.tusb.org)
 ### USB主机例程 Demo for host
 
 - 简易交互式主机，支持U盘、HUB、键盘、鼠标以及自定义设备 [更多说明][host_readme]。 Interactive host, support HUB,MSC,Keyboard,Mouse and generic device. [more info][host_readme]
+- rt-thread双角色设备, 支持运行时切换设备类行，支持动态mount U盘，[更多说明][drd_readme]。Dual role device with rt-thread, [more info][drd_readme].
 
 [host_readme]: https://github.com/xtoolbox/TeenyUSB/blob/master/demo/host/readme.md
+[drd_readme]: https://github.com/xtoolbox/TeenyUSB/blob/master/demo/drd_rtt/readme.md
 
 ## 如何生成示例程序 How to make demo
 
@@ -111,3 +113,5 @@ $ echo "   text    data     bss     dec     hex filename" && make all -j8 LOG_IN
 - [libopencm3](https://github.com/libopencm3/libopencm3.git) 动态生成描述符，不依赖官方库。USB设备类型少，不支持主机模式。
 - [libusb_stm32](https://github.com/dmitrystu/libusb_stm32.git) 资源占用极少的USB设备库，不支持主机模式。
 
+## 其它嵌入式开源USB协议栈
+- [lufa](https://github.com/abcminiuser/lufa) 运行于AVR的轻量级USB主机和从机栈。
