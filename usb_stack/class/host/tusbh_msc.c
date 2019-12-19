@@ -349,10 +349,16 @@ static int tusbh_msc_init(tusbh_device_t* dev, tusbh_interface_t* interface, int
     if(tusbh_ep_allocate_pipe(info->in_ep)<0){
         TUSB_ITF_INFO("Fail to allocate pipe for MSC in\n");
         goto error;
+    }else{
+        tusbh_ep_info_t* ep = info->in_ep;
+        TUSB_EP_INFO("MSC IN ep pipe = %d\n", ep->pipe_num);
     }
     if(tusbh_ep_allocate_pipe(info->out_ep)<0){
         TUSB_ITF_INFO("Fail to allocate pipe for MSC out\n");
         goto error;
+    }else{
+        tusbh_ep_info_t* ep = info->out_ep;
+        TUSB_EP_INFO("MSC OUT ep pipe = %d\n", ep->pipe_num);
     }
     
     r = tusbh_control_xfer(
