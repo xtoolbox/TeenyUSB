@@ -139,6 +139,7 @@ static int tusbh_hub_init(tusbh_device_t* dev, tusbh_interface_t* interface, int
     uint16_t wTotalLength = ((usb_config_descriptor_t*)dev->config_desc)->wTotalLength;
     uint8_t ep_index = 0;
     uint8_t itf_cnt = 0;
+    int r = 0;
     interface->ep_num = itf->bNumEndpoints;
     create_info_pool(interface, tusbh_hub_info_t);
     memset(interface->info_pool,0,sizeof(tusbh_hub_info_t));
@@ -175,39 +176,42 @@ static int tusbh_hub_init(tusbh_device_t* dev, tusbh_interface_t* interface, int
     }
     if(ep_index != interface->ep_num){
         TUSB_ITF_INFO("Endpoint count error espect %d, got %d\n", interface->ep_num, ep_index);
-        return -1;
+        goto error;
     }
     if(!info->ep_in){
         TUSB_ITF_INFO("Fail to get hub in endpoint\n");
-        return -1;
+        goto error;
     }else{
         // allocate a buffer for the IN ep, so it will start automatically
         info->ep->data = tusbh_malloc( info->ep_in_mps );
         if(!info->ep->data){
             TUSB_ITF_INFO("Fail to allocate memory for hub in endpoint\n");
-            return -1;
+            goto error;
         }
         if(tusbh_ep_allocate_pipe(info->ep) < 0){
             TUSB_ITF_INFO("Fail to allocate pipe for HUB in endpoint\n");
-            return -1;
+            goto error;
+        }else{
+            tusbh_ep_info_t* ep = info->ep;
+            TUSB_EP_INFO("HUB IN ep pipe = %d\n", ep->pipe_num);
         }
     }
     
     if( (info->ep_in_type & USBD_EP_TYPE_MASK) != USBD_EP_TYPE_INTR){
         TUSB_ITF_INFO("Hub in endpoint attr error %d\n", info->ep_in_type);
-        return -1;
+        goto error;
     }
     
-    int r = tusbh_get_hub_descriptor(dev, &info->hub_desc, 8);//tusbh_get_descriptor(dev, USB_HUB_DESCRIPTOR_TYPE, 0, &info->hub_desc, 8);
+    r = tusbh_get_hub_descriptor(dev, &info->hub_desc, 8);//tusbh_get_descriptor(dev, USB_HUB_DESCRIPTOR_TYPE, 0, &info->hub_desc, 8);
     if(r < 0){
         TUSB_ITF_INFO("Fail to get hub descriptor\n");
-        return -1;
+        goto error;
     }
     
     r = tusbh_get_hub_descriptor(dev, &info->hub_desc, info->hub_desc.bLength);
     if(r < 0){
         TUSB_ITF_INFO("Fail to get full hub descriptor\n");
-        return -1;
+        goto error;
     }
     
     for(uint8_t port=1;port<=info->hub_desc.bNumPorts;port++){
@@ -222,6 +226,7 @@ static int tusbh_hub_init(tusbh_device_t* dev, tusbh_interface_t* interface, int
     if(info->hub_desc.bNumPorts > TUSBH_MAX_CHILD){
         TUSB_ITF_INFO("Warning, HUB port large than TUSBH_MAX_CHILD (%d)\n", TUSBH_MAX_CHILD);
     }
+error:
     return cfg_offset;
 }
 
@@ -337,10 +342,24 @@ static int hub_data_xfered(tusbh_ep_info_t* ep)
                     child->speed = PORT_SPEED_LOW;
                 }
                 tusb_delay_ms(200);
+                
+                if(dev->ctrl_in>=0){
+                    tusbh_close_pipe(dev, dev->ctrl_in);
+                }
+                if(dev->ctrl_out>=0){
+                    tusbh_close_pipe(dev, dev->ctrl_out);
+                }
                 if(tusbh_device_attach(child) != 0){
                     TUSB_HUB_INFO("Device attach failed\n");
                 }
-                
+                dev->ctrl_in = tusbh_allocate_pipe(dev, 0x80, EP_TYPE_CTRL, dev->device_desc.bMaxPacketSize);
+                dev->ctrl_out = tusbh_allocate_pipe(dev, 0x00, EP_TYPE_CTRL, dev->device_desc.bMaxPacketSize);
+                if(dev->ctrl_in<0){
+                    TUSB_HUB_INFO("Fail to re-allocate hub ctrl in\n");
+                }
+                if(dev->ctrl_out<0){
+                    TUSB_HUB_INFO("Fail to re-allocate hub ctrl out\n");
+                } 
             }else{
                 TUSB_HUB_INFO("Connect\n");
                 tusbh_device_t* child = dev->children[port-1];
