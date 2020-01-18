@@ -53,8 +53,8 @@ void console_uart_init(uint32_t baud)
     //__HAL_RCC_USART3_CONFIG(RCC_USART3CLKSOURCE_SYSCLK);
   
      /**USART3 GPIO Configuration
-        PC7     ------> USART6_RX
-        PC6     ------> USART6_TX
+        PC11    ------> USART6_RX
+        PC10    ------> USART6_TX
      */
     GPIOC->MODER &= ~ (MODE(3,10) | MODE(3,11));
     GPIOC->MODER |=   (MODE(2,10) | MODE(2,11));  
