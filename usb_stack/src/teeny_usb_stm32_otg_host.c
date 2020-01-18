@@ -599,7 +599,7 @@ static void tusb_otg_out_channel_handler(tusb_host_t* host, uint8_t ch_num)
     }else if (hc->state == TUSB_CS_TRANSFER_COMPLETE){
       uint32_t HcEpType = (HC->HCCHAR & USB_OTG_HCCHAR_EPTYP) >> USB_OTG_HCCHAR_EPTYP_Pos;
       uint32_t len = (HC->HCTSIZ & USB_OTG_HCTSIZ_XFRSIZ) >> USB_OTG_HCTSIZ_XFRSIZ_Pos;
-      if(HcEpType == HCCHAR_BULK){
+      if(HcEpType == HCCHAR_BULK || HcEpType == HCCHAR_INTR){
         hc->toggle_out ^= 1U;
       }
       hc->error_count = 0;
