@@ -918,7 +918,7 @@ static void process_period_ep(tusbh_device_t* dev)
     for(uint8_t i=0;i<dev->interface_num;i++){
         tusbh_interface_t* itf = &dev->interfaces[i];
         for(uint32_t j=0;j<itf->ep_num;j++){
-            tusbh_ep_info_t* ep = &itf->endpoints[i];
+            tusbh_ep_info_t* ep = &itf->endpoints[j];
             if( (ep->xfer_in_progress == 0) 
              && (ep->desc->bmAttributes & 1)
              && (ep->desc->bEndpointAddress & 0x80)
