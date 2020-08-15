@@ -193,7 +193,6 @@ static void tusb_disconnect(tusb_device_driver_t *dev)
 
 int tusb_dev_drv_open(tusb_device_driver_t **pdrv, const tusb_device_driver_param_t *param, void *context)
 {
-    // TODO: parse the param
     tusb_device_driver_t * drv = &stm32_dev_drv;
     if (!pdrv){
         return -1;
@@ -348,12 +347,18 @@ void USB_HP_CAN1_TX_IRQHandler(void)
 #endif
 {
     uint16_t wIstr;
+#ifdef  RTOS_INTERRUPT_ENTER
+    RTOS_INTERRUPT_ENTER();
+#endif
     tusb_device_driver_t *drv = &stm32_dev_drv;
     while ((wIstr = GetUSB(drv)->ISTR) & USB_ISTR_CTR)
     {
         GetUSB(drv)->ISTR = (uint16_t)(USB_CLR_CTR);
         tusb_ep_handler(drv, wIstr & USB_ISTR_EP_ID);
     }
+#ifdef  RTOS_INTERRUPT_LEAVE
+    RTOS_INTERRUPT_LEAVE();
+#endif
 }
 
 #if defined(STM32F0)
@@ -366,6 +371,9 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 {
     tusb_device_driver_t *drv = &stm32_dev_drv;
     uint16_t wIstr;
+#ifdef  RTOS_INTERRUPT_ENTER
+    RTOS_INTERRUPT_ENTER();
+#endif
     while ((wIstr = GetUSB(drv)->ISTR) & USB_ISTR_CTR)
     {
         GetUSB(drv)->ISTR = (uint16_t)(USB_CLR_CTR);
@@ -432,9 +440,12 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
     }
 
     GetUSB(drv)->ISTR = (0);
+#ifdef  RTOS_INTERRUPT_LEAVE
+    RTOS_INTERRUPT_LEAVE();
+#endif
 }
 
-int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config *ep_config, int count)
+int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config *ep_config, int count, int is_reset)
 {    
     uint8_t ep_in[TUSB_MAX_EP_PAIR_COUNT] = {0};
     uint8_t ep_out[TUSB_MAX_EP_PAIR_COUNT] = {0};
@@ -581,7 +592,7 @@ int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config 
                     SET_DBL_TX_CNT(drv, ep, 0);
                     SET_DOUBLE_ADDR(drv, ep, bt_start, bt_start + cfg->mps);
                     TUSB_LOGD("EP: 0x%02x, addr0: 0x%x addr1:0x%x, size: %d, Double Tx, Type 0x%x\n",
-                              cfg->addr, bt_start, bt_start + cfg->mps, cfg->mps, s_type);
+                              cfg->addr, (int)bt_start, (int)(bt_start + cfg->mps), cfg->mps, s_type);
                     bt_start += cfg->mps * 2;
                 }
                 else
@@ -598,7 +609,7 @@ int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config 
                     SET_DBL_RX_CNT(drv, ep, cfg->mps);
                     SET_DOUBLE_ADDR(drv, ep, bt_start, bt_start + cfg->mps);
                     TUSB_LOGD("EP: 0x%02x, addr0: 0x%x addr1:0x%x, size: %d, Double Rx, Type 0x%x\n",
-                              cfg->addr, bt_start, bt_start + cfg->mps, cfg->mps, s_type);
+                              cfg->addr, (int)bt_start, (int)(bt_start + cfg->mps), cfg->mps, s_type);
                     bt_start += cfg->mps * 2;
                 }
                 else
@@ -621,7 +632,7 @@ int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config 
                             INIT_EP_BiDirection(drv, ep, s_type);
                         }
                         SET_TX_ADDR(drv, ep, bt_start);
-                        TUSB_LOGD("EP: 0x%02x, addr: 0x%x, size: %d, Bi-Direction Tx, Type 0x%x\n", cfg->addr, bt_start, cfg->mps, s_type);
+                        TUSB_LOGD("EP: 0x%02x, addr: 0x%x, size: %d, Bi-Direction Tx, Type 0x%x\n", cfg->addr, (int)bt_start, cfg->mps, s_type);
                         bt_start += cfg->mps;
                     }
                     else
@@ -640,7 +651,7 @@ int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config 
                         }
                         SET_RX_ADDR(drv, ep, bt_start);
                         SET_RX_CNT(drv, ep, cfg->mps);
-                        TUSB_LOGD("EP: 0x%02x, addr: 0x%x, size: %d, Bi-Direction Rx, Type 0x%x\n", cfg->addr, bt_start, cfg->mps, s_type);
+                        TUSB_LOGD("EP: 0x%02x, addr: 0x%x, size: %d, Bi-Direction Rx, Type 0x%x\n", cfg->addr, (int)bt_start, cfg->mps, s_type);
                         bt_start += cfg->mps;
                     }
                     else
@@ -658,7 +669,7 @@ int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config 
                         ep_in_used[ep] = 1;
                         INIT_EP_TxOnly(drv, ep, s_type);
                         SET_TX_ADDR(drv, ep, bt_start);
-                        TUSB_LOGD("EP: 0x%02x, addr: 0x%x, size: %d, Tx Only, Type 0x%x\n", cfg->addr, bt_start, cfg->mps, s_type);
+                        TUSB_LOGD("EP: 0x%02x, addr: 0x%x, size: %d, Tx Only, Type 0x%x\n", cfg->addr, (int)bt_start, cfg->mps, s_type);
                         bt_start += cfg->mps;
                     }
                     else
@@ -674,7 +685,7 @@ int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config 
                         INIT_EP_RxOnly(drv, ep, s_type);
                         SET_RX_ADDR(drv, ep, bt_start);
                         SET_RX_CNT(drv, ep, cfg->mps);
-                        TUSB_LOGD("EP: 0x%02x, addr: 0x%x, size: %d, Rx Only, Type 0x%x\n", cfg->addr, bt_start, cfg->mps, s_type);
+                        TUSB_LOGD("EP: 0x%02x, addr: 0x%x, size: %d, Rx Only, Type 0x%x\n", cfg->addr, (int)bt_start, cfg->mps, s_type);
                         bt_start += cfg->mps;
                     }
                     else

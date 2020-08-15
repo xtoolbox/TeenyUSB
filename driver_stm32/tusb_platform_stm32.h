@@ -40,6 +40,7 @@
 // HAL header for STM32F0xx devices
 #include "stm32f0xx_hal.h"
 #include "stm32_fs_platform.h"
+#include "tusb_dev_drv_stm32_fs.h"
 
 #elif defined(STM32F102x6) || defined(STM32F102xB) || \
     defined(STM32F103x6) || defined(STM32F103xB) || \
@@ -47,16 +48,19 @@
 // HAL header for STM32F1xx devices
 #include "stm32f1xx_hal.h"
 #include "stm32_fs_platform.h"
+#include "tusb_dev_drv_stm32_fs.h"
 
 #elif defined(STM32F105xC) || defined(STM32F107xC)
 // HAL header for STM32F1xx connective line devices
 #include "stm32f1xx_hal.h"
 #include "stm32_otg_platform.h"
+#include "tusb_dev_drv_stm32_otg.h"
 
 #elif defined (STM32F205xx) || defined (STM32F215xx) || defined (STM32F207xx) || defined (STM32F217xx)
 // HAL header for STM32F2xx devices
 #include "stm32f2xx_hal.h"
 #include "stm32_otg_platform.h"
+#include "tusb_dev_drv_stm32_otg.h"
 
 
 #elif defined(STM32F302xE) || defined(STM32F303xE) || defined(STM32F302x8) || \
@@ -64,6 +68,7 @@
 // HAL header for STM32F3xx devices
 #include "stm32f3xx_hal.h"
 #include "stm32_fs_platform.h"
+#include "tusb_dev_drv_stm32_fs.h"
 
 
 #elif defined(STM32F405xx) || defined(STM32F415xx) || defined(STM32F407xx) || defined(STM32F417xx) || \
@@ -74,6 +79,7 @@
 // HAL header for STM32F4xx devices
 #include "stm32f4xx_hal.h"
 #include "stm32_otg_platform.h"
+#include "tusb_dev_drv_stm32_otg.h"
 
 #elif defined (STM32F756xx) || defined (STM32F746xx) || defined (STM32F745xx) || defined (STM32F767xx) || \
       defined (STM32F769xx) || defined (STM32F777xx) || defined (STM32F779xx) || defined (STM32F722xx) || \
@@ -81,11 +87,13 @@
 // HAL header for STM32F7xx devices
 #include "stm32f7xx_hal.h"
 #include "stm32_otg_platform.h"
+#include "tusb_dev_drv_stm32_otg.h"
 
 #elif  defined (STM32H743xx) || defined (STM32H753xx) || defined (STM32H750xx)
 // HAL header for STM32H7xx devices
 #include "stm32h7xx_hal.h"
 #include "stm32_otg_platform.h"
+#include "tusb_dev_drv_stm32_otg.h"
 
 #else
 
