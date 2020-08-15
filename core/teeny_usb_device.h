@@ -247,7 +247,7 @@ static inline void tusb_clear_stall(tusb_device_t* dev, uint8_t EPn)
  *
  *  \return  0 for success, otherwise fail
  */
-inline int tusb_set_recv_buffer(tusb_device_t* dev, uint8_t EPn, void* data, uint16_t len)
+static inline int tusb_set_recv_buffer(tusb_device_t* dev, uint8_t EPn, void* data, int len)
 { return tusb_dev_drv_set_recv_buffer( GetDriver(dev), EPn, data, len); }
 
 /** USB device set the Rx/In endpoint valid

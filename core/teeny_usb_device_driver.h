@@ -84,10 +84,11 @@ int tusb_dev_drv_close(tusb_device_driver_t *drv);
  *  \param[in] drv         Device driver handle, init by \ref tusb_dev_drv_open
  *  \param[in] ep_config   endpoint config array
  *  \param[in] count       endpoint count
+ *  \param[in] is_reset    endpoint setup reason, 1 - device reset, 0 - set configuration
  *
  *  \return                0 success, otherwise fail
  */
-int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config *ep_config, int count);
+int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config *ep_config, int count, int is_reset);
 
 /** get USB device current speed
  *

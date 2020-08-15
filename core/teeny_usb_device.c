@@ -58,8 +58,7 @@ int tusb_device_ep_xfer_done(tusb_device_driver_t *drv, uint8_t EPn, const void 
                 TUSB_LOGD("Setup data, bReq:0x%02x bmReq:0x%02x wVal:0x%04x wIdx:0x%04x wLen:0x%04x\n",
                           s->bRequest, s->bmRequestType, s->wValue, s->wIndex, s->wLength);
                 tusb_setup_handler(dev);
-            }
-            if (dev->ep0_rx_done)
+            }else if (dev->ep0_rx_done)
             {
                 dev->ep0_rx_done(dev, data, len);
                 dev->ep0_rx_done = NULL;
@@ -72,6 +71,9 @@ int tusb_device_ep_xfer_done(tusb_device_driver_t *drv, uint8_t EPn, const void 
                 dev->ep0_tx_done(dev, data, len);
                 dev->ep0_tx_done = NULL;
             }
+            // prepare receive status
+            tusb_set_recv_buffer(dev, 0, NULL, 0);
+            tusb_set_rx_valid(dev, 0);
         }
         else if (EPn & 0x80)
         {
@@ -114,7 +116,7 @@ void tusb_device_reset(tusb_device_driver_t *drv)
             epc[1].addr = 0x00;
             epc[1].attribute = USBD_EP_TYPE_CTRL;
             epc[1].mps = dev->descriptors->device[7];
-            tusb_dev_drv_setup_endpoint(drv, epc, 2);
+            tusb_dev_drv_setup_endpoint(drv, epc, 2, 1);
         }
         else
         {
@@ -375,13 +377,15 @@ static int tusb_vendor_request(tusb_device_t *dev, tusb_setup_packet *setup_req)
         }
             //#endif
         }
+    }else{
+        TUSB_LOGW("Unknown Vendor request code %d\n", setup_req->bRequest);
     }
     // TODO: Handle length large than 0xffff
     len = setup_req->wLength > len ? len : setup_req->wLength;
 #if defined(DESCRIPTOR_BUFFER_SIZE) && DESCRIPTOR_BUFFER_SIZE > 0
     if (len > DESCRIPTOR_BUFFER_SIZE)
     {
-        TUSB_LOGE("Descriptor buffer size too small for vendor desc, require %d, current %d\n", len, DESCRIPTOR_BUFFER_SIZE);
+        TUSB_LOGE("Descriptor buffer size too small for vendor desc, require %d, current %d\n", (int)len, DESCRIPTOR_BUFFER_SIZE);
         return 0;
     }
     if (desc)
@@ -400,7 +404,7 @@ static int tusb_vendor_request(tusb_device_t *dev, tusb_setup_packet *setup_req)
     }
     else
     {
-        TUSB_LOGW("Unknown Vendor request code %d\n", setup_req->bRequest);
+        TUSB_LOGD("Vendor request fail, stall it\n");
     }
 #else
     if (setup_req->bRequest == TUSB_WCID_VENDOR_CODE)
@@ -408,7 +412,9 @@ static int tusb_vendor_request(tusb_device_t *dev, tusb_setup_packet *setup_req)
         TUSB_LOGE("WCID Vendor request is not support, define TUSB_SUPPORT_WCID to enable it\n");
     }
 #endif // #if defined(TUSB_SUPPORT_WCID)
-    return 0;
+    
+    tusb_set_stall(dev, 0);
+    return 1;
 }
 
 // Set device address after send status
@@ -439,7 +445,7 @@ static int tusb_init_endpoint_by_config(tusb_device_t *dev)
     if (dev->descriptors->config_count < dev->config)
     {
         TUSB_LOGE("Device config descriptor number (%d) less than request (%d)\n",
-                  dev->descriptors->config_count, dev->config);
+                  (int)dev->descriptors->config_count, dev->config);
         return -1;
     }
     desc_t cfg = dev->descriptors->configs[dev->config - 1];
@@ -526,7 +532,7 @@ static int tusb_init_endpoint_by_config(tusb_device_t *dev)
         const tusb_ep_config *epc = &ep_cfg[i];
         TUSB_LOGD("Addr: 0x%02x Attr: 0x%02x MPS:%d\n", epc->addr, epc->attribute, epc->mps);
     }
-    tusb_dev_drv_setup_endpoint(GetDriver(dev), ep_cfg, ep_count);
+    tusb_dev_drv_setup_endpoint(GetDriver(dev), ep_cfg, ep_count, 0);
     return 0;
 }
 
@@ -652,7 +658,6 @@ static int tusb_std_endpoint_request(tusb_device_t *dev, tusb_setup_packet *setu
             if ((ep_addr & 0x7f) < TUSB_MAX_EP_PAIR_COUNT)
             {
                 tusb_clear_stall(dev, ep_addr);
-                break;
             }
             tusb_send_status(dev);
             return 1;
@@ -667,7 +672,6 @@ static int tusb_std_endpoint_request(tusb_device_t *dev, tusb_setup_packet *setu
             if ((ep_addr & 0x7f) < TUSB_MAX_EP_PAIR_COUNT)
             {
                 tusb_set_stall(dev, ep_addr);
-                break;
             }
             tusb_send_status(dev);
             return 1;
