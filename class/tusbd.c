@@ -45,10 +45,10 @@ void tusb_set_device_config(tusb_device_t* dev, tusb_device_config_t* dev_config
             if(itf->dev != dev){
                 itf->dev = dev;
             }
-            if(itf->ep_in && (itf->ep_in & 0x7f) <= MAX_EP_ID){
+            if(itf->ep_in && (itf->ep_in & 0x7f) < TUSB_MAX_EP_PAIR_COUNT){
                 dev_config->ep_in_interface[ (itf->ep_in & 0x7f) - 1] = itf;
             }
-            if(itf->ep_out && (itf->ep_out & 0x7f) <= MAX_EP_ID){
+            if(itf->ep_out && (itf->ep_out & 0x7f) < TUSB_MAX_EP_PAIR_COUNT){
                 dev_config->ep_out_interface[ (itf->ep_out & 0x7f) - 1] = itf;
             }
         }

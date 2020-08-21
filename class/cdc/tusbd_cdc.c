@@ -58,7 +58,7 @@ static int tusb_cdc_device_init(tusb_cdc_device_t* cdc)
     tusb_set_recv_buffer(cdc->dev, cdc->ep_out, cdc->rx_buf, cdc->rx_size);
     tusb_set_rx_valid(cdc->dev, cdc->ep_out);
     cdc->ep_int_busy = 0;
-    if(cdc->ep_int && cdc->ep_int <= MAX_EP_ID){
+    if(cdc->ep_int && cdc->ep_int < TUSB_MAX_EP_PAIR_COUNT){
       tusb_device_config_t* dev_config = (tusb_device_config_t*)cdc->dev->user_data;
       dev_config->ep_in_interface[ cdc->ep_int-1 ] = (tusb_device_interface_t*)cdc;
     }

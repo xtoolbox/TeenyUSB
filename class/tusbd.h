@@ -38,18 +38,6 @@
 #include "teeny_usb.h"
 #include <string.h>
 
-#ifndef MAX_EP_ID
-#ifdef EP_NUM
-#if EP_NUM < 2
-#define MAX_EP_ID   (1)
-#else
-#define MAX_EP_ID   (EP_NUM-1)
-#endif
-#else
-#define MAX_EP_ID   7
-#endif
-#endif
-
 typedef struct _tusb_device_backend tusb_device_backend_t;
 typedef struct _tusb_device_interface tusb_device_interface_t;
 typedef struct _tusb_device_config tusb_device_config_t;
@@ -75,9 +63,9 @@ struct _tusb_device_config{
     tusb_device_interface_t** interfaces;  /**< Interface array        */
     uint8_t   cmd_buffer[64];              /**< buffer for control transfer, not for descriptor */
     tusb_device_interface_t* 
-        ep_in_interface[MAX_EP_ID];     /**< array for in callback  */
+        ep_in_interface[TUSB_MAX_EP_PAIR_COUNT];     /**< array for in callback  */
     tusb_device_interface_t* 
-        ep_out_interface[MAX_EP_ID];    /**< array for out callback */
+        ep_out_interface[TUSB_MAX_EP_PAIR_COUNT];    /**< array for out callback */
 };
 
 void tusb_set_device_config(tusb_device_t* dev, tusb_device_config_t* dev_config);
