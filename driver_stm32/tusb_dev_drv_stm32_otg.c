@@ -108,11 +108,11 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 #ifdef USB_OTG_HS
         NVIC_SetPriority(OTG_HS_IRQn, 0);
         NVIC_EnableIRQ(OTG_HS_IRQn);
-        if(hpcd->Init.phy_itface == USB_OTG_EMBEDDED_PHY){
 #if defined(USB_HS_PHYC)
+        if(hpcd->Init.phy_itface == USB_OTG_HS_EMBEDDED_PHY){
             __HAL_RCC_OTGPHYC_CLK_ENABLE();
-#endif
         }
+#endif
         __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
         __HAL_RCC_USB_OTG_HS_ULPI_CLK_ENABLE();
 #endif
@@ -186,7 +186,7 @@ int tusb_dev_drv_open(tusb_device_driver_t **pdrv, const tusb_device_driver_para
         }
         if(param->is_internal_phy){
 #if defined(USB_HS_PHYC)
-            drv->pcd.Init.phy_itface = USB_OTG_EMBEDDED_PHY;
+            drv->pcd.Init.phy_itface = USB_OTG_HS_EMBEDDED_PHY;
 #else
             TUSB_LOGE("STM32 OTG HS not have embedded phy\n");
             return -1;
