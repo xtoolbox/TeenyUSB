@@ -65,8 +65,8 @@
 
 
 #elif defined(STM32F4) || defined(STM32F2)
-#define USB_OTG_FS_MAX_EP_NUM   4
-#define USB_OTG_HS_MAX_EP_NUM   6
+#define USB_OTG_FS_MAX_EP_NUM   3
+#define USB_OTG_HS_MAX_EP_NUM   5
 #define USB_OTG_FS_MAX_CH_NUM   8
 #define USB_OTG_HS_MAX_CH_NUM   12
 #define MAX_HC_NUM              12
