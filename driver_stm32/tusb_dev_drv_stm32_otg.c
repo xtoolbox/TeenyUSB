@@ -500,7 +500,9 @@ void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum)
         // HAL got wrong count, fix it here
         PCD_TypeDef* USBx = hpcd->Instance;
         uint32_t len = ep->xfer_len;
-        if(ep->xfer_len % ep->maxpacket){
+        if(ep->xfer_len < ep->maxpacket){
+        }else if(ep->xfer_len % ep->maxpacket){
+            len = ep->xfer_count;
         }else{
             len = ep->xfer_len - (USBx_OUTEP(epnum)->DOEPTSIZ & USB_OTG_DOEPTSIZ_XFRSIZ);
         }
