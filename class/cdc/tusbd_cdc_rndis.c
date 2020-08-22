@@ -34,6 +34,7 @@
 
 
 #include "tusbd_cdc_rndis.h"
+#include "teeny_usb_util.h"
 
 const uint32_t OIDSupportedList[] = 
 {
@@ -69,7 +70,7 @@ static int tusb_rndis_device_init(tusb_rndis_device_t* cdc)
     tusb_set_recv_buffer(cdc->dev, cdc->ep_out, cdc->rx_buf, sizeof(cdc->rx_buf));
     tusb_set_rx_valid(cdc->dev, cdc->ep_out);
     cdc->ep_int_busy = 0;
-    if(cdc->ep_int && cdc->ep_int <= MAX_EP_ID){
+    if(cdc->ep_int && cdc->ep_int < TUSB_MAX_EP_PAIR_COUNT){
       tusb_device_config_t* dev_config = (tusb_device_config_t*)cdc->dev->user_data;
       dev_config->ep_in_interface[ cdc->ep_int-1 ] = (tusb_device_interface_t*)cdc;
     }
@@ -346,8 +347,9 @@ static int tusb_rndis_device_request(tusb_rndis_device_t* cdc, tusb_setup_packet
         tusb_control_send(dev, cdc->encapsulated_buffer, ((rndis_generic_msg_t *)cdc->encapsulated_buffer)->MessageLength );
         return 1;
     }else if(setup_req->bRequest == CDC_SEND_ENCAPSULATED_COMMAND){
-        tusb_set_recv_buffer(dev, 0, cdc->encapsulated_buffer, setup_req->wLength);
         dev->ep0_rx_done = rndis_dataout_request;
+        tusb_set_recv_buffer(dev, 0, cdc->encapsulated_buffer, setup_req->wLength);
+        tusb_set_rx_valid(dev, 0);
         return 1;
     }
     return 0;
@@ -357,7 +359,7 @@ static int tusb_rndis_device_send_done(tusb_rndis_device_t* cdc, uint8_t EPn, co
 {
     if(EPn == cdc->ep_in){
         if(cdc->on_send_done){
-            return cdc->on_send_done(cdc);
+            return cdc->on_send_done(cdc, data, len);
         }
     }else if(EPn == cdc->ep_int){
       cdc->ep_int_busy = 0;

@@ -58,8 +58,8 @@ struct _tusb_rndis_device
     uint8_t ep_out;
     uint8_t ep_int;
     uint8_t ep_int_busy;
-    int(* on_recv_data)(tusb_rndis_device_t* cdc, const void* data, uint16_t len);
-    int(* on_send_done)(tusb_rndis_device_t* cdc);
+    int(* on_recv_data)(tusb_rndis_device_t* cdc, const void* data, int len);
+    int(* on_send_done)(tusb_rndis_device_t* cdc, const void* data, int len);
     int(* eth_linkchange)(tusb_rndis_device_t* cdc, int linkup);
     int(* config_param)(tusb_rndis_device_t* cdc, const char* name, const char* data, int name_len, int data_len);
     uint8_t    rx_buf[ ((sizeof(rndis_data_packet_t) + ETH_MAX_PACKET_SIZE+3) / 4) * 4];
