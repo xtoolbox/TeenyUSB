@@ -397,11 +397,6 @@
           <GroupName>usb_driver</GroupName>
           <Files>
             <File>
-              <FileName>tusb_drv_stm32_otg.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\driver_stm32\tusb_drv_stm32_otg.c</FilePath>
-            </File>
-            <File>
               <FileName>tusb_dev_drv_stm32_otg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\driver_stm32\tusb_dev_drv_stm32_otg.c</FilePath>
@@ -410,6 +405,11 @@
               <FileName>tusb_dev_drv_stm32_fs.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\driver_stm32\tusb_dev_drv_stm32_fs.c</FilePath>
+            </File>
+            <File>
+              <FileName>tusb_drv_stm32_otg_common.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver_stm32\tusb_drv_stm32_otg_common.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1270,11 +1270,6 @@
           <GroupName>usb_driver</GroupName>
           <Files>
             <File>
-              <FileName>tusb_drv_stm32_otg.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\driver_stm32\tusb_drv_stm32_otg.c</FilePath>
-            </File>
-            <File>
               <FileName>tusb_dev_drv_stm32_otg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\driver_stm32\tusb_dev_drv_stm32_otg.c</FilePath>
@@ -1283,6 +1278,11 @@
               <FileName>tusb_dev_drv_stm32_fs.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\driver_stm32\tusb_dev_drv_stm32_fs.c</FilePath>
+            </File>
+            <File>
+              <FileName>tusb_drv_stm32_otg_common.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver_stm32\tusb_drv_stm32_otg_common.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -2143,11 +2143,6 @@
           <GroupName>usb_driver</GroupName>
           <Files>
             <File>
-              <FileName>tusb_drv_stm32_otg.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\driver_stm32\tusb_drv_stm32_otg.c</FilePath>
-            </File>
-            <File>
               <FileName>tusb_dev_drv_stm32_otg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\driver_stm32\tusb_dev_drv_stm32_otg.c</FilePath>
@@ -2156,6 +2151,11 @@
               <FileName>tusb_dev_drv_stm32_fs.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\driver_stm32\tusb_dev_drv_stm32_fs.c</FilePath>
+            </File>
+            <File>
+              <FileName>tusb_drv_stm32_otg_common.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver_stm32\tusb_drv_stm32_otg_common.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -3016,11 +3016,6 @@
           <GroupName>usb_driver</GroupName>
           <Files>
             <File>
-              <FileName>tusb_drv_stm32_otg.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\driver_stm32\tusb_drv_stm32_otg.c</FilePath>
-            </File>
-            <File>
               <FileName>tusb_dev_drv_stm32_otg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\driver_stm32\tusb_dev_drv_stm32_otg.c</FilePath>
@@ -3029,6 +3024,11 @@
               <FileName>tusb_dev_drv_stm32_fs.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\driver_stm32\tusb_dev_drv_stm32_fs.c</FilePath>
+            </File>
+            <File>
+              <FileName>tusb_drv_stm32_otg_common.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver_stm32\tusb_drv_stm32_otg_common.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -3889,11 +3889,6 @@
           <GroupName>usb_driver</GroupName>
           <Files>
             <File>
-              <FileName>tusb_drv_stm32_otg.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\driver_stm32\tusb_drv_stm32_otg.c</FilePath>
-            </File>
-            <File>
               <FileName>tusb_dev_drv_stm32_otg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\driver_stm32\tusb_dev_drv_stm32_otg.c</FilePath>
@@ -3902,6 +3897,11 @@
               <FileName>tusb_dev_drv_stm32_fs.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\driver_stm32\tusb_dev_drv_stm32_fs.c</FilePath>
+            </File>
+            <File>
+              <FileName>tusb_drv_stm32_otg_common.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver_stm32\tusb_drv_stm32_otg_common.c</FilePath>
             </File>
           </Files>
         </Group>

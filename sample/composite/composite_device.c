@@ -197,6 +197,10 @@ int main(void)
   SetDescriptor(&g_dev, &COMP_descriptors);
   tusb_set_device_config(&g_dev, &device_config);
   tusb_open_device(&g_dev, TUSB_DEFAULT_DEV_PARAM);
+  while(!g_dev.config){
+      // wait device ready
+  }
+  // Device configured, ready to work
   while(1){
     if(user_len){
       for(int i=0;i<user_len;i++){
