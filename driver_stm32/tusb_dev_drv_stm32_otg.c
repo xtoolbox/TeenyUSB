@@ -166,7 +166,7 @@ int tusb_dev_drv_open(tusb_device_driver_t **pdrv, const tusb_device_driver_para
     }else{
 #ifdef USB_OTG_FS
         drv = &stm32_fs;
-        stm32_hs.pcd.Instance = USB_OTG_FS;
+        stm32_fs.pcd.Instance = USB_OTG_FS;
         drv->fifo_size = USB_OTG_FS_FIFO_SIZE;
         drv->max_ep_num = USB_OTG_FS_MAX_EP_NUM;
 #else
