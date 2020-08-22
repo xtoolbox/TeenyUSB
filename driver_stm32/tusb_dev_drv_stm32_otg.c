@@ -572,5 +572,16 @@ void HAL_PCD_ISOINIncompleteCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum)
         ep->xfer_buff - drv->in_ep_len[epnum], drv->in_ep_len[epnum], 0);
 }
 
+void tusb_fix_control_xfer_corrupt_issue(tusb_device_t* dev)
+{
+#if defined(STM32F7) && defined(USB_OTG_FS)
+    if(dev->dev_drv->pcd.Instance == USB_OTG_FS){
+        TUSB_LOGD("TODO: STM32F7 OTG FS need flush ep to fix the response data corrupt issue\n");
+        USB_FlushTxFifo(dev->dev_drv->pcd.Instance, 0);
+    }
+#endif
+}
+
+
 #endif // #ifndef NO_DEVICE
 #endif // #if defined(USB_OTG_FS) || defined(USB_OTG_HS)

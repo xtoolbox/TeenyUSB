@@ -332,6 +332,7 @@ static void rndis_dataout_request(tusb_device_t* dev, const void* data, int len)
     tusb_send_status(dev);
 }
 
+WEAK void tusb_fix_control_xfer_corrupt_issue(tusb_device_t* dev){}
 static int tusb_rndis_device_request(tusb_rndis_device_t* cdc, tusb_setup_packet* setup_req)
 {
     tusb_device_t* dev = cdc->dev;
@@ -344,6 +345,7 @@ static int tusb_rndis_device_request(tusb_rndis_device_t* cdc, tusb_setup_packet
         return 1;
     }
     if(setup_req->bRequest == CDC_GET_ENCAPSULATED_RESPONSE){
+        tusb_fix_control_xfer_corrupt_issue(dev);
         tusb_control_send(dev, cdc->encapsulated_buffer, ((rndis_generic_msg_t *)cdc->encapsulated_buffer)->MessageLength );
         return 1;
     }else if(setup_req->bRequest == CDC_SEND_ENCAPSULATED_COMMAND){
