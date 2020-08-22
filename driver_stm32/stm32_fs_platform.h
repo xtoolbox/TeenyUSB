@@ -210,7 +210,7 @@ typedef union _pma_ep_desc {
 
 // Init ep in rx double buffer mode, and set rx to VALID state
 #define  INIT_EP_RxDouble(dev, bEpNum, type) \
-  PCD_SET_ENDPOINT(GetUSB(dev), bEpNum,  BUILD_EP_SETTING(dev, bEpNum, type, USB_EP_RX_NAK, USB_EP_TX_DIS, USB_EP_KIND) \
+  PCD_SET_ENDPOINT(GetUSB(dev), bEpNum,  BUILD_EP_SETTING(dev, bEpNum, type, USB_EP_RX_VALID, USB_EP_TX_DIS, USB_EP_KIND) \
   /* Toggle the SW_BUF bits, to make sure the rx state is real valid */ \
   ^ USB_EP_DTOG_TX ) 
 
