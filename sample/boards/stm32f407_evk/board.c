@@ -152,3 +152,28 @@ const tusb_device_driver_param_t otg_default_param = {
     .use_external_vbus = 0,
     .io_cfgs = f407_otg_default_io,
 };
+
+
+
+const tusb_stm32_otg_io_cfg_t f407_otg_fs_io[] = {
+/* DM  */  {GPIOA,  11, GPIO_AF10_OTG_FS},
+/* DP  */  {GPIOA,  12, GPIO_AF10_OTG_FS},
+    {0,0,0},
+};
+
+
+const tusb_device_driver_param_t otg_fs_param = {
+    .is_hs_core = 0,
+    .is_high_speed = 0,
+    .is_internal_phy = 0,
+    .dma_enable = 0,
+    .sof_enable = 0,
+    .low_power_enable = 0,
+    .lpm_enable = 0,
+    .battery_charging_enable = 0,
+    
+    .vbus_sensing_enable = 0,
+    .use_dedicated_ep1 = 0,
+    .use_external_vbus = 0,
+    .io_cfgs = f407_otg_fs_io,
+};
