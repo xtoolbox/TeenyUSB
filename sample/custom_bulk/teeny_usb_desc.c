@@ -176,7 +176,7 @@ const uint8_t* const BULK_StringDescriptors[4] = {
 };
 #define HAS_WCID
 #define HAS_WCID_20
-#define WCID_VENDOR_CODE 17
+#define WCID_VENDOR_CODE 0x17
 
 //////////////////////////////////////////////////////
 ///// WCID descripors
