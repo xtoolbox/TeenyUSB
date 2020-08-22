@@ -398,7 +398,7 @@ const uint8_t* const COMP_StringDescriptors[5] = {
 };
 #define HAS_WCID
 #define HAS_WCID_20
-#define WCID_VENDOR_CODE 17
+#define WCID_VENDOR_CODE 0x17
 #define COMP_REPORT_DESCRIPTOR_SIZE_IF0  (24)
 WEAK __ALIGN_BEGIN const uint8_t COMP_ReportDescriptor_if0[COMP_REPORT_DESCRIPTOR_SIZE_IF0] __ALIGN_END = {
         // report descriptor for general input/output
