@@ -97,11 +97,6 @@ static tusb_device_driver_t stm32_hs;
 
 void tusb_stm32_init_otg_io(const tusb_stm32_otg_io_cfg_t* cfg);
 
-uint32_t HAL_RCC_GetHCLKFreq()
-{
-    return SystemCoreClock; 
-}
-
 void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 {
     if(hpcd->Init.speed == USB_OTG_SPEED_HIGH){

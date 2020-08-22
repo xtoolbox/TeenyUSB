@@ -68,6 +68,12 @@ void tusb_stm32_init_otg_io(const tusb_stm32_otg_io_cfg_t* cfg)
 
 void tusb_delay_ms(uint32_t ms);
 
+// HAL function implement
+uint32_t HAL_RCC_GetHCLKFreq()
+{
+    return SystemCoreClock; 
+}
+
 void HAL_Delay(uint32_t ms)
 {
     tusb_delay_ms(ms);
