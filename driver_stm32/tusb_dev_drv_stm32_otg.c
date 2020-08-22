@@ -278,6 +278,7 @@ int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config 
             in_mps[ep] = cfg->mps;
             if(cfg->mps < 64){
                 in_total_size += 64;
+                in_mps[ep] = 64;
             }else{
                 in_total_size += cfg->mps;
             }
@@ -309,9 +310,16 @@ int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config 
         TUSB_LOGE("Rx fifo value will large than 256\n");
         return -1;
     }
-    if(rx_value < 512){
-        rx_value = 512;
+    if(drv == &stm32_hs){
+        if(rx_value < 512){
+            rx_value = 512;
+        }
+    }else{
+        if(rx_value < 128){
+            rx_value = 128;
+        }
     }
+    
     uint32_t rx_size = rx_value * 4;
 #else
     // config in other mode
