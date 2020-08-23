@@ -39,6 +39,7 @@
 
 #include "stm32f7xx_hal.h"
 #include "teeny_usb_def.h"
+#include "teeny_usb_config.h"
 #include "tusb_dev_drv_stm32_otg.h"
 #include <errno.h>
 #include <stdio.h>
@@ -130,11 +131,13 @@ const tusb_stm32_otg_io_cfg_t f723_otg_default_io[] = {
 };
 
 
+
 const tusb_device_driver_param_t otg_default_param = {
     .is_hs_core = 1,
     .is_high_speed = 1,
     .is_internal_phy = 1,
-    .dma_enable = 0,   // DMA not work well on HS internal core, also happen on CubeMX
+    // Debug info will cause DMA enum fail on STM32F723's HS core
+    .dma_enable = TUSB_DBG_LEVEL != TUSB_DBG_LEVEL_DEBUG,
     .sof_enable = 0,
     .low_power_enable = 0,
     .lpm_enable = 0,
