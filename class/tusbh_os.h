@@ -32,46 +32,77 @@
  * SOFTWARE.
  */
 
-#include "teeny_usb_host.h"
-#include "teeny_usb_osal.h"
-#include "teeny_usb_util.h"
+#ifndef __TUSBH_OS_H__
+#define __TUSBH_OS_H__
 
-int tusb_open_host(tusb_host_t* host, const tusb_hardware_param_t* driver_param)
-{ 
-    host->periodic_queue = 0;
-    host->periodic_pending = 0;
-    int res = tusb_host_drv_open(&host->host_drv, driver_param, host);
-    host->last_frame = tusb_host_get_frame_number(host);
-    return res;
-}
+////////////////////////////////////////////////
+// OS related APIs
+////////////////////////////////////////////////
 
-WEAK int tusb_host_port_changed(tusb_host_driver_t* drv, int port, host_port_state_t new_state)
+typedef struct _tusbh_message_t tusbh_message_t;
+
+struct _tusbh_message_t
 {
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host port changed, port: %d, state: %d\n", port, new_state);
-    return 0;
-}
+    uint32_t     param;
+    uint32_t     len;
+    void*        data;
+    void (*handler)(tusbh_message_t* msg);
+};
 
-WEAK int tusb_host_sof_event(tusb_host_driver_t* drv)
-{
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    return 0;
-}
+#define POST_MESSAGE(mq, func, p, d, l)  \
+do{                             \
+    tusbh_message_t msg = {     \
+    .param = p,                 \
+    .len = l,                   \
+    .data = d,                  \
+    .handler = func};           \
+    tusbh_mq_post(mq, &msg);    \
+}while(0)
 
-WEAK int tusb_host_channel_event(tusb_host_driver_t* drv, int ch_num, int ch_state)
-{
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host channel event, channel: %d, state: %d\n", ch_num, ch_state);
-    return 0;
-}
 
-WEAK int tusb_host_transfer_done(tusb_host_driver_t* drv, tusbh_transfer_t* transfer)
-{
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host transfer done\n");
-    return 0;
-}
+/// API for message queue
+typedef struct _tusbh_msg_q tusbh_msg_q_t;
+
+tusbh_msg_q_t* tusbh_mq_create(void);
+
+void tusbh_mq_free(tusbh_msg_q_t* mq);
+
+int tusbh_mq_init(tusbh_msg_q_t* mq);
+
+int tusbh_mq_post(tusbh_msg_q_t* mq, const tusbh_message_t* msg);
+
+// return value: 1 - success, 0 
+int tusbh_mq_get(tusbh_msg_q_t* mq, tusbh_message_t* msg);
+
+/// API for event
+typedef struct _tusbh_evt tusbh_evt_t;
+
+tusbh_evt_t* tusbh_evt_create(void);
+
+void tusbh_evt_free(tusbh_evt_t* evt);
+
+int tusbh_evt_init(tusbh_evt_t* evt);
+
+int tusbh_evt_set(tusbh_evt_t* evt);
+
+int tusbh_evt_clear(tusbh_evt_t* evt);
+
+// return 0 for success, otherwise fail
+int tusbh_evt_wait(tusbh_evt_t* evt, uint32_t timeout_ms);
+
+// API for memory manage
+typedef struct _tusbh_device tusbh_device_t;
+
+tusbh_device_t* tusbh_new_device(void);
+
+void tusbh_free_device(tusbh_device_t* device);
+
+// return memory must 32 bit aligned
+// real allocate memory size muse be muple of 4 (USB FIFO requirement)
+void* tusbh_malloc(uint32_t size);
+
+void tusbh_free(void* p);
+
+
+#endif
+

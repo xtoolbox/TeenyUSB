@@ -191,7 +191,7 @@ static void tusb_disconnect(tusb_device_driver_t *dev)
 #endif
 }
 
-int tusb_dev_drv_open(tusb_device_driver_t **pdrv, const tusb_device_driver_param_t *param, void *context)
+int tusb_dev_drv_open(tusb_device_driver_t **pdrv, const tusb_hardware_param_t *param, void *context)
 {
     tusb_device_driver_t * drv = &stm32_dev_drv;
     if (!pdrv){

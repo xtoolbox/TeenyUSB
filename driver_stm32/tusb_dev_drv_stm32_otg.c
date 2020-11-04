@@ -141,7 +141,7 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd)
     }
 }
 
-int tusb_dev_drv_open(tusb_device_driver_t **pdrv, const tusb_device_driver_param_t *param, void *context)
+int tusb_dev_drv_open(tusb_device_driver_t **pdrv, const tusb_hardware_param_t *param, void *context)
 {
     if (!pdrv){
         return -1;

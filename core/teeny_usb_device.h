@@ -129,7 +129,7 @@ struct _tusb_device{
 // Device functions,  used in device only mode
 //////////////////////////////////////////////
 
-/** Get USB device handle
+/** Open USB device
  *
  *  \ingroup Group_Device
  * 
@@ -138,7 +138,7 @@ struct _tusb_device{
  *
  *  \return 0 for success, otherwise fail
  */
-static inline int tusb_open_device(tusb_device_t* dev, const tusb_device_driver_param_t* driver_param)
+static inline int tusb_open_device(tusb_device_t* dev, const tusb_hardware_param_t* driver_param)
 { return tusb_dev_drv_open(&dev->dev_drv, driver_param, dev); }
 
 /** close USB device 

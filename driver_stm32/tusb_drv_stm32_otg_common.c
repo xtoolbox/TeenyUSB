@@ -42,12 +42,38 @@
 
 #define AFL(val, pin)   ((val)<< (( (pin))*4))
 #define AFH(val, pin)   ((val)<< (( (pin)-8)*4))
+
+#ifndef GPIO_MODER_MODER0
+#define GPIO_MODER_MODER0 GPIO_MODER_MODE0
+#endif
+
+#ifndef GPIO_MODER_MODER0_1
+#define GPIO_MODER_MODER0_1 GPIO_MODER_MODE0_1
+#endif
+
+#ifndef GPIO_OTYPER_OT_0
+#define GPIO_OTYPER_OT_0 GPIO_OTYPER_OT0
+#endif
+
+#ifndef GPIO_OSPEEDER_OSPEEDR0_0
+#define GPIO_OSPEEDER_OSPEEDR0_0 GPIO_OSPEEDR_OSPEED0_0
+#endif
+
+#ifndef GPIO_OSPEEDER_OSPEEDR0_1
+#define GPIO_OSPEEDER_OSPEEDR0_1 GPIO_OSPEEDR_OSPEED0_1
+#endif
+
 void tusb_stm32_init_otg_io(const tusb_stm32_otg_io_cfg_t* cfg)
 {
     while(cfg->IO_BASE){
         GPIO_TypeDef* GPIO = (GPIO_TypeDef*)cfg->IO_BASE;
         uint32_t pos = ((uint32_t)GPIO - GPIOA_BASE) / 0x400;
+        
+#ifdef STM32H7
+        SET_BIT(RCC->AHB4ENR, (1<<pos));
+#else
         SET_BIT(RCC->AHB1ENR, (1<<pos));
+#endif
         
         uint8_t pin = cfg->pin;
         uint8_t af = cfg->af;
@@ -69,10 +95,20 @@ void tusb_stm32_init_otg_io(const tusb_stm32_otg_io_cfg_t* cfg)
 void tusb_delay_ms(uint32_t ms);
 
 // HAL function implement
+#ifdef STM32H7
+uint32_t HAL_RCC_GetHCLKFreq(void)
+{
+  static uint32_t SystemD2Clock;
+  SystemD2Clock = (SystemCoreClock >> ((D1CorePrescTable[(RCC->D1CFGR & RCC_D1CFGR_HPRE)>> RCC_D1CFGR_HPRE_Pos]) & 0x1FU));
+  return SystemD2Clock;
+}
+
+#else
 uint32_t HAL_RCC_GetHCLKFreq()
 {
     return SystemCoreClock; 
 }
+#endif
 
 void HAL_Delay(uint32_t ms)
 {

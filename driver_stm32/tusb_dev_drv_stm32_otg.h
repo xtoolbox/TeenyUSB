@@ -36,7 +36,7 @@
 #define __TUSB_DEV_DRV_STM32_OTG_H__
 
 #include "stdint.h"
-#include "teeny_usb_device_driver.h"
+#include "teeny_usb_def.h"
 
 #define  TUSB_STM32_OTG_FS_CORE     0
 #define  TUSB_STM32_OTG_HS_CORE     1
@@ -54,7 +54,7 @@ typedef struct _tusb_stm32_otg_io_cfg
 }tusb_stm32_otg_io_cfg_t;
 
 
-struct _tusb_device_driver_param
+struct _tusb_hardware_param
 {
     uint32_t is_hs_core : 1;
     uint32_t is_high_speed : 1;
@@ -73,7 +73,7 @@ struct _tusb_device_driver_param
     const tusb_stm32_otg_io_cfg_t* io_cfgs;
 };
 
-extern const tusb_device_driver_param_t otg_default_param;
+extern const tusb_hardware_param_t otg_default_param;
 
 #ifndef TUSB_DEFAULT_DEV_PARAM
 #define TUSB_DEFAULT_DEV_PARAM    (&otg_default_param)

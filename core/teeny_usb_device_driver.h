@@ -38,7 +38,6 @@
 #include "stdint.h"
 
 typedef struct _tusb_device_driver tusb_device_driver_t;
-typedef struct _tusb_device_driver_param tusb_device_driver_param_t;
 
 typedef struct _tusb_ep_config
 {
@@ -55,9 +54,9 @@ typedef struct _tusb_ep_config
  *  \param[in]  param      driver parameter
  *  \return                0 success, otherwise fail
  */
-int tusb_dev_drv_open(tusb_device_driver_t **drv, const tusb_device_driver_param_t *param, void *context);
+int tusb_dev_drv_open(tusb_device_driver_t **drv, const tusb_hardware_param_t *param, void *context);
 
-/** Device driver close
+/** Device driver get context
  *
  *  \ingroup Group_Device_Driver
  * 

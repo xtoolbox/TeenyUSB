@@ -31,47 +31,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+ 
+#ifndef __BOARD_CONFIG_H__
+#define __BOARD_CONFIG_H__
 
-#include "teeny_usb_host.h"
-#include "teeny_usb_osal.h"
-#include "teeny_usb_util.h"
+#if defined(USE_RTTHREAD)
+#include <rtthread.h>
+#define RTOS_INTERRUPT_ENTER()  rt_interrupt_enter()
+#define RTOS_INTERRUPT_LEAVE()  rt_interrupt_leave()
+#define TUSB_PRINTF  rt_kprintf
+#define TUSB_HAS_OS
+#endif
 
-int tusb_open_host(tusb_host_t* host, const tusb_hardware_param_t* driver_param)
-{ 
-    host->periodic_queue = 0;
-    host->periodic_pending = 0;
-    int res = tusb_host_drv_open(&host->host_drv, driver_param, host);
-    host->last_frame = tusb_host_get_frame_number(host);
-    return res;
-}
+#define  HOST_PORT_POWER_ON_HS()
 
-WEAK int tusb_host_port_changed(tusb_host_driver_t* drv, int port, host_port_state_t new_state)
-{
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host port changed, port: %d, state: %d\n", port, new_state);
-    return 0;
-}
+#define  HOST_PORT_POWER_ON_FS() \
+do{\
+}while(0)
 
-WEAK int tusb_host_sof_event(tusb_host_driver_t* drv)
-{
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    return 0;
-}
+#define  HOST_PORT_POWER_ON()  HOST_PORT_POWER_ON_FS()
 
-WEAK int tusb_host_channel_event(tusb_host_driver_t* drv, int ch_num, int ch_state)
-{
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host channel event, channel: %d, state: %d\n", ch_num, ch_state);
-    return 0;
-}
+// init the stdio hardware
+void stdio_init(void);
+// stdin recv char handler
+void stdin_recvchar(int ch);
+// stdout send char handler 
+void stdout_sendchar(int ch);
 
-WEAK int tusb_host_transfer_done(tusb_host_driver_t* drv, tusbh_transfer_t* transfer)
-{
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host transfer done\n");
-    return 0;
-}
+#endif
+

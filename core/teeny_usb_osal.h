@@ -32,46 +32,80 @@
  * SOFTWARE.
  */
 
-#include "teeny_usb_host.h"
-#include "teeny_usb_osal.h"
-#include "teeny_usb_util.h"
+#ifndef __TEENY_USB_OSAL_H__
+#define __TEENY_USB_OSAL_H__
 
-int tusb_open_host(tusb_host_t* host, const tusb_hardware_param_t* driver_param)
-{ 
-    host->periodic_queue = 0;
-    host->periodic_pending = 0;
-    int res = tusb_host_drv_open(&host->host_drv, driver_param, host);
-    host->last_frame = tusb_host_get_frame_number(host);
-    return res;
-}
+#include "teeny_usb_config.h"
 
-WEAK int tusb_host_port_changed(tusb_host_driver_t* drv, int port, host_port_state_t new_state)
-{
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host port changed, port: %d, state: %d\n", port, new_state);
-    return 0;
-}
+typedef struct _tusb_msg{
+    void*    context;
+    uint32_t param1;
+    uint32_t param2;
+    void (*handler)(struct _tusb_msg*);
+}tusb_msg_t;
 
-WEAK int tusb_host_sof_event(tusb_host_driver_t* drv)
-{
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    return 0;
-}
 
-WEAK int tusb_host_channel_event(tusb_host_driver_t* drv, int ch_num, int ch_state)
-{
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host channel event, channel: %d, state: %d\n", ch_num, ch_state);
-    return 0;
-}
+#ifdef TUSB_MQ_T
+#define tusb_mq_t  TUSB_MQ_T
+#else
+typedef struct _tusb_mq tusb_mq_t;
+#endif
 
-WEAK int tusb_host_transfer_done(tusb_host_driver_t* drv, tusbh_transfer_t* transfer)
-{
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host transfer done\n");
-    return 0;
-}
+tusb_mq_t* tusb_mq_create(void);
+
+void tusb_mq_free(tusb_mq_t* mq);
+
+int tusb_mq_init(tusb_mq_t* mq);
+
+int tusb_mq_post(tusb_mq_t* mq, const tusb_msg_t* msg);
+
+int tusb_mq_get(tusb_mq_t* mq, tusb_msg_t* msg);
+
+
+#ifdef TUSB_MALLOC
+#define tusb_malloc  TUSB_MALLOC
+#else
+void* tusb_malloc(int size);
+#endif
+
+#ifdef TUSB_FREE
+#define tusb_free  TUSB_FREE
+#else
+void tusb_free(void* p);
+#endif
+
+
+#ifdef TUSB_EV_T
+#define tusb_ev_t  TUSB_EV_T
+#else
+typedef struct _tusb_ev tusb_ev_t;
+#endif
+
+#ifdef TUSB_EV_CREATE
+#define tusb_ev_create TUSB_EV_CREATE
+#else
+tusb_ev_t* tusb_ev_create(void);
+#endif
+
+#ifdef TUSB_EV_DELETE
+#define tusb_ev_delete TUSB_EV_DELETE
+#else
+void tusb_ev_delete(tusb_ev_t* ev);
+#endif
+
+#ifdef TUSB_EV_SET
+#define tusb_ev_set TUSB_EV_SET
+#else
+void tusb_ev_set(tusb_ev_t* ev);
+#endif
+
+#ifdef TUSB_EV_WAIT
+#define tusb_ev_wait TUSB_EV_WAIT
+#else
+int tusb_ev_wait(tusb_ev_t* ev, uint32_t timeout_in_ms);
+#endif
+
+
+
+
+#endif

@@ -1,4 +1,4 @@
-/*       
+/* 
  *         _______                    _    _  _____ ____  
  *        |__   __|                  | |  | |/ ____|  _ \ 
  *           | | ___  ___ _ __  _   _| |  | | (___ | |_) |
@@ -10,8 +10,8 @@
  *
  * TeenyUSB - light weight usb stack for micro controllers
  * 
- * Copyright (c) 2020 XToolBox  - admin@xtoolbox.org
- *                         www.tusb.org
+ * Copyright (c) 2020 XToolBox - admin@xtoolbox.org
+ * www.tusb.org
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,47 +31,82 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
-#include "teeny_usb_host.h"
-#include "teeny_usb_osal.h"
+ 
+#include "teeny_usb.h"
 #include "teeny_usb_util.h"
+#include "string.h"
+#include "tusb_platform_stm32.h"
+#include "board_config.h"
+#include "tusbh.h"
+#include "tusbh_hid.h"
 
-int tusb_open_host(tusb_host_t* host, const tusb_hardware_param_t* driver_param)
-{ 
-    host->periodic_queue = 0;
-    host->periodic_pending = 0;
-    int res = tusb_host_drv_open(&host->host_drv, driver_param, host);
-    host->last_frame = tusb_host_get_frame_number(host);
-    return res;
-}
 
-WEAK int tusb_host_port_changed(tusb_host_driver_t* drv, int port, host_port_state_t new_state)
+static __IO uint32_t tick_count = 0;
+void tusb_delay_ms(uint32_t Delay)
 {
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host port changed, port: %d, state: %d\n", port, new_state);
-    return 0;
+  uint32_t tickstart = tick_count;
+  uint32_t wait = Delay;
+  if (wait < HAL_MAX_DELAY)
+  {
+    wait += (uint32_t)(1);
+  }
+
+  while ((tick_count - tickstart) < wait)
+  {
+  }
 }
 
-WEAK int tusb_host_sof_event(tusb_host_driver_t* drv)
+static void init_systick(void)
 {
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    return 0;
+    SysTick_Config(HAL_RCC_GetHCLKFreq()/1000);
 }
 
-WEAK int tusb_host_channel_event(tusb_host_driver_t* drv, int ch_num, int ch_state)
+void SysTick_Handler(void)
 {
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host channel event, channel: %d, state: %d\n", ch_num, ch_state);
-    return 0;
+    tick_count++;
 }
 
-WEAK int tusb_host_transfer_done(tusb_host_driver_t* drv, tusbh_transfer_t* transfer)
+tusb_host_t g_host;
+tusbh_root_hub_t g_root;
+
+static const tusbh_boot_key_class_t cls_boot_key = {
+    .backend = &tusbh_boot_keyboard_backend,
+    .on_key = 0, // TODO: add keyboard handler
+};
+
+static const tusbh_boot_mouse_class_t cls_boot_mouse = {
+    .backend = &tusbh_boot_mouse_backend,
+    .on_mouse = 0, // TODO: add mouse handler
+};
+
+static const tusbh_hid_class_t cls_hid = {
+    .backend = &tusbh_hid_backend,
+};
+
+static const tusbh_class_cp class_table[] = {
+    (tusbh_class_cp)&cls_boot_key,
+    (tusbh_class_cp)&cls_boot_mouse,
+    (tusbh_class_cp)&cls_hid,
+    0,
+};
+
+int main(void)
 {
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host transfer done\n");
-    return 0;
+    stdio_init();
+    // host demo need accurate delay, use systick to do it
+    init_systick();
+    TUSB_LOGD("Host demo begin\n");
+    tusb_mq_t* mq = tusb_mq_create();
+    tusb_mq_init(mq);
+    
+    g_root.mq = mq;
+    g_root.id = "HS";
+    g_root.support_classes = class_table;
+    tusbh_init(&g_host, &g_root);
+    tusb_open_host(&g_host, TUSB_DEFAULT_DEV_PARAM);
+    HOST_PORT_POWER_ON();
+    while(1){
+        tusbh_host_handler(mq);
+    }
 }
+

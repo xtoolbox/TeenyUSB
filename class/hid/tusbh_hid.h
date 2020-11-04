@@ -32,46 +32,46 @@
  * SOFTWARE.
  */
 
-#include "teeny_usb_host.h"
-#include "teeny_usb_osal.h"
-#include "teeny_usb_util.h"
+#ifndef __TUSBH_HID_H__
+#define __TUSBH_HID_H__
 
-int tusb_open_host(tusb_host_t* host, const tusb_hardware_param_t* driver_param)
-{ 
-    host->periodic_queue = 0;
-    host->periodic_pending = 0;
-    int res = tusb_host_drv_open(&host->host_drv, driver_param, host);
-    host->last_frame = tusb_host_get_frame_number(host);
-    return res;
-}
+#include "tusbh.h"
 
-WEAK int tusb_host_port_changed(tusb_host_driver_t* drv, int port, host_port_state_t new_state)
+typedef struct _tusbh_hid_class
 {
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host port changed, port: %d, state: %d\n", port, new_state);
-    return 0;
-}
+    const tusbh_interface_backend_t* backend;    
+    int(*on_recv_data)(tusbh_ep_info_t* ep, const uint8_t* data, int len);
+    int(*on_send_done)(tusbh_ep_info_t* ep, const uint8_t* data, int len);
+}tusbh_hid_class_t;
 
-WEAK int tusb_host_sof_event(tusb_host_driver_t* drv)
+typedef struct _tusbh_boot_key_class
 {
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    return 0;
-}
+    const tusbh_interface_backend_t* backend;    
+    int(*on_key)(tusbh_ep_info_t* ep, const uint8_t* key);
+}tusbh_boot_key_class_t;
 
-WEAK int tusb_host_channel_event(tusb_host_driver_t* drv, int ch_num, int ch_state)
+typedef struct _tusbh_boot_mouse_class
 {
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host channel event, channel: %d, state: %d\n", ch_num, ch_state);
-    return 0;
-}
+    const tusbh_interface_backend_t* backend;    
+    int(*on_mouse)(tusbh_ep_info_t* ep, const uint8_t* mouse);
+}tusbh_boot_mouse_class_t;
 
-WEAK int tusb_host_transfer_done(tusb_host_driver_t* drv, tusbh_transfer_t* transfer)
+typedef struct _tusbh_hid_info
 {
-    tusb_host_t* host = (tusb_host_t*)tusb_host_drv_get_context(drv);
-    (void)host;
-    TUSB_LOGD("Host transfer done\n");
-    return 0;
-}
+    tusbh_ep_info_t* ep_in;
+    tusbh_ep_info_t* ep_out;
+    uint8_t*         report_desc;
+    uint32_t         report_desc_len;
+}tusbh_hid_info_t;
+
+
+int tusbh_hid_send_data(tusbh_ep_info_t* ep, void* data, int len);
+
+int tusbh_set_keyboard_led(tusbh_ep_info_t* ep, uint8_t leds);
+
+extern const tusbh_interface_backend_t  tusbh_hid_backend;
+extern const tusbh_interface_backend_t  tusbh_boot_mouse_backend;
+extern const tusbh_interface_backend_t  tusbh_boot_keyboard_backend;
+
+
+#endif

@@ -1,7 +1,7 @@
 /*
  * Name   :  teeny_usb_desc.c
  * Author :  admin@xtoolbox.org
- * Date   :  2020-08-22 08:05:12
+ * Date   :  2020-08-20 15:05:12
 
  * Desc   :  This file is auto generate by the TeenyDT
  *           Visit http://dt.tusb.org for more info

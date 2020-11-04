@@ -78,6 +78,10 @@
 #define  USB_REQ_SET_INTERFACE                          0x0B
 #define  USB_REQ_SYNCH_FRAME                            0x0C
 
+#define  USB_REQ_DIR_MASK                                  0x80U
+#define  USB_H2D                                           0x00U
+#define  USB_D2H                                           0x80U
+
 #define  USB_DESC_TYPE_DEVICE                              1
 #define  USB_DESC_TYPE_CONFIGURATION                       2
 #define  USB_DESC_TYPE_STRING                              3
@@ -158,7 +162,6 @@
 #define USBD_EP_TYPE_BULK                                 2
 #define USBD_EP_TYPE_INTR                                 3
 #define USBD_EP_TYPE_MASK                                 3
-
 
 #ifndef  SWAPBYTE
 #define  SWAPBYTE(addr)        (((uint16_t)(*((uint8_t *)(addr)))) + \
@@ -306,6 +309,11 @@ typedef __PACK_BEGIN struct _usb_endpoint_descriptor {
 } __PACK_END usb_endpoint_descriptor_t;
 
 STATIC_ASSERT(sizeof(usb_endpoint_descriptor_t) == USB_LEN_EP_DESC)
+    
+// Some device not support un-aligned access
+#define EP_MPS(ep_desc)  (\
+    ((uint16_t)(((uint8_t*)(&((ep_desc)->wMaxPacketSize)))[0]) << 0) \
+  | ((uint16_t)(((uint8_t*)(&((ep_desc)->wMaxPacketSize)))[1]) << 8))
 
 
 typedef __PACK_BEGIN struct _usb_interface_association_descriptor {
@@ -354,5 +362,8 @@ STATIC_ASSERT(sizeof(usb_function_descriptor_t) == USB_LEN_FUNCTION_DESC)
 /** USB port speed low speed */
 #define PORT_SPEED_LOW                 2U
 
+#define TUSB_ARR_SIZE(x)   (sizeof(x) / sizeof((x)[0]))
+
+typedef struct _tusb_hardware_param tusb_hardware_param_t;
 
 #endif

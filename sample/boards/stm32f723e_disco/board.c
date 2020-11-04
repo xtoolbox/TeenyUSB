@@ -132,7 +132,7 @@ const tusb_stm32_otg_io_cfg_t f723_otg_default_io[] = {
 
 
 
-const tusb_device_driver_param_t otg_default_param = {
+const tusb_hardware_param_t otg_default_param = {
     .is_hs_core = 1,
     .is_high_speed = 1,
     .is_internal_phy = 1,
@@ -157,7 +157,7 @@ const tusb_stm32_otg_io_cfg_t f723_otg_fs_io[] = {
 };
 
 
-const tusb_device_driver_param_t otg_fs_param = {
+const tusb_hardware_param_t otg_fs_param = {
     .is_hs_core = 0,
     .is_high_speed = 0,
     .is_internal_phy = 1,

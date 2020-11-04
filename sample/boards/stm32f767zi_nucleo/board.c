@@ -129,7 +129,7 @@ const tusb_stm32_otg_io_cfg_t f767_otg_default_io[] = {
 };
 
 
-const tusb_device_driver_param_t otg_default_param = {
+const tusb_hardware_param_t otg_default_param = {
     .is_hs_core = 0,
     .is_high_speed = 0,
     .is_internal_phy = 1,

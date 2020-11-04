@@ -1,18 +1,13 @@
-TARGET ?= f072bulk
-BOARD ?= stm32f072c8t6
+TARGET ?= f723bulk
+BOARD ?= stm32f723e_disco
 
 BOARD_PATH = ../boards/$(BOARD)
 include $(BOARD_PATH)/board.mk
 
-# TeenyDT format descriptor
-TEENYDT = custom_bulk_desc.lua
-USBMEM = 512
-USBEP = 5
 # project source
-SOURCES  = custom_bulk.c \
-           teeny_usb_desc.c
+SOURCES  = simple_host.c
 INCLUDES = . 
-DEFINES  = __forceinline=inline NO_HOST
+DEFINES  = __forceinline=inline NO_DEVICE
 # board source
 SOURCES  += $(BOARD_SRC)
 INCLUDES += $(BOARD_INC)
@@ -23,7 +18,20 @@ TUSB_PATH = ../../core
 SOURCES  += $(wildcard $(TUSB_PATH)/*.c)
 INCLUDES += $(TUSB_PATH)
 INCLUDES += $(TUSB_PATH)/../driver_stm32
+INCLUDES += $(TUSB_PATH)/../class
+INCLUDES += $(TUSB_PATH)/../class/msc
+INCLUDES += $(TUSB_PATH)/../class/cdc
+INCLUDES += $(TUSB_PATH)/../class/hid
+INCLUDES += $(TUSB_PATH)/../class/user
 INCLUDES += $(TUSB_PATH)/../mcu_lib/st_driver/CMSIS/Include
+
+
+# Teeny USB device class source
+SOURCES  += $(wildcard $(TUSB_PATH)/../class/tusbh*.c)
+SOURCES  += $(wildcard $(TUSB_PATH)/../class/msc/tusbh*.c)
+SOURCES  += $(wildcard $(TUSB_PATH)/../class/cdc/tusbh*.c)
+SOURCES  += $(wildcard $(TUSB_PATH)/../class/hid/tusbh*.c)
+SOURCES  += $(wildcard $(TUSB_PATH)/../class/user/tusbh*.c)
 
 # MCU driver source
 SOURCES += $(wildcard $(TUSB_PATH)/../driver_stm32/*.c)
@@ -57,29 +65,11 @@ vpath %.c $(SRCPATH)
 vpath %.S $(SRCPATH)
 vpath %.s $(SRCPATH)
 
-all: f072 f103 f303 f407 f723 f767 h743
+all: f723
 
-f072:
-	@echo Building stm32f072c8t6
-	@$(MAKE) demo TARGET='f072bulk' BOARD='stm32f072c8t6'
-f103:
-	@echo Building stm32f103ret6
-	@$(MAKE) demo TARGET='f103bulk' BOARD='stm32f103ret6'
-f303:
-	@echo Building stm32f303vct6
-	@$(MAKE) demo TARGET='f303bulk' BOARD='stm32f3_disco'
-f407:
-	@echo Building stm32f407igt6
-	@$(MAKE) demo TARGET='f407bulk' BOARD='stm32f407_evk'
 f723:
 	@echo Building stm32f723iek6
-	@$(MAKE) demo TARGET='f723bulk' BOARD='stm32f723e_disco'
-f767:
-	@echo Building stm32f767zit6
-	@$(MAKE) demo TARGET='f767bulk' BOARD='stm32f767zi_nucleo'
-h743:
-	@echo Building stm32h743vit6
-	@$(MAKE) demo TARGET='h743bulk' BOARD='stm32h743_openmv'
+	@$(MAKE) demo TARGET='f723host' BOARD='stm32f723e_disco'
 
 demo: $(OUTDIR) $(OUTDIR)/$(TARGET).bin $(OUTDIR)/$(TARGET).hex
 
@@ -108,16 +98,6 @@ $(OUTDIR)/$(TARGET).elf: $(OBJDIR) $(OBJECTS)
 	@echo linking $@
 	@$(LD) $(LDFLAGS) $(OBJECTS) -o $@
 	@$(SIZE) $@
-
-USBMEM ?= 512
-USBEP  ?= 7
-
-PWD = $(shell pwd)
-teeny_usb_desc.c teeny_usb_desc.h:$(TEENYDT)
-	@echo generate USB descriptor
-	cd $(PWD)/../../TeenyDT && \
-	lua gen_descriptor.lua $(PWD)/$< -maxmem=$(USBMEM) -maxep=$(USBEP) && \
-	cd $(PWD)
 
 clean:
 	$(RM) $(OUTDIR)/* $(OBJDIR)/*
