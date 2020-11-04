@@ -25,4 +25,4 @@ before_script:
   - arm-none-eabi-gcc --version
 
 script:
-  - cd demo && make all -j8
+  - cd sample && make all -j8
