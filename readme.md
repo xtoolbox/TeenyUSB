@@ -52,7 +52,7 @@ USB descriptor is generate by TeenyDT. [Try TeenyDT online](http://dt.tusb.org)
 git clone https://github.com/xtoolbox/TeenyUSB.git
 cd TeenyUSB
 git submodule update --init
-cd demo
+cd sample
 make all -j8
 ```
 如果更新mcu库很慢，可以使用gitee.com镜像。[https://gitee.com/xtoolbox/st_driver.git](https://gitee.com/xtoolbox/st_driver.git)
@@ -84,9 +84,11 @@ $ echo "   text    data     bss     dec     hex filename" && make all -j8 LOG_IN
 ```
 .
 ├── TeenyDT         # 基于lua的USB描述符生成工具 A lua based USB descriptor generator 
-├── demo            # 示例代码 Sample projects
+├── sample          # 示例代码 Sample projects
 ├── mcu_lib         # MCU文件子仓库，MCU library sub module
-├── usb_stack       # USB主机及设备类文件 TeenyUSB host and deivce class
+├── core            # USB核心文件， TeenyUSB core file
+├── class           # USB设备类和主机类文件, TeenyUSB device and host class file
+├── driver_stm32    # STM32驱动文件。 STM32 Driver file
 ├── pc_test_tool    # 基于lua Qt的Windows USB 测试程序 A luaQt based Windows program to test CDC/HID/WinUSB devices
 └── third_part      # 第三方代码,如FatFs,rt-thread。 Third part source code, e.g. FatFs, rt-thread.
 ```
@@ -102,11 +104,14 @@ $ echo "   text    data     bss     dec     hex filename" && make all -j8 LOG_IN
 | stm32f407_evk    | [Waveshare EVK407I][407]    | STM32F407IGT6 | 8 MHz   | OTG_FS/OTG_HS_ULPI  |
 | stm32f723e_disco | [stm32f723e discovery][723] | STM32F723IEK6 | 25 MHz  | OTG_FS/OTG_HS_Embed |
 | stm32767zi_nucleo| [stm32f767zi nucleo][767]   | STM32F767ZIT6 | 8 MHz   | OTG_FS              |
+| stm32h743_openmv | [stm32h743_openmv][h743]    | STM32H743VIT6 | 12 MHz  | OTG_FS              |
+
 
 [767]: https://www.st.com/en/evaluation-tools/nucleo-f767zi.html
 [723]: https://www.st.com/en/evaluation-tools/32f723ediscovery.html
 [407]: http://www.waveshare.net/wiki/EVK407I
 [303]: https://www.st.com/en/evaluation-tools/stm32f3discovery.html
+[h743]: https://github.com/Kevincoooool/OpenMV_PCB
 
 ## 其它支持STM32的开源USB协议栈 Other open source USB stack for STM32
 - [tinyusb](https://github.com/hathach/tinyusb.git)  全静态内存分配，不支持多设备，不支持同一设备上使用多个同类型接口，暂时不支持STM32主机模式。
