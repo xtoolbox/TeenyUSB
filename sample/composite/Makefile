@@ -69,7 +69,7 @@ vpath %.c $(SRCPATH)
 vpath %.S $(SRCPATH)
 vpath %.s $(SRCPATH)
 
-all: f072 f103 f303 f407 f723 f767
+all: f072 f103 f303 f407 f723 f767 h743
 
 f072:
 	@echo Building stm32f072c8t6
@@ -89,6 +89,9 @@ f723:
 f767:
 	@echo Building stm32f767zit6
 	@$(MAKE) demo TARGET='f767comp' BOARD='stm32f767zi_nucleo'
+h743:
+	@echo Building stm32h743vit6
+	@$(MAKE) demo TARGET='h743comp' BOARD='stm32h743_openmv'
 
 demo: $(OUTDIR) $(OUTDIR)/$(TARGET).bin $(OUTDIR)/$(TARGET).hex
 

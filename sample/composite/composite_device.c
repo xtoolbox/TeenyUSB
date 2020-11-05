@@ -230,18 +230,23 @@ int main(void)
   }
 }
 
-#if  defined(STM32F723xx) || defined(STM32F767xx) || defined(STM32F407xx)
+#if  defined(STM32F723xx) || defined(STM32F767xx) || defined(STM32F407xx) || defined(STM32H743xx)
 #define BLOCK_SIZE   512
 // the stack is start at RAM end in GCC linker script, reserve the last 2 blocks
 #if defined(STM32F723xx)
 #define BLOCK_COUNT  ((256-64-2)*2)
 #elif defined(STM32F767xx)
 #define BLOCK_COUNT  ((512-64-2)*2)
+#elif defined(STM32H743xx)
+#define START_ADDR   (uint8_t*)(0x24000000)
+#define BLOCK_COUNT  ((512-64-2)*2)
 #else
 #define BLOCK_COUNT  ((128-64-2)*2)
 #endif
 
+#ifndef START_ADDR
 #define START_ADDR   (uint8_t*)(0x20000000ul + 64*1024ul)
+#endif
 
 int msc_get_cap(tusb_msc_device_t* msc, uint8_t lun, uint32_t *block_num, uint32_t *block_size)
 {
