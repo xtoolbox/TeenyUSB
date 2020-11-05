@@ -107,7 +107,7 @@ struct _tusb_device{
     tusb_setup_packet          setup;             /**< setup packet buffer                            */
     const tusb_descriptors_t*  descriptors;       /**< device descriptors, can be override at runtime */
     uint32_t                   addr:8;            /**< device address                                 */
-    uint32_t                   config:8;          /**< device current configurtaion ID                */
+    volatile uint32_t          config:8;          /**< device current configurtaion ID                */
     uint32_t                   b_hnp:1;           /**< OTG only, hnp for B device                     */
     uint32_t                   a_hnp:1;           /**< OTG only, hnp for A device                     */
     uint32_t                   a_alt_hnp:1;       /**< OTG only, hnp for A device on other port       */
