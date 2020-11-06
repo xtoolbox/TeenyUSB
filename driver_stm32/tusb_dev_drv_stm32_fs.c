@@ -627,11 +627,14 @@ int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config 
                     if (!ep_in_used[ep])
                     {
                         ep_in_used[ep] = 1;
-                        if(!ep_out_used[ep]){
-                            TUSB_LOGD("INIT Bi-Direction Ep %d, type 0x%x\n", ep ,s_type);
-                            INIT_EP_BiDirection(drv, ep, s_type);
+                        
+                        if( ep != 0 || is_reset ){
+                            if(!ep_out_used[ep]){
+                                TUSB_LOGD("INIT Bi-Direction Ep %d, type 0x%x\n", ep ,s_type);
+                                INIT_EP_BiDirection(drv, ep, s_type);
+                            }
+                            SET_TX_ADDR(drv, ep, bt_start);
                         }
-                        SET_TX_ADDR(drv, ep, bt_start);
                         TUSB_LOGD("EP: 0x%02x, addr: 0x%x, size: %d, Bi-Direction Tx, Type 0x%x\n", cfg->addr, (int)bt_start, cfg->mps, s_type);
                         bt_start += cfg->mps;
                     }
@@ -645,12 +648,14 @@ int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config 
                     if (!ep_out_used[ep])
                     {
                         ep_out_used[ep] = 1;
-                        if(!ep_in_used[ep]){
-                            TUSB_LOGD("INIT Bi-Direction Ep %d, type 0x%x\n", ep ,s_type);
-                            INIT_EP_BiDirection(drv, ep, s_type);
+                        if( ep != 0 || is_reset ){
+                            if(!ep_in_used[ep]){
+                                TUSB_LOGD("INIT Bi-Direction Ep %d, type 0x%x\n", ep ,s_type);
+                                INIT_EP_BiDirection(drv, ep, s_type);
+                            }
+                            SET_RX_ADDR(drv, ep, bt_start);
+                            SET_RX_CNT(drv, ep, cfg->mps);
                         }
-                        SET_RX_ADDR(drv, ep, bt_start);
-                        SET_RX_CNT(drv, ep, cfg->mps);
                         TUSB_LOGD("EP: 0x%02x, addr: 0x%x, size: %d, Bi-Direction Rx, Type 0x%x\n", cfg->addr, (int)bt_start, cfg->mps, s_type);
                         bt_start += cfg->mps;
                     }
@@ -1127,8 +1132,8 @@ void tusb_ep_handler(tusb_device_driver_t *drv, uint8_t EPn)
                 // Handle ep 0 data packet
                 tusb_recv_data(drv, EPn);
             }
-            TUSB_CLEAR_RX_CTR(GetUSB(drv), PCD_ENDP0, EP);
-            TUSB_SET_RX_STATUS(GetUSB(drv), PCD_ENDP0, EP, USB_EP_RX_VALID);
+            PCD_CLEAR_RX_EP_CTR(GetUSB(drv), PCD_ENDP0);
+            PCD_SET_EP_RX_STATUS(GetUSB(drv), PCD_ENDP0, USB_EP_RX_VALID);
         }
         else
         {
