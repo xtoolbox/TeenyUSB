@@ -112,6 +112,7 @@ static int tusb_hid_device_request(tusb_hid_device_t* hid, tusb_setup_packet* se
         return 1;
       case HID_REQ_SET_REPORT:
         tusb_set_recv_buffer(dev, 0, dev_config->cmd_buffer, setup_req->wLength);
+        tusb_set_rx_valid(dev, 0);
         dev->ep0_rx_done = hid_dataout_request;
         return 1;
       case HID_REQ_GET_REPORT:
