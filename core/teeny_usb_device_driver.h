@@ -44,6 +44,9 @@ typedef struct _tusb_ep_config
     uint8_t addr;
     uint8_t attribute;
     uint16_t mps;
+#ifdef TUSB_SUPPORT_USB3
+    uint8_t burst_count;
+#endif
 } tusb_ep_config;
 
 /** Device driver open

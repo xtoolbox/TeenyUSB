@@ -2,9 +2,9 @@ Teeny USB
 ==========
 [![Build Status](https://travis-ci.org/xtoolbox/teenyusb.svg?branch=master)](https://travis-ci.org/xtoolbox/teenyusb)
 
-一个简易的STM32 USB主机和设备协议栈
+一个简易的单片机USB主机和设备协议栈，现在支持3.0设备。
 
-A teeny USB device and host stack for STM32 MCUs
+A teeny USB device and host stack for MCUs, support super speed device.
 
 关于TeenyUSB的实现细节和使用方式请阅读《STM32 USB设备开发指南》 [Github下载](https://github.com/xtoolbox/TeenyUSB/releases/download/0.1/STM32_USB_desgin_guide.pdf) , [21IC下载](http://dl.21ic.com/download/stm32_usb-285543.html)
 

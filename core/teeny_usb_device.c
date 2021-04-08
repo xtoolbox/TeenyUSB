@@ -110,12 +110,21 @@ void tusb_device_reset(tusb_device_driver_t *drv)
         {
             // setup endpoint 0
             tusb_ep_config epc[2];
+            uint16_t bcdUSB = dev->descriptors->device[2] | (dev->descriptors->device[3]<<8);
             epc[0].addr = 0x80;
             epc[0].attribute = USBD_EP_TYPE_CTRL;
-            epc[0].mps = dev->descriptors->device[7];
+            if(bcdUSB >= 0x300){
+                epc[0].mps = 1<<dev->descriptors->device[7];
+            }else{
+                epc[0].mps = dev->descriptors->device[7];
+            }
             epc[1].addr = 0x00;
             epc[1].attribute = USBD_EP_TYPE_CTRL;
-            epc[1].mps = dev->descriptors->device[7];
+            epc[1].mps = epc[0].mps;
+#ifdef TUSB_SUPPORT_USB3
+            epc[0].burst_count = 1;
+            epc[1].burst_count = 1;
+#endif
             tusb_dev_drv_setup_endpoint(drv, epc, 2, 1);
         }
         else
@@ -468,12 +477,21 @@ static int tusb_init_endpoint_by_config(tusb_device_t *dev)
         // remote wakeup
         SetRemoteWakeup(dev);
     }
+    uint16_t bcdUSB = dev->descriptors->device[2] | (dev->descriptors->device[3]<<8);
     ep_cfg[0].addr = 0x80;
     ep_cfg[0].attribute = USBD_EP_TYPE_CTRL;
-    ep_cfg[0].mps = dev->descriptors->device[7];
+    if(bcdUSB >= 0x300){
+        ep_cfg[0].mps = 1<<dev->descriptors->device[7];
+    }else{
+        ep_cfg[0].mps = dev->descriptors->device[7];
+    }
     ep_cfg[1].addr = 0x00;
     ep_cfg[1].attribute = USBD_EP_TYPE_CTRL;
-    ep_cfg[1].mps = dev->descriptors->device[7];
+    ep_cfg[1].mps = ep_cfg[0].mps;
+#ifdef TUSB_SUPPORT_USB3
+    ep_cfg[0].burst_count = 1;
+    ep_cfg[1].burst_count = 1;
+#endif
     int valid_intf = 0;
     int ep_count = 2;
     // collect endpoint config here
@@ -511,6 +529,9 @@ static int tusb_init_endpoint_by_config(tusb_device_t *dev)
                         epc->addr = ep_addr;
                         epc->attribute = cfg[index + 3];
                         epc->mps = cfg[index + 4] | (cfg[index + 5] << 8);
+#ifdef TUSB_SUPPORT_USB3
+                        epc->burst_count = 1;
+#endif
                         ep_count++;
                     }
                     else
@@ -523,6 +544,11 @@ static int tusb_init_endpoint_by_config(tusb_device_t *dev)
                     TUSB_LOGW("Endpoint count overflow, ignore it\n");
                 }
             }
+        }else if(bType == USB_SS_ENDPOINT_COMPANION_TYPE){
+#ifdef TUSB_SUPPORT_USB3
+            tusb_ep_config *epc = &ep_cfg[ep_count-1];
+            epc->burst_count = cfg[index + 2] + 1;
+#endif
         }
         index += bLength;
     }
@@ -530,7 +556,11 @@ static int tusb_init_endpoint_by_config(tusb_device_t *dev)
     for (int i = 0; i < ep_count; i++)
     {
         const tusb_ep_config *epc = &ep_cfg[i];
+#ifdef TUSB_SUPPORT_USB3
+        TUSB_LOGD("Addr: 0x%02x Attr: 0x%02x MPS:%4d Burst:%d\n", epc->addr, epc->attribute, epc->mps, epc->burst_count);
+#else
         TUSB_LOGD("Addr: 0x%02x Attr: 0x%02x MPS:%d\n", epc->addr, epc->attribute, epc->mps);
+#endif
     }
     tusb_dev_drv_setup_endpoint(GetDriver(dev), ep_cfg, ep_count, 0);
     return 0;

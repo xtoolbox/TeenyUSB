@@ -103,6 +103,7 @@
 #define USB_REPORT_DESCRIPTOR_TYPE              0x22
 #define USB_DESC_TYPE_REPORT                    0x22
 #define USB_FUCNTION_DESCRIPTOR_TYPE            0x24
+#define USB_SS_ENDPOINT_COMPANION_TYPE          0x30
 
 
 #define USB_CLASS_DEVICE                0x00
@@ -361,6 +362,8 @@ STATIC_ASSERT(sizeof(usb_function_descriptor_t) == USB_LEN_FUNCTION_DESC)
 #define PORT_SPEED_FULL                1U
 /** USB port speed low speed */
 #define PORT_SPEED_LOW                 2U
+/** USB port speed super speed */
+#define PORT_SPEED_SUPER               3U
 
 #define TUSB_ARR_SIZE(x)   (sizeof(x) / sizeof((x)[0]))
 
