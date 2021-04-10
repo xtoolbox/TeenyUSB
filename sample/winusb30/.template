@@ -1,0 +1,12 @@
+Mcu Type=CH56x
+Address=0x00008000
+Target Path=obj\winusb30.hex
+Erase All=true
+Program=true
+Verify=true
+Reset=true
+
+Vendor=WCH
+Toolchain=RISC-V
+Series=CH56X
+Description=ROM(byte): 32K, SRAMX(byte): 96K,SRAMS(byte): 16K, CHIP PINS: 68, GPIO PORTS: 49.\nThe CH565W microcontrollers use the RISC-V3A kernel and support IMAC subsets of RISC-V instructions.The 128-bit data width DMA is adopted on the chip to support the high bandwidth demand of multiple high-speed peripherals and realize the high speed transmission of large data volume.peripherals include USB3.0 overspeed, USB2.0 high-speed host and device controller and transceiver PHY, Gigabit Ethernet controller, dedicated high-speed SerDes controller and transceiver PHY, SD/EMMC interface controller, encryption and decryption module, high-speed parallel interface, digital video interface DVP, etc.

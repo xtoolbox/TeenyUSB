@@ -105,6 +105,7 @@ $ echo "   text    data     bss     dec     hex filename" && make all -j8 LOG_IN
 | stm32f723e_disco | [stm32f723e discovery][723] | STM32F723IEK6 | 25 MHz  | OTG_FS/OTG_HS_Embed |
 | stm32767zi_nucleo| [stm32f767zi nucleo][767]   | STM32F767ZIT6 | 8 MHz   | OTG_FS              |
 | stm32h743_openmv | [stm32h743_openmv][h743]    | STM32H743VIT6 | 12 MHz  | OTG_FS              |
+| ch565w_evk       | [ch565w_evk][ch565w]        | CH565W        | 30 MHz  | OTG_SS              |
 
 
 [767]: https://www.st.com/en/evaluation-tools/nucleo-f767zi.html
@@ -112,6 +113,7 @@ $ echo "   text    data     bss     dec     hex filename" && make all -j8 LOG_IN
 [407]: http://www.waveshare.net/wiki/EVK407I
 [303]: https://www.st.com/en/evaluation-tools/stm32f3discovery.html
 [h743]: https://github.com/Kevincoooool/OpenMV_PCB
+[ch565w]: http://www.wch.cn/downloads/CH569EVT_ZIP.html
 
 ## 其它支持STM32的开源USB协议栈 Other open source USB stack for STM32
 - [tinyusb](https://github.com/hathach/tinyusb.git)  全静态内存分配，不支持多设备，不支持同一设备上使用多个同类型接口，暂时不支持STM32主机模式。
