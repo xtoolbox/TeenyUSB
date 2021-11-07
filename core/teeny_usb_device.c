@@ -658,7 +658,7 @@ static int tusb_std_interface_request(tusb_device_t *dev, tusb_setup_packet *set
                 tusb_init_endpoint_by_config(dev);
             }
             TUSB_LOGW("Interface, set interface %d, alt = %d\n", setup_req->wIndex, setup_req->wValue);
-            tusb_control_send(dev, &dev->temp_buffer, 1);
+            tusb_send_status(dev);
             return 1;
         }
         TUSB_LOGW("Interface, set unknown interface %d\n", setup_req->wIndex);
