@@ -541,7 +541,7 @@ int tusb_dev_drv_setup_endpoint(tusb_device_driver_t *drv, const tusb_ep_config 
         }
     }
     // reserved space for endpoint config
-    uint32_t bt_start = (max_ep_id + 1) * sizeof(pma_ep_desc);
+    uint32_t bt_start = TUSB_MAX_EP_PAIR_COUNT * sizeof(pma_ep_desc);
     uint8_t real_double = 0;
     if (bt_start + used_double <= PMA_SIZE)
     {
