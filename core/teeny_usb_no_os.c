@@ -146,7 +146,9 @@ struct _tusb_ev
 tusb_ev_t* tusb_ev_create(void)
 {
     tusb_ev_t* ev = (tusb_ev_t*)tusb_malloc(sizeof(tusb_ev_t));
-    ev->event = 0;
+    if (ev) {
+        ev->event = 0;
+    }
     return ev;
 }
 #endif
